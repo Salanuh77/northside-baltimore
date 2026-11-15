@@ -5,9 +5,13 @@ local city = rb.deserializePlace(fs.readFile(path)):GetService('Workspace').Balt
 local function find(name)
  return assert(city:FindFirstChild(name,true),name..' missing from built city')
 end
+assert(city:GetAttribute('ReleaseChannel')=='Alpha','Release channel missing')
 local ship = find('USS Constellation')
 local masts = 0
 for _,part in ship:GetChildren() do
+ if part:IsA('BasePart') then
+  for _,value in {part.CFrame:GetComponents()} do assert(math.abs(value)<math.huge,'Invalid transform on '..part.Name) end
+ end
  if part.Name=='Lower mast' then masts+=1 end
 end
 assert(masts==3 and ship:FindFirstChild('Boarding ramp'))
