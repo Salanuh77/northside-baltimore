@@ -52,7 +52,7 @@ local pane=make('ScrollingFrame',{CanvasSize=UDim2.new(),AutomaticCanvasSize=Enu
 local footer=label(panel,'Loading your files…',12,gold);footer.TextWrapped=true
 local slot,tab,waiting=nil,'Identity',false
 local rows={}
-local function fresh() return {Height='Medium',Build='Average',Tone='Amber',Hair='Close crop',Name='',Starter='Harbor',Detail='Clean'} end
+local function fresh() return {Height='Medium',Build='Average',Tone='Amber',Hair='Close crop',Name='',Starter='Varsity',Detail='Clean',HairColor='Black',Eye='Brown'} end
 local draft=fresh()
 local yaw=.22
 local rig
@@ -63,6 +63,10 @@ local function pose()
  local center=bounds.Position
  local aspect=viewport.AbsoluteSize.X/math.max(1,viewport.AbsoluteSize.Y)
  local distance=math.max(size.Y*1.17,size.X/math.max(.5,aspect))*1.95
+ if slot and (tab=='Face' or tab=='Style') then
+  center=rig.Head.Position-Vector3.new(0,tab=='Face' and .08 or .33,0)
+  distance=math.max(tab=='Face' and 2.8 or 4.3,2.2/math.max(.5,aspect))
+ end
  camera.CFrame=CFrame.lookAt(center+Vector3.new(0,.24,-distance),center)
 end
 local function rebuild()
@@ -160,21 +164,24 @@ draw=function()
   end
   return
  end
- for i,v in {'Identity','Build','Style'} do
+ for i,v in {'Identity','Build','Style','Face'} do
   local b=button(tabs,v,function() tab=v;draw() end)
-  b.Position=UDim2.fromScale((i-1)/3,0);b.Size=UDim2.new(1/3,-3,1,0)
+  b.Position=UDim2.fromScale((i-1)/4,0);b.Size=UDim2.new(1/4,-3,1,0)
   if v==tab then b.BackgroundColor3=paper;b.TextColor3=ink end
  end
  if tab=='Identity' then
   line('Resident name')
   local name=make('TextBox',{Name='ResidentName',Position=UDim2.fromOffset(0,y),Size=UDim2.new(1,-6,0,40),BackgroundColor3=slate,BorderSizePixel=0,ClearTextOnFocus=false,PlaceholderText=player.DisplayName,Text=draft.Name,TextColor3=cream,PlaceholderColor3=paper,Font=Enum.Font.Gotham,TextSize=16},pane)
   name:GetPropertyChangedSignal('Text'):Connect(function() draft.Name=name.Text end)
-  y+=50;options('Starter','Starter shirt',style.Starters,3)
+  y+=50;options('Starter','Starter outfit',style.Starters,3)
  elseif tab=='Build' then
   options('Height','Height',style.Heights,3);options('Build','Build',style.Builds,3)
- else
+ elseif tab=='Style' then
   options('Tone','Skin tone  /  '..draft.Tone,style.Tones,7)
   options('Hair','Haircut',style.Hair,3)
+  options('HairColor','Hair color',style.HairColors,3)
+ else
+  options('Eye','Eye color',style.Eyes,3)
   options('Detail','Face detail',style.Details,3)
  end
 end

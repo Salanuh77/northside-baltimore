@@ -86,3 +86,5 @@ Follow the open galleries and end stairs at the housing courts to reach the flat
 Northside Baltimore uses place `131234846449292` and universe `10755218391`. The current Roblox revision and publication status are recorded in `publish-receipt.json` and `published-place.json`.
 
 Open **City servers** from the resident files or city phone to see public instances and available seats. Choosing **Join** checkpoints your file before Roblox starts the transfer. Studio lists the local session. Live transfers require the Roblox player.
+
+Residents use the city?s articulated R15 body. Players can change their build, skin, nine haircuts, hair color, eyes, facial hair and starter outfit. The camera moves in for face and hair edits. Use X, controller B or **Exit car** on touch to leave the driver seat.
