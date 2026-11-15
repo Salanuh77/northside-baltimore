@@ -101,6 +101,9 @@ run.Heartbeat:Connect(function(dt)
   c.yaw-=c.steer*math.clamp(c.speed/16,-1,1)*1.55*math.min(dt,.1)
   local heading=CFrame.Angles(0,c.yaw,0)
   c.turn.CFrame=heading
-  c.motion.PlaneVelocity=Vector2.new(heading.LookVector.X,heading.LookVector.Z)*c.speed
+  -- Let the body turn before applying lateral thrust, including when a curb blocks yaw.
+  local facing=c.base.CFrame.LookVector
+  local planar=Vector2.new(facing.X,facing.Z)
+  c.motion.PlaneVelocity=planar.Magnitude>.01 and planar.Unit*c.speed or Vector2.zero
  end
 end)
