@@ -202,6 +202,18 @@ local at=Instance.new('Atmosphere'); at.Density=0.17; at.Offset=0.2; at.Color=Co
 local grade=Instance.new('ColorCorrectionEffect'); grade.Contrast=0.1; grade.Saturation=0.03; grade.TintColor=Color3.fromRGB(255,251,242); grade.Parent=lighting
 local cam=world:FindFirstChildOfClass('Camera'); if cam then cam.CFrame=CFrame.lookAt(Vector3.new(-601,9,302),Vector3.new(-607,7.8,279.5)); cam.Focus=CFrame.new(-607,7.8,279.5) end
 local rs=game:GetService('ReplicatedStorage'); local rem=Instance.new('RemoteEvent'); rem.Name='CityAction'; rem.Parent=rs
+local starter=game:GetService('StarterPlayer')
+game:GetService('Players').CharacterAutoLoads=false
+starter.LoadCharacterAppearance=false
+local rig=rb.deserializeModel(fs.readFile('art/resident-rig.rbxm'))[1]
+rig.Name='ResidentRig';rig:SetAttribute('GameOwnedRig',true);rig.PrimaryPart=rig.HumanoidRootPart
+for _,v in rig:GetDescendants() do
+ if v:IsA('LuaSourceContainer') or v:IsA('Accessory') or v:IsA('Clothing') then v:Destroy() end
+end
+rig.Humanoid.DisplayDistanceType=Enum.HumanoidDisplayDistanceType.None
+rig.Parent=rs
+local starterRig=rig:Clone();starterRig.Name='StarterCharacter';starterRig.Parent=starter
+local menu=Instance.new('LocalScript');menu.Name='ResidentMenu';menu.Source=fs.readFile('src/ResidentMenu.client.luau');menu.Parent=starter:FindFirstChildOfClass('StarterPlayerScripts')
 local style=Instance.new('ModuleScript'); style.Name='StreetStyle'; style.Source=fs.readFile('src/StreetStyle.luau'); style.Parent=rs
 local art=require('@lune/serde').decode('json',fs.readFile('art/assets.json'))
 for _,key in {'fleet-track','foundry-work','pier-varsity','indigo-denim'} do style:SetAttribute(key,art[key]) end
@@ -215,7 +227,7 @@ local input=Instance.new('LocalScript'); input.Name='TrafficClient'; input.Sourc
 local catalog=Instance.new('ModuleScript'); catalog.Name='WorkCatalog'; catalog.Source=fs.readFile('src/WorkCatalog.luau'); catalog.Parent=rs
 local jobs=Instance.new('ModuleScript'); jobs.Name='WorkService'; jobs.Source=fs.readFile('src/WorkService.luau'); jobs.Parent=server.Parent
 local lifeUi=Instance.new('ModuleScript'); lifeUi.Name='LifeUI'; lifeUi.Source=fs.readFile('src/LifeUI.luau'); lifeUi.Parent=rs
-for _,entry in {{'CityRetail','src/CityRetail.luau'},{'NeighborhoodLife','src/NeighborhoodLife.luau'},{'Responders','src/Responders.luau'},{'Custody','src/Custody.luau'}} do
+for _,entry in {{'ResidentFiles','src/ResidentFiles.luau'},{'CityRetail','src/CityRetail.luau'},{'NeighborhoodLife','src/NeighborhoodLife.luau'},{'Responders','src/Responders.luau'},{'Custody','src/Custody.luau'}} do
  local mod=Instance.new('ModuleScript'); mod.Name=entry[1]; mod.Source=fs.readFile(entry[2]); mod.Parent=server.Parent
 end
 fs.writeFile('Northside Baltimore - Heritage Harbor.rbxl',rb.serializePlace(game))

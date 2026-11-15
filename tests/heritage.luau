@@ -1,7 +1,12 @@
 local rb = require('@lune/roblox')
 local fs = require('@lune/fs')
 local path = require('@lune/process').args[1] or 'Northside Baltimore - Heritage Harbor.rbxl'
-local city = rb.deserializePlace(fs.readFile(path)):GetService('Workspace').Baltimore
+local game=rb.deserializePlace(fs.readFile(path))
+local city=game:GetService('Workspace').Baltimore
+local starter=game:GetService('StarterPlayer')
+assert(not game:GetService('Players').CharacterAutoLoads and not starter.LoadCharacterAppearance)
+assert(starter.StarterCharacter:GetAttribute('GameOwnedRig') and game:GetService('ReplicatedStorage').ResidentRig.Humanoid)
+
 local function find(name)
  return assert(city:FindFirstChild(name,true),name..' missing from built city')
 end

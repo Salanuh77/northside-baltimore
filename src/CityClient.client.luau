@@ -10,6 +10,8 @@ local mouse=p:GetMouse()
 local openPhone
 local catalog=require(game:GetService('ReplicatedStorage'):WaitForChild('WorkCatalog'))
 local gui=Instance.new('ScreenGui'); gui.Name='NorthsideHUD'; gui.ResetOnSpawn=false; gui.IgnoreGuiInset=false; gui.Parent=p:WaitForChild('PlayerGui')
+gui.Enabled=p.Character~=nil
+p.CharacterAdded:Connect(function() gui.Enabled=true end)
 local dark=Color3.fromRGB(21,27,29); local cream=Color3.fromRGB(236,229,212); local gold=Color3.fromRGB(224,176,83)
 local function make(class,props,parent)
  local v=Instance.new(class); for k,val in props do v[k]=val end; v.Parent=parent; return v
@@ -168,7 +170,7 @@ local function character(c)
 end
 p.CharacterAdded:Connect(character); if p.Character then character(p.Character) end
 UIS.InputBegan:Connect(function(key,processed)
- if processed then return end
+ if processed or not p.Character then return end
  if key.KeyCode==Enum.KeyCode.H then event:FireServer('Surrender')
  elseif key.KeyCode==Enum.KeyCode.T then playersMenu()
  elseif key.KeyCode==Enum.KeyCode.P and openPhone then openPhone()
@@ -261,7 +263,6 @@ openPhone=function()
   row('Start shift  ·  $'..role.Pay,function() event:FireServer('StartShift') end)
   row('Leave '..role.Employer,function() event:FireServer('Resign') end)
  end
- if p:GetAttribute('NeedsCharacter') then row('Create your character',retailUI.creator) end
  row('Party supplies',retailUI.bag);row('Job applications',jobBoard); lifeApps()
  row('City map',showMap)
  row('Pay or trade with a nearby player',playersMenu)
@@ -282,7 +283,5 @@ button(gui,'GUIDE',UDim2.fromOffset(82,34),UDim2.new(1,-100,0,18),function()
  paragraph('Wanted level fades over time. Player robbery takes 8 seconds and at most 25% of cash, capped at $200. The same player is protected from another robbery for 5 minutes.')
  paragraph('Use Drive at a parked vehicle. Fuel drops with distance. Park at a dispenser to fill up for $1 per 5%. Use movement controls to steer, accelerate and reverse. Jump to exit. The quay is north of Monument Street, Lanvale Courts is west, and Eastgate Terrace is east.')
 end)
-p:GetAttributeChangedSignal('NeedsCharacter'):Connect(function() if p:GetAttribute('NeedsCharacter') then retailUI.creator() end end)
-if p:GetAttribute('NeedsCharacter') then task.defer(retailUI.creator) end
 event:FireServer('Ready')
 notify('Open PHONE to apply for work. MAP shows downtown, the housing courts and the harbor.')

@@ -5,7 +5,7 @@ local decision=enum.ProductPurchaseDecision
 local source=fs.readFile('src/CityRetail.luau')
 local function fixture()
  local p={UserId=8}
- local profile={Receipts={},Stock={},Items={},Reserve=110}
+ local profile={Look={},Receipts={},Stock={},Items={},Reserve=110}
  local profiles={[p]=profile}
  local state={tools=0,canSave=true}
  local services={Players={GetPlayerByUserId=function(_,id) return id==8 and p or nil end},MarketplaceService={}}

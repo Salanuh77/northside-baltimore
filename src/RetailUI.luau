@@ -12,31 +12,6 @@ return function(event,modal,content,clear,row,paragraph,input,state)
    if ok and b.Parent and info.PriceInRobux then b.Text=product[2]..' · '..info.PriceInRobux..' Robux' end
   end)
  end
- local function creator()
-  clear('YOUR NORTHSIDE CHARACTER')
-  local choices={Height='Medium',Build='Average',Hair='Close crop',Tone='Amber',Name=p.DisplayName}
-  local preview=Instance.new('ViewportFrame');preview.Size=UDim2.new(1,-6,0,158);preview.BackgroundColor3=Color3.fromRGB(48,65,65);preview.LayoutOrder=0;preview.Parent=content
-  preview.Ambient=Color3.fromRGB(179,168,153);preview.LightColor=Color3.fromRGB(255,238,202)
-  local camera=Instance.new('Camera');camera.CFrame=CFrame.lookAt(Vector3.new(2.4,2.1,-8),Vector3.new(0,.4,0));camera.FieldOfView=39;camera.Parent=preview;preview.CurrentCamera=camera
-  local function render()
-   local old=preview:FindFirstChildOfClass('WorldModel'); if old then old:Destroy() end
-   local c=p.Character;if not c or not c:FindFirstChild('Head') then return end
-   local archive=c.Archivable;c.Archivable=true;local clone=c:Clone();c.Archivable=archive
-   for _,v in clone:GetDescendants() do if v:IsA('LuaSourceContainer') or v:IsA('Tool') then v:Destroy() end end
-   local world=Instance.new('WorldModel');world.Parent=preview;clone.Parent=world;clone:PivotTo(CFrame.new())
-   local root=clone:FindFirstChild('HumanoidRootPart');if root then root.Anchored=true end
-   Style.apply(clone,choices,nil)
-  end
-  render()
-  local name=input('Roleplay name · blank uses your display name')
-  for _,opt in {{'Height','Height',Style.Heights},{'Build','Build / weight',Style.Builds},{'Tone','Skin tone',Style.Tones},{'Hair','Haircut',Style.Hair}} do
-   local key,label,list=table.unpack(opt);local b
-   b=row(label..' · '..choices[key],function()
-    choices[key]=list[table.find(list,choices[key])%#list+1];b.Text=label..' · '..choices[key];render()
-   end)
-  end
-  row('Save character',function() choices.Name=name.Text;event:FireServer('CreateResident',choices) end)
- end
  local function bag()
   clear('PARTY SUPPLIES')
   for _,key in {'Glow','Confetti'} do
@@ -70,5 +45,5 @@ return function(event,modal,content,clear,row,paragraph,input,state)
   else return false end
   return true
  end
- return {handle=handle,creator=creator,bag=bag}
+ return {handle=handle,bag=bag}
 end

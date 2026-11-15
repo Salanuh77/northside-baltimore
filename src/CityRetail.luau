@@ -42,7 +42,7 @@ return function(profiles,jobs,event,closest,sync,tell,save,tool)
     if not ok or filtered=='' or filtered:find('#',1,true) then tell(p,'Choose another name or leave it blank to use your Roblox display name.'); return true end
     name=filtered
    end
-   d.Look={Name=name=='' and p.DisplayName or name,Height=data.Height,Build=data.Build,Hair=data.Hair,Tone=data.Tone}
+   d.Look={Name=name=='' and p.DisplayName or name,Height=data.Height,Build=data.Build,Hair=data.Hair,Tone=data.Tone,Starter=data.Starter or 'Harbor',Detail=data.Detail or 'Clean'}
    p:SetAttribute('NeedsCharacter',false); dress(p,d); sync(p); event:FireClient(p,'StyleSaved')
   elseif kind=='Outfit' then
    if not closest(p,'Clothing') or not d.Look then return true end
@@ -100,7 +100,7 @@ return function(profiles,jobs,event,closest,sync,tell,save,tool)
  end
  local function receipt(info)
   local key=types[info.ProductId];local p=Players:GetPlayerByUserId(info.PlayerId);local d=p and profiles[p]
-  if not d or not key or d.Leaving or d.Trading then return Enum.ProductPurchaseDecision.NotProcessedYet end
+  if not d or not d.Look or not key or d.Leaving or d.Trading then return Enum.ProductPurchaseDecision.NotProcessedYet end
   local id=tostring(info.PurchaseId)
   if not d.Receipts[id] then
    d.Receipts[id]=true
