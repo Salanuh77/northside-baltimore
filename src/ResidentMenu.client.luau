@@ -52,7 +52,7 @@ local pane=make('ScrollingFrame',{CanvasSize=UDim2.new(),AutomaticCanvasSize=Enu
 local footer=label(panel,'Loading your files…',12,gold);footer.TextWrapped=true
 local slot,tab,waiting=nil,'Identity',false
 local rows={}
-local function fresh() return {Height='Medium',Build='Average',Tone='Amber',Hair='Close crop',Name='',Starter='Harbor',Detail='Clean',HairColor='Black',Eye='Brown'} end
+local function fresh() return {Height='Medium',Build='Average',Tone='Amber',Hair='Close crop',Name='',Starter='Harbor',Detail='Clean',HairColor='Black',Eye='Brown',Expression='Calm'} end
 local draft=fresh()
 local yaw=.22
 local rig
@@ -181,6 +181,7 @@ draw=function()
   options('Hair','Haircut',style.Hair,3)
   options('HairColor','Hair color',style.HairColors,3)
  else
+  options('Expression','Expression',style.Expressions,3)
   options('Eye','Eye color',style.Eyes,3)
   options('Detail','Face detail',style.Details,3)
  end

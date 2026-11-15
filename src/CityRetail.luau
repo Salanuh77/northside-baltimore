@@ -42,7 +42,7 @@ return function(profiles,jobs,event,closest,sync,tell,save,tool)
     if not ok or filtered=='' or filtered:find('#',1,true) then tell(p,'Choose another name or leave it blank to use your Roblox display name.'); return true end
     name=filtered
    end
-   d.Look={Name=name=='' and p.DisplayName or name,Height=data.Height,Build=data.Build,Hair=data.Hair,Tone=data.Tone,Starter=data.Starter or 'Harbor',Detail=data.Detail or 'Clean',Eye=data.Eye or 'Brown',HairColor=data.HairColor or 'Black'}
+   d.Look={Name=name=='' and p.DisplayName or name,Height=data.Height,Build=data.Build,Hair=data.Hair,Tone=data.Tone,Starter=data.Starter or 'Harbor',Detail=data.Detail or 'Clean',Eye=data.Eye or 'Brown',Expression=data.Expression or 'Calm',HairColor=data.HairColor or 'Black'}
    p:SetAttribute('NeedsCharacter',false); dress(p,d); sync(p); event:FireClient(p,'StyleSaved')
   elseif kind=='Outfit' then
    if not closest(p,'Clothing') or not d.Look then return true end

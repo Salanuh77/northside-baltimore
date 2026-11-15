@@ -1,7 +1,7 @@
 local Style={}
 Style.Heights={'Short','Medium','Tall'}
 Style.Builds={'Slender','Average','Broad'}
-Style.Hair={'Close crop','Curls','High puff','Twists','Shaved','Cornrows','Twin buns','Short locs','Afro'}
+Style.Hair={'Close crop','Curls','High puff','Twists','Shaved','Cornrows','Twin buns','Short locs','Afro','Braids','Ponytail','Side part'}
 Style.Tones={'Espresso','Umber','Copper','Amber','Olive','Sand','Porcelain'}
 Style.Skin={Color3.fromRGB(78,48,39),Color3.fromRGB(106,66,49),Color3.fromRGB(148,90,62),Color3.fromRGB(185,125,86),Color3.fromRGB(189,146,108),Color3.fromRGB(218,178,141),Color3.fromRGB(239,207,181)}
 Style.Outfits={{Id='fleet-track',Name='Fleet track jacket',Price=65},{Id='pier-varsity',Name='Pier varsity jacket',Price=95},{Id='foundry-work',Name='Foundry overshirt',Price=55}}
@@ -9,12 +9,13 @@ Style.Starters={'Harbor','Clay','Olive','Track jacket','Varsity','Overshirt'}
 local starterShirts={Harbor='harbor-warmup',Clay='clay-workshirt',Olive='olive-overshirt',['Track jacket']='fleet-track',Varsity='pier-varsity',Overshirt='foundry-work'}
 Style.HairColors={'Black','Chestnut','Auburn','Honey','Silver'}
 local dyes={Black=Color3.fromRGB(31,25,23),Chestnut=Color3.fromRGB(84,53,35),Auburn=Color3.fromRGB(126,60,39),Honey=Color3.fromRGB(173,126,68),Silver=Color3.fromRGB(160,158,151)}
+Style.Expressions={'Calm','Smile','Focused'}
 Style.Eyes={'Brown','Hazel','Blue','Gray'}
 local iris={Brown=Color3.fromRGB(69,43,30),Hazel=Color3.fromRGB(108,102,60),Blue=Color3.fromRGB(83,114,128),Gray=Color3.fromRGB(105,112,112)}
 Style.Details={'Clean','Freckles','Goatee','Mustache','Stubble'}
 function Style.valid(data)
  if type(data)~='table' or (data.Starter~=nil and not table.find(Style.Starters,data.Starter)) or (data.Detail~=nil and not table.find(Style.Details,data.Detail)) then return false end
- for key,list in {HairColor=Style.HairColors,Eye=Style.Eyes} do if data[key]~=nil and not table.find(list,data[key]) then return false end end
+ for key,list in {HairColor=Style.HairColors,Eye=Style.Eyes,Expression=Style.Expressions} do if data[key]~=nil and not table.find(list,data[key]) then return false end end
  for key,list in {Height=Style.Heights,Build=Style.Builds,Hair=Style.Hair,Tone=Style.Tones} do
   if not table.find(list,data[key]) then return false end
  end
@@ -32,27 +33,33 @@ local function hair(head,style,dye)
   p.Size=Vector3.new(sx,sy,sz)*scale; p.CFrame=head.CFrame*CFrame.new(Vector3.new(x,y,z)*scale); p.Parent=folder
   local weld=Instance.new('WeldConstraint'); weld.Part0=head; weld.Part1=p; weld.Parent=p
  end
- -- A continuous crown and tapered back keep the hairline attached in profile.
- lock(0,.31,.055,1.05,.51,1.01,18)
- lock(0,.19,.23,.96,.54,.68,17)
- if style=='Close crop' then return end
- if style=='Cornrows' then
-  for i=-2,2 do lock(i*.17,.47-math.abs(i)*.055,.02,.13,.18,.88,22) end
-  return
+ local foundation=({Twists='Curls',['Short locs']='Braids',Cornrows='Braids',['Twin buns']='Close crop',['High puff']='Close crop'})[style] or style
+ local source=game.ReplicatedStorage:WaitForChild('ResidentHair'):FindFirstChild(foundation)
+ if source then
+  local handle=source:Clone();handle.Name='Hair mesh';handle.Anchored=false;handle.CanCollide=false;handle.CanTouch=false;handle.CanQuery=false;handle.Massless=true
+  local shape=handle:FindFirstChildOfClass('SpecialMesh')
+  local fitting=handle:FindFirstChild('HairAttachment') or handle:FindFirstChild('HatAttachment')
+  local mount=head:FindFirstChild(fitting.Name)
+  local h=head.Parent:GetScale()
+  if shape then shape.Scale*=h else handle.Size*=h end
+  if dye~=dyes.Black then
+   if shape then shape.TextureId='';shape.VertexColor=Vector3.new(dye.R,dye.G,dye.B)
+   elseif handle:IsA('MeshPart') then handle.TextureID='' end
+   handle.Color=dye
+  end
+  local localMount=CFrame.new(fitting.Position*h)*fitting.CFrame.Rotation
+  handle.CFrame=head.CFrame*mount.CFrame*localMount:Inverse();handle.Parent=folder
+  local w=Instance.new('WeldConstraint');w.Part0=head;w.Part1=handle;w.Parent=handle
  end
- if style=='Twin buns' then for _,side in {-1,1} do lock(side*.41,.63,.16,.55,.42,.55,24) end;return end
- if style=='Afro' then
-  lock(0,.47,.04,1.49,.82,1.35,18)
-  for i=1,16 do local a=i*math.pi/8;lock(.58*math.cos(a),.47+.05*(i%2),.53*math.sin(a),.35,.37,.35,20+i%5) end
-  return
- end
- if style=='High puff' then lock(0,.76,.16,.92,.82,.87,24) end
- local count=(style=='Twists' or style=='Short locs') and 22 or 15
- for i=1,count do
-  local a=i*2*math.pi/count; local long=style=='Twists' or style=='Short locs'; local puff=style=='High puff'
-  local back=(math.cos(a)+1)/2
-  local drop=long and ((style=='Short locs' and .62 or .45)+.18*back+.09*(i%3)) or .33
-  lock(.46*math.sin(a),puff and .5 or long and (.48-drop*.38) or .42,.43*math.cos(a),long and .16 or .32,drop,long and .17 or .32,16+i%4*3)
+ if style=='High puff' then lock(0,.65,.11,.76,.65,.76,21)
+ elseif style=='Twin buns' then for _,side in {-1,1} do lock(side*.35,.55,.18,.44,.47,.46,21) end
+ elseif style=='Twists' or style=='Short locs' then
+  -- Keep the forehead open; shortened strands follow the sideburns and nape.
+  for i=0,12 do
+   local a=(i/12-.5)*math.pi*1.12
+   local length=(style=='Twists' and .27 or .40)+.06*(i%3)
+   lock(.43*math.sin(a),.21-length*.28,.41*math.cos(a),.105,length,.12,18+i%3)
+  end
  end
 end
 function Style.apply(c,look,outfit)
@@ -98,10 +105,10 @@ function Style.apply(c,look,outfit)
   part.CFrame=head.CFrame*CFrame.new(Vector3.new(x,y,z)*head.Size);part.Parent=holder
   local weld=Instance.new('WeldConstraint');weld.Part0=head;weld.Part1=part;weld.Parent=part
  end
+ local face=head:FindFirstChild('Resident face') or Instance.new('Decal')
+ face.Name='Resident face';face.Face=Enum.NormalId.Front;face.Texture='rbxassetid://'..script:GetAttribute('resident-'..string.lower(look.Expression or 'Calm'))
+ face.Color3=iris[look.Eye or 'Brown']:Lerp(Color3.new(1,1,1),.72);face.Parent=head
  for _,side in {-1,1} do
-  mark('Eye',side*.22,.064,-.434,.20,.059,.055,Color3.fromRGB(222,215,198))
-  mark('Iris',side*.22,.063,-.458,.080,.058,.039,iris[look.Eye or 'Brown'])
-  mark('Brow',side*.22,.142,-.425,.23,.043,.068,dye)
   if look.Detail=='Freckles' then
    for i=1,3 do mark('Freckle',side*(.16+i*.045),-.044+(i%2)*.027,-.438,.025,.022,.03,tone:Lerp(dye,.5)) end
   end
