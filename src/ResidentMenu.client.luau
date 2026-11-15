@@ -104,6 +104,7 @@ local back=button(panel,'Files',function()
  if waiting or player:GetAttribute('ResidentSlot') then return end
  slot=nil;draft=fresh();footer.Text='';rebuild();draw()
 end)
+local servers=button(panel,'City servers',function() require(storage.ServerBrowser).open() end)
 local function layout()
  local w,h=page.AbsoluteSize.X,page.AbsoluteSize.Y
  local portrait=w<h and w<650
@@ -116,6 +117,7 @@ local function layout()
  local pad=pw<390 and 12 or 22
  local top=ph<360 and 5 or 18
  at(imprint,pad,top,pw-2*pad,14);at(title,pad,top+17,pw-2*pad,35)
+ at(servers,pw-100-pad,top+16,100,33)
  at(tabs,pad,top+54,pw-2*pad,31)
  local contentTop=top+(slot and 92 or 58)
  at(pane,pad,contentTop,pw-pad*2,ph-contentTop-(slot and 77 or 30))
@@ -129,6 +131,7 @@ draw=function()
  clear(pane);clear(tabs);pane.CanvasPosition=Vector2.zero
  title.Text=slot and 'Create your resident' or 'Resident files'
  enter.Visible=slot~=nil;back.Visible=slot~=nil and not player:GetAttribute('ResidentSlot')
+ servers.Visible=slot==nil
  tabs.Visible=slot~=nil
  layout()
  local y=0

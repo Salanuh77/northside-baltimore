@@ -11,7 +11,9 @@ local function find(kind)
  for _,v in city:GetDescendants() do if v:IsA('BasePart') and v:GetAttribute('Action')==kind then return v end end
 end
 local function move(p,pos)
- p.Character:PivotTo(CFrame.new(pos)); p.Character.HumanoidRootPart.Anchored=true
+ local root=p.Character.HumanoidRootPart
+ root.Anchored=true
+ p.Character:PivotTo(CFrame.new(pos)*root.CFrame:ToObjectSpace(p.Character:GetPivot()))
  p:RequestStreamAroundAsync(pos,3); task.wait(0.3)
 end
 local function call(p,kind,data) drive:InvokeClient(p,kind,data or {}) end

@@ -132,6 +132,7 @@ local function save(p,release)
  account.State=nextState; account.LastSave=os.time()
  return true
 end
+require(script.Parent.ServerDirectory).start(RS.CityServers,function(p) return accounts[p] and save(p,false) end)
 local function finiteInt(v,max)
  return typeof(v)=='number' and v==v and v%1==0 and v>=1 and v<=(max or 100000)
 end
@@ -307,7 +308,9 @@ end
 local function join(p)
  local account
  if store then
-  local ok,result=pcall(function()
+  local ok,result
+  for attempt=1,5 do
+   ok,result=pcall(function()
    return store:UpdateAsync('u'..p.UserId,function(old)
     if old and old.Lock and old.Lock~=session and (old.Lease or 0)>os.time() then return nil end
     local state=Files.open(old)
@@ -315,6 +318,9 @@ local function join(p)
     return state
    end)
   end)
+  if ok and result or not p.Parent then break end
+   if attempt<5 then task.wait(2) end
+  end
   if not ok or not result then p:Kick('Your save is unavailable or open on another server. Please rejoin shortly.');return end
   account=result
  else account=Files.open(nil) end

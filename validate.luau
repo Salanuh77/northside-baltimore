@@ -1,7 +1,7 @@
 local fs=require('@lune/fs')
 local luau=require('@lune/luau')
 local rb=require('@lune/roblox')
-for _,name in {'src/ResidentMenu.client.luau','src/ResidentFiles.luau','src/CityServer.server.luau','src/CityClient.client.luau','src/RetailUI.luau','src/CityRetail.luau','src/CityClock.server.luau','src/StreetStyle.luau','src/Traffic.server.luau','src/Traffic.client.luau','src/WorkService.luau','src/WorkCatalog.luau','src/NeighborhoodLife.luau','src/Responders.luau','src/Custody.luau','prison.luau','src/LifeUI.luau','downtown.luau','citylife.luau','roads.luau','districts.luau','fleet.luau','build.luau'} do
+for _,name in {'src/ResidentMenu.client.luau','src/ResidentFiles.luau','src/ServerBrowser.luau','src/ServerDirectory.luau','src/CityServer.server.luau','src/CityClient.client.luau','src/RetailUI.luau','src/CityRetail.luau','src/CityClock.server.luau','src/StreetStyle.luau','src/Traffic.server.luau','src/Traffic.client.luau','src/WorkService.luau','src/WorkCatalog.luau','src/NeighborhoodLife.luau','src/Responders.luau','src/Custody.luau','prison.luau','src/LifeUI.luau','downtown.luau','citylife.luau','roads.luau','districts.luau','fleet.luau','build.luau'} do
  local f=luau.load(fs.readFile(name),{debugName=name}); assert(f); print('COMPILES',name)
 end
 local game=rb.deserializePlace(fs.readFile('Northside Baltimore - Heritage Harbor.rbxl'))

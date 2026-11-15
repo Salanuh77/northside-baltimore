@@ -84,3 +84,5 @@ Follow the open galleries and end stairs at the housing courts to reach the flat
 ## Published place
 
 Northside Baltimore uses place `131234846449292` and universe `10755218391`. The current Roblox revision and publication status are recorded in `publish-receipt.json` and `published-place.json`.
+
+Open **City servers** from the resident files or city phone to see public instances and available seats. Choosing **Join** checkpoints your file before Roblox starts the transfer. Studio lists the local session. Live transfers require the Roblox player.
