@@ -1,4 +1,4 @@
-# Squishy Factory → Northside Baltimore
+#Northside Baltimore
 
 Open **Northside Baltimore - Heritage Harbor.rbxl** in Roblox Studio. The source project lives in this folder, separate from the basketball app workspace.
 
