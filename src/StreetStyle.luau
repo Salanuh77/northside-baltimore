@@ -37,18 +37,21 @@ local function hair(head,style,dye)
  local source=game.ReplicatedStorage:WaitForChild('ResidentHair'):FindFirstChild(foundation)
  if source then
   local handle=source:Clone();handle.Name='Hair mesh';handle.Anchored=false;handle.CanCollide=false;handle.CanTouch=false;handle.CanQuery=false;handle.Massless=true
-  local shape=handle:FindFirstChildOfClass('SpecialMesh')
-  local fitting=handle:FindFirstChild('HairAttachment') or handle:FindFirstChild('HatAttachment')
-  local mount=head:FindFirstChild(fitting.Name)
-  local h=head.Parent:GetScale()
-  if shape then shape.Scale*=h else handle.Size*=h end
+  -- These catalog cuts use wrap cages with skeleton-space attachment offsets.
+  -- Fit their rigid render meshes to the game's fixed head shape in both worlds.
+  local cage=handle:FindFirstChildOfClass('WrapLayer');if cage then cage:Destroy() end
+  local proportions={
+   ['Close crop']=Vector3.new(1.08,.76,1.10),Curls=Vector3.new(1.12,.88,1.13),
+   Afro=Vector3.new(1.38,1.12,1.38),Braids=Vector3.new(1.13,1.45,1.21),
+   ['Side part']=Vector3.new(1.09,.88,1.15),Ponytail=Vector3.new(1.16,1.49,1.53)
+  }
+  handle.Size=head.Size*proportions[foundation]
   if dye~=dyes.Black then
-   if shape then shape.TextureId='';shape.VertexColor=Vector3.new(dye.R,dye.G,dye.B)
-   elseif handle:IsA('MeshPart') then handle.TextureID='' end
-   handle.Color=dye
+   local surface=handle:FindFirstChildOfClass('SurfaceAppearance');if surface then surface:Destroy() end
+   handle.TextureID='';handle.Color=dye
   end
-  local localMount=CFrame.new(fitting.Position*h)*fitting.CFrame.Rotation
-  handle.CFrame=head.CFrame*mount.CFrame*localMount:Inverse();handle.Parent=folder
+  local offset=foundation=='Ponytail' and Vector3.new(0,.18,.23) or foundation=='Braids' and Vector3.new(0,.16,.11) or Vector3.new(0,.34,.04)
+  handle.CFrame=head.CFrame*CFrame.new(offset*head.Size);handle.Parent=folder
   local w=Instance.new('WeldConstraint');w.Part0=head;w.Part1=handle;w.Parent=handle
  end
  if style=='High puff' then lock(0,.65,.11,.76,.65,.76,21)
