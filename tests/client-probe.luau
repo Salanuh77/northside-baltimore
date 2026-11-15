@@ -19,6 +19,12 @@ remote.OnClientInvoke=function(kind,data)
  if kind=='ActivatePistol' then
   p.Character.Pistol:Activate(); task.wait(.45); return true
  end
+ if kind=='ExitCar' then
+  local human=p.Character.Humanoid
+  assert(human.SeatPart,'Driver must be seated before jumping')
+  human.Jump=true
+  return true
+ end
  if kind=='DriveInput' then
   local seat=p.Character.Humanoid.SeatPart
   local run=game:GetService('RunService')

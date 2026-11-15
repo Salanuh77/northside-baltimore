@@ -63,8 +63,14 @@ local ok,err=pcall(function()
  check((car.Chassis.Position-start).Magnitude>50 and car:GetAttribute('Fuel')==0,'Driving spends the final fuel unit')
  start=car.Chassis.Position; call('DriveInput',{gas=1,steer=0,duration=1.4})
  check((car.Chassis.Position-start).Magnitude<2,'An empty tank cannot accelerate')
- human.Sit=false; task.wait(.6)
- check(not human.SeatPart and math.abs(seat.CFrame:PointToObjectSpace(p.Character.HumanoidRootPart.Position).X)>3,'Driver exits beside the door')
+ call('ExitCar')
+ local exitDeadline=os.clock()+3
+ local relative
+ repeat
+  task.wait(.1)
+  relative=seat.CFrame:PointToObjectSpace(p.Character.HumanoidRootPart.Position)
+ until (not human.SeatPart and math.abs(relative.X)>3) or os.clock()>=exitDeadline
+ check(not human.SeatPart and math.abs(relative.X)>3 and relative.Magnitude<14,'Driver exits beside the door at '..tostring(relative))
  local pump=city:FindFirstChild('North Avenue Fuel',true):FindFirstChild('Pump face')
  local park=pump.Position+pump.CFrame.LookVector*7
  car:PivotTo(CFrame.new(park.X,2.8,park.Z)); task.wait(1)

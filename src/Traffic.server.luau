@@ -54,15 +54,28 @@ end
 local function exitAtDoor(seat,human)
  local char=human.Parent
  local root=char and char:FindFirstChild('HumanoidRootPart')
- if not root or human.Health<=0 or human.SeatPart or (root.Position-seat.Position).Magnitude>10 then return end
+ if not root or human.Health<=0 then return end
+ -- Occupant can clear before the physics step detaches the resident's assembly.
+ local deadline=os.clock()+.75
+ while (human.SeatPart==seat or root.AssemblyRootPart==seat.AssemblyRootPart) and os.clock()<deadline do
+  run.Heartbeat:Wait()
+ end
+ if not root.Parent or human.SeatPart or root.AssemblyRootPart==seat.AssemblyRootPart or (root.Position-seat.Position).Magnitude>14 then return end
  local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances={char,seat.Parent};params.RespectCanCollide=true
  for _,offset in {Vector3.new(-seat:GetAttribute('DoorDistance'),0,0),Vector3.new(seat:GetAttribute('DoorDistance')+2.8,0,0),Vector3.new(0,0,10)} do
   local door=seat.CFrame:PointToWorldSpace(offset)
   local wall=workspace:Raycast(seat.Position+Vector3.yAxis*2,door-seat.Position,params)
   local floor=workspace:Raycast(door+Vector3.yAxis*3,-Vector3.yAxis*10,params)
   if not wall and floor and floor.Normal.Y>.65 then
+   local canOwn=root:CanSetNetworkOwnership()
+   if canOwn then root:SetNetworkOwner(nil) end
    root.AssemblyLinearVelocity=Vector3.zero;root.AssemblyAngularVelocity=Vector3.zero
    char:PivotTo(CFrame.new(floor.Position+Vector3.yAxis*(human.HipHeight+root.Size.Y/2+.25))*seat.CFrame.Rotation*root.CFrame:ToObjectSpace(char:GetPivot()))
+   if canOwn then
+    task.delay(.15,function()
+     if root.Parent and not human.SeatPart and root:CanSetNetworkOwnership() then root:SetNetworkOwnershipAuto() end
+    end)
+   end
    return
   end
  end
