@@ -1,0 +1,16 @@
+tools/
+*.rbxl.lock
+*.rbxlx
+tests/launch.luau
+tests/*.log
+
+*.rbxl
+!Squishy-original.rbxlx.rbxl
+*.jpg
+*.log
+*.receipt.json
+/Studio recovery/
+/publish-operation.json
+/publish-receipt.json
+/published-place.json
+/release-hash.json

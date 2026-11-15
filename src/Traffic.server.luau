@@ -1,0 +1,106 @@
+local players=game:GetService('Players')
+local run=game:GetService('RunService')
+local city=workspace:WaitForChild('Baltimore')
+local drive=game:GetService('ReplicatedStorage'):WaitForChild('DriveCar')
+local signals=city:WaitForChild('Streets & alleys'):WaitForChild('Traffic signals'):GetChildren()
+local colors={Red=Color3.fromRGB(251,65,52),Amber=Color3.fromRGB(255,181,53),Green=Color3.fromRGB(66,224,138)}
+local function lights(axis,phase)
+ for _,head in signals do
+  local active=head:GetAttribute('Axis')==axis and phase or 'Red'
+  head:SetAttribute('Phase',active)
+  local crossing=head['Crossing signal'].SurfaceGui
+  crossing.Walk.Visible=active=='Green'; crossing.Stop.Visible=active~='Green'
+  for name,color in colors do
+   local lens=head[name]
+   lens.Material=name==active and Enum.Material.Neon or Enum.Material.SmoothPlastic
+   lens.Color=name==active and color or color:Lerp(Color3.fromRGB(18,25,26),.87)
+  end
+ end
+end
+task.spawn(function()
+ while true do
+  for axis=0,1 do
+   lights(axis,'Green'); task.wait(12)
+   lights(axis,'Amber'); task.wait(3)
+   lights(axis,'Red'); task.wait(1)
+  end
+ end
+end)
+local cars={}
+for _,model in city:WaitForChild('Motor pool'):GetChildren() do
+ local base=model.Chassis
+ local seat=model.Driver
+ local attachment=Instance.new('Attachment',base)
+ local motion=Instance.new('LinearVelocity')
+ motion.VelocityConstraintMode=Enum.VelocityConstraintMode.Plane
+ motion.PrimaryTangentAxis=Vector3.xAxis; motion.SecondaryTangentAxis=Vector3.zAxis
+ motion.MaxForce=120000; motion.Attachment0=attachment; motion.Parent=base
+ local turn=Instance.new('AlignOrientation')
+ turn.Mode=Enum.OrientationAlignmentMode.OneAttachment; turn.Attachment0=attachment
+ turn.MaxTorque=220000; turn.Responsiveness=15; turn.CFrame=base.CFrame.Rotation; turn.Parent=base
+ local _,yaw=base.CFrame:ToOrientation()
+ local state={model=model,base=base,seat=seat,motion=motion,turn=turn,home=model:GetPivot(),homeYaw=yaw,yaw=yaw,speed=0,gas=0,steer=0,updated=0}
+ model:SetAttribute('Fuel',100); state.fuelUsed=0; state.lastPosition=base.Position
+ model:GetAttributeChangedSignal('Fuel'):Connect(function() if model:GetAttribute('Fuel')==100 then state.fuelUsed=0 end end)
+ cars[seat]=state
+ for _,p in model:GetChildren() do
+  if p:IsA('BasePart') then
+   if p~=base then
+    local weld=Instance.new('WeldConstraint'); weld.Part0=base; weld.Part1=p; weld.Parent=p
+    p.Massless=true
+   end
+   p.CanCollide=p==base or p.Name=='Tire' or p==seat
+   p.CustomPhysicalProperties=PhysicalProperties.new(.8,.18,0)
+  end
+ end
+ for _,p in model:GetChildren() do if p:IsA('BasePart') then p.Anchored=false end end
+ base:SetNetworkOwner(nil)
+ local prompt=Instance.new('ProximityPrompt'); prompt.ActionText='Drive'; prompt.ObjectText=model.Name; prompt.RequiresLineOfSight=false; prompt.MaxActivationDistance=10; prompt.Parent=seat
+ prompt.Triggered:Connect(function(player)
+  local character=player.Character
+  local human=character and character:FindFirstChildOfClass('Humanoid')
+  local root=character and character:FindFirstChild('HumanoidRootPart')
+  if human and root and human.Health>0 and not human.SeatPart and not seat.Occupant and (root.Position-seat.Position).Magnitude<=12 then seat:Sit(human) end
+ end)
+ seat:GetPropertyChangedSignal('Occupant'):Connect(function()
+  state.gas=0; state.steer=0; state.updated=0; prompt.Enabled=seat.Occupant==nil
+  if base:CanSetNetworkOwnership() then base:SetNetworkOwner(nil) end
+ end)
+end
+drive.OnServerEvent:Connect(function(player,gas,steer)
+ local human=player.Character and player.Character:FindFirstChildOfClass('Humanoid')
+ local car=human and cars[human.SeatPart]
+ if not car or car.seat.Occupant~=human or typeof(gas)~='number' or typeof(steer)~='number' then return end
+ if not (math.abs(gas)<=1 and math.abs(steer)<=1) then return end
+ local now=os.clock()
+ if now-car.updated<.035 then return end
+ car.gas=gas; car.steer=steer; car.updated=now
+end)
+run.Heartbeat:Connect(function(dt)
+ for _,c in cars do
+  local pos=c.base.Position
+  if pos.Y< -12 or pos.X< -789 or pos.X>726 or pos.Z< -554 or pos.Z>1098 then
+   if c.seat.Occupant then c.seat.Occupant.Sit=false end
+   c.model:PivotTo(c.home); c.base.AssemblyLinearVelocity=Vector3.zero; c.base.AssemblyAngularVelocity=Vector3.zero
+   c.speed=0; c.gas=0; c.steer=0; c.yaw=c.homeYaw; pos=c.base.Position; c.lastPosition=pos
+  end
+  if os.clock()-c.updated>.5 then c.gas=0; c.steer=0 end
+  local fuel=c.model:GetAttribute('Fuel') or 0
+  local delta=pos-c.lastPosition; c.lastPosition=pos
+  local distance=Vector2.new(delta.X,delta.Z).Magnitude
+  if c.seat.Occupant and fuel>0 and distance<=math.max(6,90*dt) then
+   c.fuelUsed+=distance/60
+   local used=math.floor(c.fuelUsed)
+   if used>0 then
+    c.fuelUsed-=used; fuel=math.max(0,fuel-used); c.model:SetAttribute('Fuel',fuel)
+   end
+  end
+  local target=(fuel>0 and c.gas or 0)*(c.gas>=0 and 54 or 21)
+  local step=(c.gas==0 and 45 or 31)*math.min(dt,.1)
+  c.speed+=math.clamp(target-c.speed,-step,step)
+  c.yaw-=c.steer*math.clamp(c.speed/16,-1,1)*1.55*math.min(dt,.1)
+  local heading=CFrame.Angles(0,c.yaw,0)
+  c.turn.CFrame=heading
+  c.motion.PlaneVelocity=Vector2.new(heading.LookVector.X,heading.LookVector.Z)*c.speed
+ end
+end)

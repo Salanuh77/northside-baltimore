@@ -1,0 +1,12 @@
+local city=workspace:WaitForChild('Baltimore',30)
+assert(city,'Baltimore map missing')
+assert(game:GetService('ServerScriptService'):FindFirstChild('CityServer'))
+assert(#city:GetDescendants()>1500)
+print('SQUISHY_ENGINE_SMOKE_PASS',#city:GetDescendants())
+
+local street=city['Streets & alleys']:FindFirstChild('Street blade')
+local surface=street:FindFirstChildOfClass('SurfaceGui')
+assert(surface.CanvasSize.X>=300 and surface.TextLabel.TextSize>=24,'Street sign font too small')
+assert(math.abs(game.Lighting.ClockTime-14.4)<.02,'Unexpected daylight')
+assert((city.CommunitySpawn.Position-Vector3.new(162,1,37)).Magnitude<.1,'Spawn outside community center')
+print('HARBOR_ENGINE_PASS',surface.TextLabel.TextSize,game.Lighting.TimeOfDay)
