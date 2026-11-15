@@ -188,6 +188,7 @@ for _,x in {-213,-27,27,213} do for _,z in {-183,-28,32,183} do
  local bin=part('Trash bin',{3,4,3},{x,2.6,z},'green','Metal',streets)
  part('Bin lid',{3.4,0.4,3.4},{x,4.8,z},'dark','Metal',streets)
 end end
+city:SetAttribute('ReleaseChannel','Alpha')
 require('./districts')(part,group,label,action,city)
 require('./fleet')(part,group,city)
 require('./prison')(part,group,label,action,city)

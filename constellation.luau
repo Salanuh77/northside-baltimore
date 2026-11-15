@@ -15,7 +15,10 @@ return function(parent,group)
   return part
  end
  local function spar(name,a,b,r,color,solid)
-  local part=piece(name,V.new((b-a).Magnitude,r,r),C.lookAt((a+b)/2,b)*C.Angles(0,math.pi/2,0),color)
+  local direction=(b-a).Unit
+  local up=math.abs(direction.Y)>.99 and V.xAxis or V.yAxis
+  local frame=C.lookAt((a+b)/2,b,up)*C.Angles(0,math.pi/2,0)
+  local part=piece(name,V.new((b-a).Magnitude,r,r),frame,color)
   part.Shape=E.PartType.Cylinder;part.CanCollide=solid==true
   return part
  end
@@ -75,7 +78,7 @@ return function(parent,group)
   piece('Port shutter',V.new(.21,1.6,2.3),C.new(side*width*.95,3.85,z),tar)
  end end
  local shore,deck=V.new(30,.72,11),V.new(11,7.18,11)
- local ramp=piece('Boarding ramp',V.new(5,.45,(deck-shore).Magnitude),C.lookAt((deck+shore)/2,deck),pine)
+ piece('Boarding ramp',V.new(5,.45,(deck-shore).Magnitude),C.lookAt((deck+shore)/2,deck),pine)
  for _,side in {-1,1} do
   local offset=V.new(0,3,side*2.5)
   spar('Gangway handrail',shore+offset,deck+offset,.22,ivory)

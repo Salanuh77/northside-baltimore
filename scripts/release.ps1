@@ -17,6 +17,8 @@ $place = Join-Path $staging $manifest.file
 if ((Get-FileHash $place).Hash -ne $manifest.sha256) { throw 'Artifact checksum mismatch' }
 & "$PSScriptRoot/studio-gates.ps1" -Place $place -LogDirectory (Join-Path $staging 'tests')
 if ((Get-FileHash $place).Hash -ne $manifest.sha256) { throw 'Tested artifact changed' }
+$latest = gh api "repos/$repo/commits/main" --jq .sha
+if ($LASTEXITCODE -ne 0 -or $latest -ne $head -or (git status --porcelain --untracked-files=no)) { throw 'Release changed during playtesting' }
 & ./tools/lune.exe run publish-api.luau $ExpectedVersion $place $manifest.sha256
 if ($LASTEXITCODE -ne 0) { throw 'Publication unconfirmed. Inspect publish receipt before retrying.' }
 Copy-Item -LiteralPath $place -Destination $manifest.file -Force
