@@ -118,7 +118,8 @@ local ok,err=pcall(function()
  local atm=find('Bank'); move(a,atm.Position+Vector3.new(0,1,-5))
  call(a,'Bank',{Mode='Deposit',Amount=100}); check(a:GetAttribute('Cash')==427 and a:GetAttribute('Bank')==100,'ATM deposit conserves funds')
  call(a,'Bank',{Mode='Withdraw',Amount=40}); check(a:GetAttribute('Cash')==467 and a:GetAttribute('Bank')==60,'ATM withdrawal conserves funds')
- move(a,Vector3.new(0,5,95)); call(a,'Bank',{Mode='Withdraw',Amount=60})
+ -- Wait at the community center while the second player tests housing. The officer on the previous street can book a wanted player.
+ move(a,city.CommunitySpawn.Position+Vector3.new(0,3,0)); call(a,'Bank',{Mode='Withdraw',Amount=60})
  check(a:GetAttribute('Bank')==60,'Remote ATM access rejected')
  -- Exercise real ProximityPrompt input, including cancellation and cooldowns.
  local home=highest; move(b,home.Position+Vector3.new(0,2,-4))
@@ -130,7 +131,9 @@ local ok,err=pcall(function()
  check(b:GetAttribute('Loot')==1,'Completed home robbery awards stolen goods')
  local fence=find('Fence'); move(b,fence.Position+Vector3.new(0,2,-5)); call(b,'Prompt',fence)
  check(b:GetAttribute('Loot')==0 and b:GetAttribute('Cash')==493,'Fence exchanges goods for cash once')
- local register=city['Inner Harbor • Quay District']['Boiler House Market']['Market till']; move(a,register.Position+Vector3.new(0,1,-5)); for attempt=1,3 do
+ local register=city['Inner Harbor • Quay District']['Boiler House Market']['Market till']; move(a,register.Position+register.CFrame.LookVector*5+Vector3.new(0,1,0))
+ check(a:GetAttribute('CustodyUntil')==0 and a.Character:FindFirstChild('Pistol'),'Customer-side approach with equipped pistol outside custody')
+ for attempt=1,3 do
   call(a,'Prompt',register); if register:GetAttribute('InUse') then break end
  end
  check(register:GetAttribute('InUse'),'Harbor market register starts from a real prompt')
