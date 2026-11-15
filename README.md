@@ -1,0 +1,82 @@
+# Squishy Factory → Northside Baltimore
+
+Open **Northside Baltimore - Heritage Harbor.rbxl** in Roblox Studio. The source project lives in this folder, separate from the basketball app workspace.
+
+## Heritage Harbor
+
+Walk east on the waterfront promenade to the timber pier and cross the ramp to USS Constellation. Seven Foot Knoll Lighthouse stands west of the ferry hall. Inside Pier 8 Maritime Gallery, the mural pairs Frederick Douglass with Thurgood Marshall. Twenty-one other walls carry neighborhood paint, community portraits and basketball or football art.
+
+The placements and models interpret the real waterfront at game scale. Historical references include [Historic Ships in Baltimore](https://historicships.org/explore), the [National Park Service biography of Frederick Douglass](https://www.nps.gov/places/frederick-douglass-national-historic-site.htm) and its [Thurgood Marshall biography](https://home.nps.gov/poch/learn/historyculture/thurgood-marshall-biography.htm).
+
+Run `scripts/ci.ps1` on Windows to build and run the same checks as GitHub Actions. To promote the hosted main artifact, run `scripts/release.ps1 -RunId <CI run ID> -ExpectedVersion <live revision>` in a clean checkout with GitHub CLI and an authorized Roblox Studio session. This command acquires the candidate, checks its commit and checksum, runs the Studio suites on disposable copies, then publishes the tested bytes and verifies the live revision.
+
+## What is built
+
+- A 1,460 × 1,660-stud land area with 42 connected city blocks, named street blades, zebra crossings and 30 signal-controlled junctions. The waterfront extends past the northern edge.
+- Ten housing estates, 198 furnished apartments, and 16 original rowhomes. Upper apartments have gallery access and stairs. The four newest residential towers offer lifts serving 8–12 floors. The court buildings include laundries, barbershops and small libraries. Downtown has seven office and hotel towers with public lobbies.
+- Ten market registers, eleven delivery stops, a credit union with an ATM, a clinic and a community center. The harbor has six commercial landmarks with walk-in lobbies, market halls, piers and a beacon.
+- Twenty drivable vehicles including sports cars, muscle cars, wagons, patrol SUVs, service vans, buses and cabs, a basketball court, a pocket park and a freight warehouse with a black market and stolen-goods buyer.
+- Server-controlled cash, bank balance, inventory, gun damage and ammunition, reloads, robberies, player payments, item sales, delivery jobs and healing.
+- Safe zones at the bank and community center. Spawn protection, robbery cooldowns, distance checks, line-of-sight checks and input rate limits.
+- Session-locked persistence on published servers. Studio progress is deliberately temporary and does not touch live saves.
+
+The pre-existing warehouse, church props and loose map parts remain in **ServerStorage / OriginalMap_Archive**, with their scripts disabled. The exact untouched binary download is **Squishy-original.rbxlx.rbxl**. The `.rbxlx` suffix in that backup's name came from Studio appending its binary extension; its content is a valid binary place.
+
+## Play
+
+Press **Play**. Open **MAP** to see the streets, neighborhoods and your location. **GUIDE** lists controls and jobs. Use **Drive** at a parked car, steer with movement controls and jump to exit.
+
+- **E** / touch prompts: interact; doors open and close.
+- **H**: surrender / stop surrendering.
+- **T**: nearby player payments, item offers and robbery.
+- Equipped pistol: click/tap to fire; **R** reloads. Mobile buttons cover player menu, surrender and reload.
+- Harbor Freight sells a knife for $55, a crowbar for $90, and a medkit for $70. Union Athletics sells a wood bat for $80. Eastern Outfitters sells sidearms for Robux. Eligible players can agree on a city-cash price in the nearby player trade menu.
+- House lockbox: equip crowbar and stay nearby for 9 seconds. Sell stolen goods at the warehouse salvage counter for $110 each.
+- Store register: equip pistol and stay nearby for 12 seconds for $225. Locations reset after 3 minutes.
+- Player robbery: target must surrender; remain nearby for 8 seconds. Takes 25% of cash, capped at $200, with a 5 minute victim cooldown. Bank money is protected.
+- Community center: delivery jobs pay $90. Deliver to the marked mailbox.
+- Credit union ATM: deposit / withdraw. Clinic: heal for $50. Medkit restores up to 60 health.
+- Death charges up to $75 and removes carried stolen goods; owned equipment returns on respawn.
+
+The city wallet tracks earned cash. Roblox handles optional sidearm purchases and five-use glow stick and confetti packs. The phone displays the current Roblox product price at checkout.
+
+New residents choose their name, height, build, skin tone, and haircut. Exchange Streetwear sells three original jackets with denim for city cash. A saved outfit can be worn again at the counter. Juniper and Waverly barbershops offer $30 cuts, and a player employed as a barber can serve another customer after clocking in at Juniper.
+
+Each city day lasts 24 real minutes. The HUD and all four City Hall clock faces follow city time. Check your phone for job opening hours. The night runner takes new shifts from 20:00 through 05:59.
+
+## Source and reproducible build
+
+`build.luau` reconstructs the map from the original binary, archives the original geometry, and installs the scripts from `src/`.
+
+From PowerShell in this folder:
+
+```powershell
+.\tools\lune.exe run build.luau
+.\tools\lune.exe run validate.luau
+```
+
+Lune v0.11.1 is bundled in `tools/` from the official [lune-org/lune release](https://github.com/lune-org/lune/releases/tag/v0.11.1). It reads the Roblox place format without needing Studio UI automation. Its current reader reports an unsupported `Terrain.VoxelGridAssetContentMap` field in the original; the untouched original binary is retained for recovery.
+
+`validate.luau` compiles both gameplay scripts, reads the final binary back, checks anchored geometry and interaction counts, and verifies the original archive and spawn. `studio-smoke.luau` verifies the place loads in the Roblox engine. `tests/` contains command-line multiplayer probes; these are injected only into temporary test sessions and are not included in the delivered game.
+
+**The full two-client Roblox Studio test passed**, including actual house and store robbery prompts, cancellation when moving away, stolen-goods sale, payment validation, item trading, purchases, player robbery, cooldowns, shooting/reloading, safe zones and ATM transactions. See **TEST_RESULTS.md** for the recorded checks. This does not verify live DataStore persistence or mobile controls.
+
+## Neighborhoods and venues
+
+Downtown has a clock-tower sightline, attached commercial frontages and crown signs on three landmark towers. The housing courts have engraved entrance monuments. Hollins Row is a narrow, patched residential street with stoops and boarded vacancies. Harbor East has waterfront townhouses with $200 session leases. Free units are available at the housing courts.
+
+Claim a home at its intercom and use **PHONE → Home & parties** to host, invite guests or accept an invitation. Parties have a local music source and lighting. Meridian Social Club has a dance floor and DJ tempo controls. Three fuel marts sell food, bandages and a reusable flashlight. Use supplies from **PHONE → My bag**. Pumps refill a parked car for $1 per five units of missing fuel.
+
+Two NPC officers and two NPC paramedics patrol and respond. Use **PHONE → Emergency dispatch** for help. Police officers can settle a surrendered wanted character's citation. Paramedics treat injured players. Players can apply to either service and start a paid shift. Additional in-person dispatch payments are capped by a per-recipient cooldown.
+
+## Interiors
+
+Use the phone or press **P** to apply for work, begin a shift, check its objective, view your balances or open the map. Parcel courier, building porter and dockworker shifts pay $110, $125 and $145. The off-book runner and unauthorized poster jobs pay $190 and $155 and raise the wanted level on completion. Route shifts pay once at the final marked stop. Barbers earn the customer fee for each completed cut.
+
+Harbor Freight sells twelve reserve rounds for $30. Reloading transfers rounds from the reserve. The HUD shows health, cash, bank balance, wanted level, stolen goods, and ammo when the pistol is equipped.
+
+Follow the open galleries and end stairs at the housing courts to reach the flats. Each flat has a living area, kitchen, bedroom and lockbox. Commercial towers have furnished ground-floor lobbies. Their upper office and hotel floors are exterior scenery.
+
+## Published place
+
+Northside Baltimore uses place `131234846449292` and universe `10755218391`. The current Roblox revision and publication status are recorded in `publish-receipt.json` and `published-place.json`.

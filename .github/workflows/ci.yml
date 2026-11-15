@@ -1,0 +1,24 @@
+name: Northside CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Compile, run unit and map checks, and build the candidate
+        run: ./scripts/ci.ps1
+        shell: pwsh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: github.event_name == 'push'
+        with:
+          name: northside-place
+          path: |
+            Northside Baltimore - Heritage Harbor.rbxl
+            release-hash.json
+          if-no-files-found: error

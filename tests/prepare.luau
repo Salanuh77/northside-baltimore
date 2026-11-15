@@ -1,0 +1,23 @@
+local fs=require('@lune/fs')
+local client=fs.readFile('tests/client-probe.luau')
+local server=fs.readFile(require('@lune/process').args[1] or 'tests/server-probe.luau')
+local launch=string.format([====[
+workspace:SetAttribute('TestMinute',864)
+local clock=game.ServerScriptService.CityClock
+clock.Source=clock.Source:gsub('local total=math.floor%%(workspace:GetServerTimeNow%%(%%)%%)',"local total=workspace:GetAttribute('TestMinute') or 864")
+local cityServer=game.ServerScriptService.CityServer
+cityServer.Source..=[==[
+local probe=Instance.new('BindableFunction');probe.Name='TestReceipt';probe.Parent=game.ServerStorage
+probe.OnInvoke=function(p,info)
+ for _,d in profiles do d.PaidTrading=true end
+ return retail.receipt(info).Name
+end
+]==]
+local drive=Instance.new('RemoteFunction'); drive.Name='TestDrive'; drive.Parent=game:GetService('ReplicatedStorage')
+local client=Instance.new('LocalScript'); client.Name='ClientProbe'; client.Source=%q; client.Parent=game:GetService('StarterPlayer').StarterPlayerScripts
+local server=Instance.new('Script'); server.Name='ServerProbe'; server.Source=%q; server.Parent=game:GetService('ServerScriptService')
+task.wait(4)
+local result=game:GetService('StudioTestService'):ExecuteMultiplayerTestAsync(2,{name='Squishy gameplay validation'})
+print('SQUISHY_TEST_RESULT',game:GetService('HttpService'):JSONEncode(result))
+]====],client,server)
+fs.writeFile(require('@lune/process').args[2] or 'tests/launch.luau',fs.readFile('studio-smoke.luau')..'\n'..fs.readFile('tests/foundry-joints.luau')..'\n'..fs.readFile('tests/harbor-access.luau')..'\n'..launch)
