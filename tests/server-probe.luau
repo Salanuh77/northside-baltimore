@@ -58,6 +58,11 @@ local ok,err=pcall(function()
   call(a,'Prompt',reverseCar.Driver); task.wait(.4)
  end
  assert(reverseCar.Driver.Occupant==a.Character.Humanoid,'Reverse car entry')
+ task.wait(.65)
+ local driver,head=reverseCar.Driver,a.Character.Head
+ local top=driver.CFrame:PointToObjectSpace(head.Position).Y+head.Size.Y/2
+ for _,lock in head['Northside hair']:GetChildren() do top=math.max(top,driver.CFrame:PointToObjectSpace(lock.Position).Y+lock.Size.Y/2) end
+ check(top<=driver:GetAttribute('CabinCeiling')+.1,'Foundry V8 driver fits underneath the roof')
  local reverseStart=reverseCar.Chassis.Position
  local reverseHeading=reverseCar.Chassis.CFrame.LookVector
  call(a,'DriveInput',{gas=-1,steer=0,duration=2})
@@ -85,7 +90,7 @@ local ok,err=pcall(function()
   error('No complete top-floor navigation path')
  end
  check(path.Status==Enum.PathStatus.Success,'Street entrance connects to a furnished top-floor apartment')
- move(a,Vector3.new(0,5,95)); move(b,Vector3.new(5,5,95))
+ move(a,Vector3.new(-240,5,320)); move(b,Vector3.new(-235,5,320))
  call(a,'Pay',{Target=b.UserId,Amount=50})
  check(a:GetAttribute('Cash')==450 and b:GetAttribute('Cash')==550,'Payment conserves currency')
  for _,n in {-50,0,0/0,math.huge,0.5,999999999} do call(a,'Pay',{Target=b.UserId,Amount=n}) end
@@ -96,7 +101,7 @@ local ok,err=pcall(function()
  check(a:GetAttribute('Cash')==360,'Market prices enforced')
  check(a.Backpack:FindFirstChild('Crowbar') and a.Backpack:FindFirstChild('Pistol'),'Purchased tools granted')
  call(a,'Buy',{Item='Pistol'}); check(a:GetAttribute('Cash')==360,'Duplicate purchase rejected')
- move(a,Vector3.new(0,5,95)); move(b,Vector3.new(5,5,95))
+ move(a,Vector3.new(-240,5,320)); move(b,Vector3.new(-235,5,320))
  call(a,'Offer',{Target=b.UserId,Item='Crowbar',Amount=40}); call(b,'Accept')
  check(a:GetAttribute('Cash')==400 and b:GetAttribute('Cash')==510,'Trade settles both balances')
  check(not a.Backpack:FindFirstChild('Crowbar') and b.Backpack:FindFirstChild('Crowbar'),'Trade transfers item once')
@@ -121,7 +126,13 @@ local ok,err=pcall(function()
  health=b.Character.Humanoid.Health; call(a,'Shoot',{Position=b.Character.Head.Position})
  check(b.Character.Humanoid.Health>=health and pistol:GetAttribute('Ammo')==12,'Safe zone blocks combat')
  local atm=find('Bank'); move(a,atm.Position+Vector3.new(0,1,-5))
- call(a,'Bank',{Mode='Deposit',Amount=100}); check(a:GetAttribute('Cash')==427 and a:GetAttribute('Bank')==100,'ATM deposit conserves funds')
+ call(a,'Bank',{Mode='Deposit',Amount=100})
+ local deadline=os.clock()+3
+ while a:GetAttribute('Bank')~=100 and os.clock()<deadline do task.wait(.1) end
+ local ray=RaycastParams.new();ray.FilterDescendantsInstances={a.Character};ray.FilterType=Enum.RaycastFilterType.Exclude
+ local eye=a.Character.HumanoidRootPart.Position+Vector3.new(0,1.5,0)
+ local hit=workspace:Raycast(eye,atm.Position-eye,ray)
+ check(a:GetAttribute('Cash')==427 and a:GetAttribute('Bank')==100,('ATM deposit conserves funds (cash %s, bank %s, custody %s, eye %s, line %s)'):format(a:GetAttribute('Cash'),a:GetAttribute('Bank'),a:GetAttribute('CustodyUntil'),tostring(eye),hit and hit.Instance:GetFullName() or 'clear'))
  call(a,'Bank',{Mode='Withdraw',Amount=40}); check(a:GetAttribute('Cash')==467 and a:GetAttribute('Bank')==60,'ATM withdrawal conserves funds')
  -- Wait at the community center while the second player tests housing. The officer on the previous street can book a wanted player.
  move(a,city.CommunitySpawn.Position+Vector3.new(0,3,0)); call(a,'Bank',{Mode='Withdraw',Amount=60})
@@ -130,7 +141,7 @@ local ok,err=pcall(function()
  local home=highest; move(b,home.Position+Vector3.new(0,2,-4))
  b.Character.Humanoid:EquipTool(b.Backpack.Crowbar); task.wait(0.3)
  call(b,'Prompt',home); check(home:GetAttribute('InUse'),'Home robbery starts from a real prompt')
- move(b,Vector3.new(0,5,95)); task.wait(0.4)
+ move(b,Vector3.new(-240,5,320)); task.wait(0.4)
  check(not home:GetAttribute('InUse') and b:GetAttribute('Loot')==0,'Leaving cancels home robbery without reward')
  move(b,home.Position+Vector3.new(0,2,-4)); call(b,'Prompt',home); task.wait(9.5)
  check(b:GetAttribute('Loot')==1,'Completed home robbery awards stolen goods')
