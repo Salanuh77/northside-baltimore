@@ -213,7 +213,7 @@ rig.Name='ResidentRig';rig:SetAttribute('GameOwnedRig',true);rig.PrimaryPart=rig
 for _,v in rig:GetDescendants() do
  if v:IsA('LuaSourceContainer') or v:IsA('Accessory') or v:IsA('Clothing') then v:Destroy() end
 end
--- The shipped R15 mannequin has fifteen mesh limbs and the matching joint hierarchy.
+-- Bake the city-owned selection of Robloxian 2.0 body parts once for preview and spawn.
 rig.Humanoid.AutomaticScalingEnabled=false
 rig.Humanoid.DisplayDistanceType=Enum.HumanoidDisplayDistanceType.None
 rig.Parent=rs
@@ -221,7 +221,7 @@ local starterRig=rig:Clone();starterRig.Name='StarterCharacter';starterRig.Paren
 local menu=Instance.new('LocalScript');menu.Name='ResidentMenu';menu.Source=fs.readFile('src/ResidentMenu.client.luau');menu.Parent=starter:FindFirstChildOfClass('StarterPlayerScripts')
 local style=Instance.new('ModuleScript'); style.Name='StreetStyle'; style.Source=fs.readFile('src/StreetStyle.luau'); style.Parent=rs
 local art=require('@lune/serde').decode('json',fs.readFile('art/assets.json'))
-for _,key in {'fleet-track','foundry-work','pier-varsity','indigo-denim'} do style:SetAttribute(key,art[key]) end
+for _,key in {'fleet-track','foundry-work','pier-varsity','indigo-denim','harbor-warmup','clay-workshirt','olive-overshirt','street-denim'} do style:SetAttribute(key,art[key]) end
 local clock=Instance.new('Script'); clock.Name='CityClock'; clock.Source=fs.readFile('src/CityClock.server.luau'); clock.Parent=game:GetService('ServerScriptService')
 local styleUI=Instance.new('ModuleScript');styleUI.Name='RetailUI';styleUI.Source=fs.readFile('src/RetailUI.luau');styleUI.Parent=rs
 local server=Instance.new('Script'); server.Name='CityServer'; server.Source=fs.readFile('src/CityServer.server.luau'); server.Parent=game:GetService('ServerScriptService')

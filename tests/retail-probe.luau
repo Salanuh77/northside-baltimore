@@ -59,10 +59,10 @@ local ok,err=pcall(function()
    if not seen[id] then table.insert(images,id);seen[id]=true end
   end
  end
- for _,key in {'fleet-track','indigo-denim','pier-varsity','foundry-work'} do
+ for _,key in {'fleet-track','indigo-denim','pier-varsity','foundry-work','harbor-warmup','clay-workshirt','olive-overshirt','street-denim'} do
   table.insert(images,'rbxassetid://'..game.ReplicatedStorage.StreetStyle:GetAttribute(key))
  end
- check(#images==8,'All four mural sheets and four clothing textures present')
+ check(#images==12,'All four mural sheets and eight clothing textures present')
  local loaded,details=call(a,'PreloadArt',images);check(loaded,'Client loaded transparent paint and clothing textures '..tostring(details))
  workspace:SetAttribute('TestMinute',1200);task.wait(1.4)
  check(city:GetAttribute('CityMinute')==1200 and math.abs(game.Lighting.ClockTime-20)<.03,'Night lighting and city time')

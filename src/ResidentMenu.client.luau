@@ -52,7 +52,7 @@ local pane=make('ScrollingFrame',{CanvasSize=UDim2.new(),AutomaticCanvasSize=Enu
 local footer=label(panel,'Loading your files…',12,gold);footer.TextWrapped=true
 local slot,tab,waiting=nil,'Identity',false
 local rows={}
-local function fresh() return {Height='Medium',Build='Average',Tone='Amber',Hair='Close crop',Name='',Starter='Varsity',Detail='Clean',HairColor='Black',Eye='Brown'} end
+local function fresh() return {Height='Medium',Build='Average',Tone='Amber',Hair='Close crop',Name='',Starter='Harbor',Detail='Clean',HairColor='Black',Eye='Brown'} end
 local draft=fresh()
 local yaw=.22
 local rig

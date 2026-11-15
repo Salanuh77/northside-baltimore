@@ -6,13 +6,12 @@ Style.Tones={'Espresso','Umber','Copper','Amber','Olive','Sand','Porcelain'}
 Style.Skin={Color3.fromRGB(78,48,39),Color3.fromRGB(106,66,49),Color3.fromRGB(148,90,62),Color3.fromRGB(185,125,86),Color3.fromRGB(189,146,108),Color3.fromRGB(218,178,141),Color3.fromRGB(239,207,181)}
 Style.Outfits={{Id='fleet-track',Name='Fleet track jacket',Price=65},{Id='pier-varsity',Name='Pier varsity jacket',Price=95},{Id='foundry-work',Name='Foundry overshirt',Price=55}}
 Style.Starters={'Harbor','Clay','Olive','Track jacket','Varsity','Overshirt'}
-local starterShirts={['Track jacket']='fleet-track',Varsity='pier-varsity',Overshirt='foundry-work'}
+local starterShirts={Harbor='harbor-warmup',Clay='clay-workshirt',Olive='olive-overshirt',['Track jacket']='fleet-track',Varsity='pier-varsity',Overshirt='foundry-work'}
 Style.HairColors={'Black','Chestnut','Auburn','Honey','Silver'}
 local dyes={Black=Color3.fromRGB(31,25,23),Chestnut=Color3.fromRGB(84,53,35),Auburn=Color3.fromRGB(126,60,39),Honey=Color3.fromRGB(173,126,68),Silver=Color3.fromRGB(160,158,151)}
 Style.Eyes={'Brown','Hazel','Blue','Gray'}
 local iris={Brown=Color3.fromRGB(69,43,30),Hazel=Color3.fromRGB(108,102,60),Blue=Color3.fromRGB(83,114,128),Gray=Color3.fromRGB(105,112,112)}
 Style.Details={'Clean','Freckles','Goatee','Mustache','Stubble'}
-local shirts={Harbor=Color3.fromRGB(53,98,113),Clay=Color3.fromRGB(151,78,62),Olive=Color3.fromRGB(98,108,72)}
 function Style.valid(data)
  if type(data)~='table' or (data.Starter~=nil and not table.find(Style.Starters,data.Starter)) or (data.Detail~=nil and not table.find(Style.Details,data.Detail)) then return false end
  for key,list in {HairColor=Style.HairColors,Eye=Style.Eyes} do if data[key]~=nil and not table.find(list,data[key]) then return false end end
@@ -33,7 +32,9 @@ local function hair(head,style,dye)
   p.Size=Vector3.new(sx,sy,sz)*scale; p.CFrame=head.CFrame*CFrame.new(Vector3.new(x,y,z)*scale); p.Parent=folder
   local weld=Instance.new('WeldConstraint'); weld.Part0=head; weld.Part1=p; weld.Parent=p
  end
- lock(0,.33,.02,1.12,.47,1.04,21)
+ -- A continuous crown and tapered back keep the hairline attached in profile.
+ lock(0,.31,.055,1.05,.51,1.01,18)
+ lock(0,.19,.23,.96,.54,.68,17)
  if style=='Close crop' then return end
  if style=='Cornrows' then
   for i=-2,2 do lock(i*.17,.47-math.abs(i)*.055,.02,.13,.18,.88,22) end
@@ -46,10 +47,12 @@ local function hair(head,style,dye)
   return
  end
  if style=='High puff' then lock(0,.76,.16,.92,.82,.87,24) end
- local count=style=='Twists' and 14 or 12
+ local count=(style=='Twists' or style=='Short locs') and 22 or 15
  for i=1,count do
   local a=i*2*math.pi/count; local long=style=='Twists' or style=='Short locs'; local puff=style=='High puff'
-  lock(.46*math.sin(a),puff and .5 or long and .21 or .42,.42*math.cos(a),long and .18 or .33,long and ((style=='Short locs' and .85 or .55)+.12*(i%3)) or .33,long and .18 or .33,16+i%4*3)
+  local back=(math.cos(a)+1)/2
+  local drop=long and ((style=='Short locs' and .62 or .45)+.18*back+.09*(i%3)) or .33
+  lock(.46*math.sin(a),puff and .5 or long and (.48-drop*.38) or .42,.43*math.cos(a),long and .16 or .32,drop,long and .17 or .32,16+i%4*3)
  end
 end
 function Style.apply(c,look,outfit)
@@ -77,24 +80,13 @@ function Style.apply(c,look,outfit)
   end
   c:SetAttribute('ResidentHeight',height);c:SetAttribute('ResidentWidth',width)
  end
- outfit=outfit or starterShirts[look.Starter or '']
+ outfit=outfit or starterShirts[look.Starter or 'Harbor'] or starterShirts.Harbor
  local tone=Style.Skin[table.find(Style.Tones,look.Tone)]
  local colors=c:FindFirstChildOfClass('BodyColors') or Instance.new('BodyColors')
  for _,name in {'Head','Torso','LeftArm','RightArm','LeftLeg','RightLeg'} do colors[name..'Color3']=tone end
- if not outfit then
-  colors.TorsoColor3=shirts[look.Starter or 'Harbor'] or shirts.Harbor
-  colors.LeftLegColor3=Color3.fromRGB(45,52,65);colors.RightLegColor3=colors.LeftLegColor3
- end
  colors.Parent=c
  for _,v in c:GetChildren() do
-  if v:IsA('BasePart') and v.Name~='HumanoidRootPart' then
-   v.Color=tone
-   if not outfit then
-    if v.Name:find('Torso') or v.Name:find('UpperArm') then v.Color=colors.TorsoColor3 end
-    if v.Name:find('Leg') then v.Color=colors.LeftLegColor3 end
-    if v.Name:find('Foot') then v.Color=Color3.fromRGB(51,47,42) end
-   end
-  end
+  if v:IsA('BasePart') and v.Name~='HumanoidRootPart' then v.Color=tone end
  end
  local old=head:FindFirstChild('Face detail');if old then old:Destroy() end
  local holder=Instance.new('Folder');holder.Name='Face detail';holder.Parent=head
@@ -125,7 +117,7 @@ function Style.apply(c,look,outfit)
  hair(head,look.Hair,dye); h.DisplayName=look.Name
  if outfit and script:GetAttribute(outfit) then
   local shirt=c:FindFirstChildOfClass('Shirt') or Instance.new('Shirt'); shirt.ShirtTemplate='rbxassetid://'..script:GetAttribute(outfit); shirt.Parent=c
-  local pants=c:FindFirstChildOfClass('Pants') or Instance.new('Pants'); pants.PantsTemplate='rbxassetid://'..script:GetAttribute('indigo-denim'); pants.Parent=c
+  local pants=c:FindFirstChildOfClass('Pants') or Instance.new('Pants'); pants.PantsTemplate='rbxassetid://'..script:GetAttribute('street-denim'); pants.Parent=c
   local tee=c:FindFirstChildOfClass('ShirtGraphic'); if tee then tee:Destroy() end
  end
 end
