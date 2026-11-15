@@ -1,6 +1,9 @@
 -- All currency, damage, inventory and timed actions are owned by the server.
 local Players=game:GetService('Players')
+Players.CharacterAutoLoads=false
 local RS=game:GetService('ReplicatedStorage')
+local Files=require(script.Parent:WaitForChild('ResidentFiles'))
+local accounts={}
 local DSS=game:GetService('DataStoreService')
 local Run=game:GetService('RunService')
 local Debris=game:GetService('Debris')
@@ -98,28 +101,36 @@ local function payload(d)
  return {Cash=d.Cash,Bank=d.Bank,Loot=d.Loot,Items=table.clone(d.Items),Supplies=table.clone(d.Supplies),Magazine=d.Magazine,Reserve=d.Reserve,Employment=d.Employment,Wages=d.Wages,CustodyUntil=d.CustodyUntil,Bail=d.Bail,Look=d.Look and table.clone(d.Look),Outfit=d.Outfit,Wardrobe=table.clone(d.Wardrobe),Stock=table.clone(d.Stock),Receipts=table.clone(d.Receipts),PendingSale=d.PendingSale and table.clone(d.PendingSale),Trades=table.clone(d.Trades),Lock=session,Lease=os.time()+150}
 end
 local function save(p,release)
- local d=profiles[p]; if not d then return false end
- if Run:IsStudio() then return true end
- if d.Saving and release then
+ local account=accounts[p]
+ if not account then return false end
+ if release then
   local deadline=os.clock()+20
-  while d.Saving and os.clock()<deadline do task.wait(0.1) end
+  while account.Saving and os.clock()<deadline do task.wait(.1) end
  end
- if d.Saving then return end
- d.Saving=true
- local data=payload(d); if release then data.Lock=nil; data.Lease=0 end
- local ok,result=pcall(function()
-  return store:UpdateAsync('u'..p.UserId,function(old)
-   if not old or old.Lock~=session then return nil end
-   return data
+ if account.Saving then return false end
+ account.Saving=true
+ local d=profiles[p]
+ local nextState=account.State
+ if d and d.Look and account.Index then nextState=Files.write(nextState,account.Index,payload(d)) else nextState=table.clone(nextState) end
+ nextState.Lock=session
+ if release then nextState.Lock=nil end
+ nextState.Lease=release and 0 or os.time()+150
+ local ok,result=true,nextState
+ if store then
+  ok,result=pcall(function()
+   return store:UpdateAsync('u'..p.UserId,function(old)
+    if not old or old.Lock~=session then return nil end
+    return nextState
+   end)
   end)
- end)
- d.Saving=false
+ end
+ account.Saving=false
  if not ok or not result then
-  warn('Profile save failed for',p.UserId)
-  -- Stop mutations before the session lease expires; never overwrite another server.
-  if os.time()>d.LastSave+100 and p.Parent then p:Kick('Your data could not be saved. Rejoin shortly to protect your progress.') end
- else d.LastSave=os.time(); return true end
- return false
+  if os.time()>account.LastSave+100 and p.Parent then p:Kick('Your save is unavailable. Rejoin to protect your progress.') end
+  return false
+ end
+ account.State=nextState; account.LastSave=os.time()
+ return true
 end
 local function finiteInt(v,max)
  return typeof(v)=='number' and v==v and v%1==0 and v>=1 and v<=(max or 100000)
@@ -256,7 +267,7 @@ local function reconcileSale(seller)
  local bd=buyer and profiles[buyer]
  local decided,paid=false,false
  if bd and not bd.Leaving then
-  paid=bd.Trades[sale.Id]==true
+  paid=bd.Trades[sale.Id]==true or Files.hasTrade(accounts[buyer].State,sale.Id)
   decided=not paid or saveConfirmed(buyer,bd)
  elseif store then
   local ok,snapshot=pcall(function()
@@ -266,7 +277,7 @@ local function reconcileSale(seller)
    end)
   end)
   if ok and snapshot then
-   paid=snapshot.Trades and snapshot.Trades[sale.Id]==true
+   paid=Files.hasTrade(Files.open(snapshot),sale.Id)
    decided=paid or not snapshot.Lock or (snapshot.Lease or 0)<os.time()
   end
  elseif Run:IsStudio() then decided=true end
@@ -294,17 +305,30 @@ local function settleSidearm(seller,buyer,price)
  reconcileSale(seller);sd.Trading=nil;bd.Trading=nil
 end
 local function join(p)
- local d={Cash=500,Bank=0,Loot=0,Items={},Supplies={},Magazine=0,Reserve=0,Employment='',Wages=0,Heat=0,LastSave=os.time(),Wardrobe={},Stock={},Receipts={},Trades={}}
- if not Run:IsStudio() then
+ local account
+ if store then
   local ok,result=pcall(function()
    return store:UpdateAsync('u'..p.UserId,function(old)
     if old and old.Lock and old.Lock~=session and (old.Lease or 0)>os.time() then return nil end
-    old=old or {Cash=500,Bank=0,Loot=0,Items={}}
-    old.Lock=session; old.Lease=os.time()+150; return old
+    local state=Files.open(old)
+    state.Lock=session;state.Lease=os.time()+150
+    return state
    end)
   end)
-  if not p.Parent then return end
-  if not ok or not result then p:Kick('Your save is unavailable or still open on another server. Please rejoin shortly.'); return end
+  if not ok or not result then p:Kick('Your save is unavailable or open on another server. Please rejoin shortly.');return end
+  account=result
+ else account=Files.open(nil) end
+ accounts[p]={State=account,LastSave=os.time()}
+ if not p.Parent then save(p,true);accounts[p]=nil;return end
+ p:SetAttribute('ResidentFiles',game.HttpService:JSONEncode(Files.list(account)))
+end
+local function selectFile(p,index)
+ local account=accounts[p]
+ if not account or account.Index or not Files.valid(index) then return end
+ account.Index=index
+ local result=account.State.Files[tostring(index)]
+ local d={Cash=500,Bank=0,Loot=0,Items={},Supplies={},Magazine=0,Reserve=0,Employment='',Wages=0,Heat=0,LastSave=os.time(),Wardrobe={},Stock={},Receipts={},Trades={}}
+ if result then
   d.Cash=math.clamp(tonumber(result.Cash) or 500,0,10000000); d.Bank=math.clamp(tonumber(result.Bank) or 0,0,10000000); d.Loot=math.clamp(tonumber(result.Loot) or 0,0,20)
   for name in items do if type(result.Items)=='table' and result.Items[name]==true then d.Items[name]=true end end
   for _,key in {'Wardrobe','Stock','Receipts','Trades'} do if type(result[key])=='table' then d[key]=result[key] end end
@@ -320,7 +344,8 @@ local function join(p)
    for _,item in {'Water','Sandwich','Bandage','Flashlight'} do d.Supplies[item]=math.clamp(math.floor(tonumber(result.Supplies[item]) or 0),0,item=='Flashlight' and 1 or 10) end
   end
  end
- profiles[p]=d; retail.setup(p,d)
+ d.Receipts=table.clone(account.State.Receipts or {})
+ profiles[p]=d; p:SetAttribute('ResidentSlot',index);retail.setup(p,d)
  if d.PendingSale then task.defer(reconcileSale,p) end
  local stats=Instance.new('Folder'); stats.Name='leaderstats'; stats.Parent=p; local cash=Instance.new('IntValue'); cash.Name='Cash'; cash.Parent=stats
  local function character(c)
@@ -330,23 +355,37 @@ local function join(p)
   retail.dress(p,d); givePhone(p); for name in d.Items do tool(p,name) end
   h.Died:Connect(function()
    cancelBusy(p); workService.finish(p); offers[p]=nil
+   task.delay(Players.RespawnTime,function() if p.Parent and profiles[p]==d and p.Character==c then p:LoadCharacterAsync() end end)
    local lost=math.min(d.Cash,75); d.Cash-=lost; d.Loot=0; d.Heat=0; sync(p); tell(p,'Hospital fee: $'..lost..'. Unbanked stolen goods were lost.')
   end)
  end
- p.CharacterAdded:Connect(character); if p.Character then task.spawn(character,p.Character) end
- sync(p); tell(p,'Welcome to Northside. The community center and bank are safe zones.')
+ p.CharacterAdded:Connect(character)
+ if d.Look then task.spawn(function() p:LoadCharacterAsync() end) end
+ sync(p)
 end
 Players.PlayerAdded:Connect(join); for _,p in Players:GetPlayers() do task.spawn(join,p) end
 Players.PlayerRemoving:Connect(function(p)
  local d=profiles[p]; if d then d.Leaving=true end
- cancelBusy(p); save(p,true); profiles[p]=nil; limits[p]=nil; offers[p]=nil; jobs[p]=nil; robbed[p]=nil
+ cancelBusy(p); save(p,true); accounts[p]=nil;profiles[p]=nil; limits[p]=nil; offers[p]=nil; jobs[p]=nil; robbed[p]=nil
  for buyer,o in offers do if o.Seller==p then offers[buyer]=nil end end
 end)
 event.OnServerEvent:Connect(function(p,kind,data)
- if not allowed(p) or not profiles[p] or typeof(kind)~='string' then return end
+ if not allowed(p) or typeof(kind)~='string' then return end
+ if kind=='SelectFile' then if typeof(data)=='table' then selectFile(p,data.Index) end;return end
+ if not profiles[p] then return end
  local d=profiles[p]; data=typeof(data)=='table' and data or {}
  if kind=='Ready' then sync(p); return end
- if kind=='CreateResident' then retail.handle(p,kind,data);return end
+ if kind=='CreateResident' then
+  local before=d.Look
+  retail.handle(p,kind,data)
+  if not before and d.Look and not d.Spawning and not p.Character and profiles[p]==d then
+   d.Spawning=true
+   if not saveConfirmed(p,d) then
+    if p.Parent then p:Kick('Your resident could not be saved. Rejoin to try again.') end
+   elseif p.Parent then p:LoadCharacterAsync() end
+  end
+  return
+ end
  if not alive(p) then return end
  if kind=='PostBail' or kind=='LightPress' then return custody.handle(p,kind,data) end
  if (d.CustodyUntil or 0)>0 then return end
@@ -487,6 +526,7 @@ event.OnServerEvent:Connect(function(p,kind,data)
 end)
 task.spawn(function()
  while task.wait(30) do
+  for p in accounts do if not profiles[p] then task.spawn(save,p,false) end end
   for p,d in profiles do
    if d.Heat>0 and os.clock()>=(d.HeatNext or 0) then d.Heat-=1; d.HeatNext=os.clock()+30; sync(p) end
    if d.PendingSale then task.spawn(reconcileSale,p) end
@@ -497,7 +537,7 @@ task.spawn(function()
 end)
 game:BindToClose(function()
  local pending=0
- for p in profiles do pending+=1; task.spawn(function() save(p,true); pending-=1 end) end
+ for p in accounts do pending+=1; task.spawn(function() save(p,true); pending-=1 end) end
  local deadline=os.clock()+25; while pending>0 and os.clock()<deadline do task.wait(0.1) end
 end)
 print('Baltimore server ready: secure economy, combat, robberies, trading, deliveries.')

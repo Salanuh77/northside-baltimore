@@ -22,6 +22,10 @@ Run `scripts/ci.ps1` on Windows to build and run the same checks as GitHub Actio
 
 The pre-existing warehouse, church props and loose map parts remain in **ServerStorage / OriginalMap_Archive**, with their scripts disabled. The exact untouched binary download is **Squishy-original.rbxlx.rbxl**. The `.rbxlx` suffix in that backup's name came from Studio appending its binary extension; its content is a valid binary place.
 
+## Resident files
+
+Each account gets three resident files. Choose an occupied file to resume its saved look, wallet, purchases and job. A new file opens the character studio with a neutral city model. Rotate it and choose height, build, skin tone, haircut, face detail, starter-shirt color and roleplay name. Enter city confirms the resident before the first spawn. Existing single-resident accounts migrate to File 1. Rejoin to pick a different file.
+
 ## Play
 
 Press **Play**. Open **MAP** to see the streets, neighborhoods and your location. **GUIDE** lists controls and jobs. Use **Drive** at a parked car, steer with movement controls and jump to exit.

@@ -70,3 +70,13 @@ remote.OnClientInvoke=function(kind,data)
  return true
 end
 p:SetAttribute('ProbeReady',true)
+
+-- Gameplay suites join through the real file-selection and creation remotes.
+task.spawn(function()
+ while not p:GetAttribute('ResidentFiles') do task.wait(.05) end
+ action:FireServer('SelectFile',{Index=1})
+ if script:GetAttribute('CreateFixture') then
+  while p:GetAttribute('NeedsCharacter')~=true do task.wait(.05) end
+  action:FireServer('CreateResident',{Name='',Height='Tall',Build='Broad',Hair='Twists',Tone='Copper'})
+ end
+end)

@@ -14,10 +14,10 @@ probe.OnInvoke=function(p,info)
 end
 ]==]
 local drive=Instance.new('RemoteFunction'); drive.Name='TestDrive'; drive.Parent=game:GetService('ReplicatedStorage')
-local client=Instance.new('LocalScript'); client.Name='ClientProbe'; client.Source=%q; client.Parent=game:GetService('StarterPlayer').StarterPlayerScripts
+local client=Instance.new('LocalScript'); client.Name='ClientProbe';client:SetAttribute('CreateFixture',%s); client.Source=%q; client.Parent=game:GetService('StarterPlayer').StarterPlayerScripts
 local server=Instance.new('Script'); server.Name='ServerProbe'; server.Source=%q; server.Parent=game:GetService('ServerScriptService')
 task.wait(4)
 local result=game:GetService('StudioTestService'):ExecuteMultiplayerTestAsync(2,{name='Squishy gameplay validation'})
 print('SQUISHY_TEST_RESULT',game:GetService('HttpService'):JSONEncode(result))
-]====],client,server)
+]====],tostring(not string.find(require('@lune/process').args[1] or '', 'retail',1,true)),client,server)
 fs.writeFile(require('@lune/process').args[2] or 'tests/launch.luau',fs.readFile('studio-smoke.luau')..'\n'..fs.readFile('tests/foundry-joints.luau')..'\n'..fs.readFile('tests/harbor-access.luau')..'\n'..launch)
