@@ -37,12 +37,15 @@ local ok,err=pcall(function()
  check(car.Driver.Occupant==a.Character.Humanoid,'Driver prompt seats player')
  local start=car.Chassis.Position
  print('DRIVE start',start,car.Chassis.CFrame.LookVector)
- call(a,'DriveInput',{gas=1,steer=0})
+ call(a,'DriveInput',{gas=1,steer=0,duration=.86})
  check((car.Chassis.Position-start).Magnitude>7,'Vehicle accelerates under native seat input')
  local facing=car.Chassis.CFrame.LookVector
- call(a,'DriveInput',{gas=1,steer=.65})
+ call(a,'DriveInput',{gas=1,steer=.65,duration=.87})
  print('DRIVE turn',car.Chassis.Position,car.Chassis.CFrame.LookVector,facing,car.Chassis.AlignOrientation.CFrame.LookVector,car.Chassis.LinearVelocity.PlaneVelocity,car.Driver.Occupant)
- check(facing:Dot(car.Chassis.CFrame.LookVector)<.97,'Vehicle steering changes heading')
+ local thrust=car.Chassis.LinearVelocity.PlaneVelocity
+ local body=car.Chassis.CFrame.LookVector
+ check(facing:Dot(body)<.97,'Vehicle steering changes heading')
+ check(thrust.Magnitude>1 and thrust.Unit:Dot(Vector2.new(body.X,body.Z).Unit)>.96,'Thrust follows actual chassis heading')
  a.Character.Humanoid.Sit=false; task.wait(.5)
  check(car.Driver.Occupant==nil,'Driver can exit')
  local reverseCar
