@@ -265,6 +265,7 @@ openPhone=function()
  end
  row('Party supplies',retailUI.bag);row('Job applications',jobBoard); lifeApps()
  row('City map',showMap)
+ row('City servers',function() require(game.ReplicatedStorage.ServerBrowser).open() end)
  row('Pay or trade with a nearby player',playersMenu)
 end
 for _,attr in {'Employment','ShiftTask','Wages','Cash','Bank'} do

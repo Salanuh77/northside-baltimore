@@ -37,5 +37,6 @@ while not p:GetAttribute('ProbeChoose') do task.wait(.05) end
 event.OnClientEvent:Connect(function(kind) if kind=='ReturnCheck' then event:FireServer('SelectFile',{Index=1}) end end)
 event:FireServer('SelectFile',{Index=2})
 ]=];client.Parent=game.StarterPlayer.StarterPlayerScripts
+task.wait(4)
 local result=game:GetService('StudioTestService'):ExecutePlayModeAsync({name='Restore an existing resident'})
 print('SQUISHY_TEST_RESULT',game.HttpService:JSONEncode(result))

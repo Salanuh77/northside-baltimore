@@ -7,8 +7,12 @@ remote.OnClientInvoke=function(kind,data)
   local prompt=data:WaitForChild('ProximityPrompt',5)
   assert(prompt,'Interaction prompt missing')
   local camera=workspace.CurrentCamera; camera.CameraType=Enum.CameraType.Scriptable
-  camera.CFrame=CFrame.lookAt(p.Character.Head.Position,data.Position); task.wait(.65)
-  prompt:InputHoldBegin(); task.wait(0.7); prompt:InputHoldEnd(); task.wait(0.3)
+  local head=p.Character:WaitForChild('Head')
+  local eye=head.Position
+  local direction=data.Position-eye
+  if direction.Magnitude>.2 then eye+=direction.Unit*math.min(1.75,direction.Magnitude*.45) end
+  camera.CFrame=CFrame.lookAt(eye,data.Position); task.wait(.65)
+  prompt:InputHoldBegin(); task.wait(prompt.HoldDuration+.35); prompt:InputHoldEnd(); task.wait(0.3)
   camera.CameraType=Enum.CameraType.Custom
   return true
  end

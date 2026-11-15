@@ -7,6 +7,15 @@ local starter=game:GetService('StarterPlayer')
 assert(not game:GetService('Players').CharacterAutoLoads and not starter.LoadCharacterAppearance)
 assert(starter.StarterCharacter:GetAttribute('GameOwnedRig') and game:GetService('ReplicatedStorage').ResidentRig.Humanoid)
 
+for _,model in {starter.StarterCharacter,game:GetService('ReplicatedStorage').ResidentRig} do
+ for part,jointName in {Torso='RootJoint',Head='Neck',['Right Arm']='Right Shoulder',['Left Arm']='Left Shoulder',['Right Leg']='Right Hip',['Left Leg']='Left Hip'} do
+  local origin=part=='Torso' and model.HumanoidRootPart or model.Torso
+  local joint=origin:FindFirstChild(jointName)
+  assert(joint and joint:IsA('Motor6D') and joint.Part0==origin and joint.Part1==model[part],model.Name..' missing articulated '..part)
+  assert(((origin.CFrame*joint.C0).Position-(joint.Part1.CFrame*joint.C1).Position).Magnitude<.001,'Disconnected '..jointName)
+ end
+end
+
 local function find(name)
  return assert(city:FindFirstChild(name,true),name..' missing from built city')
 end

@@ -202,6 +202,9 @@ local at=Instance.new('Atmosphere'); at.Density=0.17; at.Offset=0.2; at.Color=Co
 local grade=Instance.new('ColorCorrectionEffect'); grade.Contrast=0.1; grade.Saturation=0.03; grade.TintColor=Color3.fromRGB(255,251,242); grade.Parent=lighting
 local cam=world:FindFirstChildOfClass('Camera'); if cam then cam.CFrame=CFrame.lookAt(Vector3.new(-601,9,302),Vector3.new(-607,7.8,279.5)); cam.Focus=CFrame.new(-607,7.8,279.5) end
 local rs=game:GetService('ReplicatedStorage'); local rem=Instance.new('RemoteEvent'); rem.Name='CityAction'; rem.Parent=rs
+local servers=Instance.new('RemoteEvent');servers.Name='CityServers';servers.Parent=rs
+local browser=Instance.new('ModuleScript');browser.Name='ServerBrowser';browser.Source=fs.readFile('src/ServerBrowser.luau');browser.Parent=rs
+local directory=Instance.new('ModuleScript');directory.Name='ServerDirectory';directory.Source=fs.readFile('src/ServerDirectory.luau');directory.Parent=game:GetService('ServerScriptService')
 local starter=game:GetService('StarterPlayer')
 game:GetService('Players').CharacterAutoLoads=false
 starter.LoadCharacterAppearance=false
@@ -209,6 +212,23 @@ local rig=rb.deserializeModel(fs.readFile('art/resident-rig.rbxm'))[1]
 rig.Name='ResidentRig';rig:SetAttribute('GameOwnedRig',true);rig.PrimaryPart=rig.HumanoidRootPart
 for _,v in rig:GetDescendants() do
  if v:IsA('LuaSourceContainer') or v:IsA('Accessory') or v:IsA('Clothing') then v:Destroy() end
+end
+-- Studio's neutral body template contains limb geometry but no R6 animation motors.
+local function articulate(name,parent,limb,offset,rotation)
+ local motor=Instance.new('Motor6D')
+ motor.Name=name;motor.Part0=parent;motor.Part1=limb
+ motor.C0=offset*rotation
+ motor.C1=limb.CFrame:ToObjectSpace(parent.CFrame*motor.C0)
+ motor.Parent=parent
+end
+local spine=CFrame.Angles(-math.pi/2,0,math.pi)
+articulate('RootJoint',rig.HumanoidRootPart,rig.Torso,CFrame.new(),spine)
+articulate('Neck',rig.Torso,rig.Head,CFrame.new(0,1,0),spine)
+for _,side in {'Left','Right'} do
+ local sign=side=='Right' and 1 or -1
+ local rotation=CFrame.Angles(0,sign*math.pi/2,0)
+ articulate(side..' Shoulder',rig.Torso,rig[side..' Arm'],CFrame.new(sign,.5,0),rotation)
+ articulate(side..' Hip',rig.Torso,rig[side..' Leg'],CFrame.new(sign,-1,0),rotation)
 end
 rig.Humanoid.DisplayDistanceType=Enum.HumanoidDisplayDistanceType.None
 rig.Parent=rs

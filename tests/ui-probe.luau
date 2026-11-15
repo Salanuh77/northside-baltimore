@@ -97,6 +97,15 @@ local ok, message = pcall(function()
   if object:IsA("GuiObject") and visible(object) and object.AbsoluteSize.X >= studio.AbsoluteSize.X-1 and object.AbsoluteSize.Y >= studio.AbsoluteSize.Y-1 then full = true end
  end
  check("file picker covers the usable screen", full, studio.AbsoluteSize)
+ click(findButton(studio,"City servers"))
+ local browser=waitUntil(function() return playerGui:FindFirstChild("CityServerBrowser") end,"Server list did not open")
+ waitUntil(function()
+  for _,node in browser:GetDescendants() do
+   if node:IsA("TextLabel") and node.Text:match("^Studio session") then return true end
+  end
+ end,"Server list did not show the actual local instance")
+ check("server browser works before file selection",player.Character==nil,player.Character)
+ click(findButton(browser,"Close"))
  click(slot)
  click(findButton(studio, "Identity"))
  local nameBox = waitUntil(function()
