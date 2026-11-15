@@ -26,6 +26,47 @@ task.spawn(function()
   end
  end
 end)
+local physics=game:GetService('PhysicsService')
+for _,name in {'NorthsideVehicle','NorthsideDriver'} do
+ if not physics:IsCollisionGroupRegistered(name) then physics:RegisterCollisionGroup(name) end
+end
+physics:CollisionGroupSetCollidable('NorthsideVehicle','NorthsideDriver',false)
+
+local function alignDriver(seat,human)
+ local char=human.Parent
+ local head=char and char:FindFirstChild('Head')
+ local weld=seat:FindFirstChild('SeatWeld')
+ if not head or not weld or not weld:IsA('Weld') or weld.Part0~=seat or not weld.Part1 then return end
+ -- Solve in seat space using the weld's intended pose even before physics settles.
+ local seatToHead=weld.C0*weld.C1:Inverse()*weld.Part1.CFrame:ToObjectSpace(head.CFrame)
+ local hairTop=head.Size.Y/2
+ local hair=head:FindFirstChild('Northside hair')
+ if hair then
+  for _,lock in hair:GetChildren() do
+   hairTop=math.max(hairTop,head.CFrame:PointToObjectSpace(lock.Position).Y+lock.Size.Y/2)
+  end
+ end
+ local targetY=seat:GetAttribute('CabinCeiling')-hairTop-.10
+ local correction=Vector3.new(-seatToHead.X,math.min(0,targetY-seatToHead.Y),0)
+ weld.C0=CFrame.new(correction)*weld.C0
+end
+
+local function exitAtDoor(seat,human)
+ local char=human.Parent
+ local root=char and char:FindFirstChild('HumanoidRootPart')
+ if not root or human.Health<=0 or human.SeatPart or (root.Position-seat.Position).Magnitude>10 then return end
+ local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances={char,seat.Parent};params.RespectCanCollide=true
+ for _,offset in {Vector3.new(-seat:GetAttribute('DoorDistance'),0,0),Vector3.new(seat:GetAttribute('DoorDistance')+2.8,0,0),Vector3.new(0,0,10)} do
+  local door=seat.CFrame:PointToWorldSpace(offset)
+  local wall=workspace:Raycast(seat.Position+Vector3.yAxis*2,door-seat.Position,params)
+  local floor=workspace:Raycast(door+Vector3.yAxis*3,-Vector3.yAxis*10,params)
+  if not wall and floor and floor.Normal.Y>.65 then
+   root.AssemblyLinearVelocity=Vector3.zero;root.AssemblyAngularVelocity=Vector3.zero
+   char:PivotTo(CFrame.new(floor.Position+Vector3.yAxis*(human.HipHeight+root.Size.Y/2+.25))*seat.CFrame.Rotation*root.CFrame:ToObjectSpace(char:GetPivot()))
+   return
+  end
+ end
+end
 local cars={}
 for _,model in city:WaitForChild('Motor pool'):GetChildren() do
  local base=model.Chassis
@@ -49,7 +90,8 @@ for _,model in city:WaitForChild('Motor pool'):GetChildren() do
     local weld=Instance.new('WeldConstraint'); weld.Part0=base; weld.Part1=p; weld.Parent=p
     p.Massless=true
    end
-   p.CanCollide=p==base or p.Name=='Tire' or p==seat
+   p.CollisionGroup='NorthsideVehicle';p.CanCollide=p==base or p.Name=='Tire'
+   if p==seat then p.CanTouch=false end
    p.CustomPhysicalProperties=PhysicalProperties.new(.8,.18,0)
   end
  end
@@ -62,7 +104,27 @@ for _,model in city:WaitForChild('Motor pool'):GetChildren() do
   local root=character and character:FindFirstChild('HumanoidRootPart')
   if human and root and human.Health>0 and not human.SeatPart and not seat.Occupant and (root.Position-seat.Position).Magnitude<=12 then seat:Sit(human) end
  end)
+ local previousDriver
+ local collisionGroups={}
  seat:GetPropertyChangedSignal('Occupant'):Connect(function()
+  local human=seat.Occupant
+  if previousDriver and previousDriver~=human then
+   for part,group in collisionGroups do if part.Parent then part.CollisionGroup=group end end
+   table.clear(collisionGroups)
+   task.defer(exitAtDoor,seat,previousDriver)
+  end
+  previousDriver=human
+  if human and human.Parent then
+   for _,part in human.Parent:GetDescendants() do
+    if part:IsA('BasePart') then collisionGroups[part]=part.CollisionGroup;part.CollisionGroup='NorthsideDriver' end
+   end
+   task.spawn(function()
+    local weld=seat:WaitForChild('SeatWeld',2)
+    if weld and seat.Occupant==human then alignDriver(seat,human) end
+    task.wait(.45)
+    if seat.Occupant==human then alignDriver(seat,human) end
+   end)
+  end
   state.gas=0; state.steer=0; state.updated=0; prompt.Enabled=seat.Occupant==nil
   if base:CanSetNetworkOwnership() then base:SetNetworkOwner(nil) end
  end)

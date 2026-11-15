@@ -213,23 +213,8 @@ rig.Name='ResidentRig';rig:SetAttribute('GameOwnedRig',true);rig.PrimaryPart=rig
 for _,v in rig:GetDescendants() do
  if v:IsA('LuaSourceContainer') or v:IsA('Accessory') or v:IsA('Clothing') then v:Destroy() end
 end
--- Studio's neutral body template contains limb geometry but no R6 animation motors.
-local function articulate(name,parent,limb,offset,rotation)
- local motor=Instance.new('Motor6D')
- motor.Name=name;motor.Part0=parent;motor.Part1=limb
- motor.C0=offset*rotation
- motor.C1=limb.CFrame:ToObjectSpace(parent.CFrame*motor.C0)
- motor.Parent=parent
-end
-local spine=CFrame.Angles(-math.pi/2,0,math.pi)
-articulate('RootJoint',rig.HumanoidRootPart,rig.Torso,CFrame.new(),spine)
-articulate('Neck',rig.Torso,rig.Head,CFrame.new(0,1,0),spine)
-for _,side in {'Left','Right'} do
- local sign=side=='Right' and 1 or -1
- local rotation=CFrame.Angles(0,sign*math.pi/2,0)
- articulate(side..' Shoulder',rig.Torso,rig[side..' Arm'],CFrame.new(sign,.5,0),rotation)
- articulate(side..' Hip',rig.Torso,rig[side..' Leg'],CFrame.new(sign,-1,0),rotation)
-end
+-- The shipped R15 mannequin has fifteen mesh limbs and the matching joint hierarchy.
+rig.Humanoid.AutomaticScalingEnabled=false
 rig.Humanoid.DisplayDistanceType=Enum.HumanoidDisplayDistanceType.None
 rig.Parent=rs
 local starterRig=rig:Clone();starterRig.Name='StarterCharacter';starterRig.Parent=starter

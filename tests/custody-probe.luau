@@ -47,7 +47,15 @@ local ok,err=pcall(function()
   end)
   trafficError=not passed and tostring(message) or nil; trafficDone=true
  end)
- sit(); car:SetAttribute('Fuel',1)
+ sit();task.wait(.85)
+ local seat=car.Driver
+ local glassTop=seat:GetAttribute('CabinCeiling')
+ local head=p.Character.Head
+ local hair=head:FindFirstChild('Northside hair')
+ local top=seat.CFrame:PointToObjectSpace(head.Position).Y+head.Size.Y/2
+ for _,lock in hair:GetChildren() do top=math.max(top,seat.CFrame:PointToObjectSpace(lock.Position).Y+lock.Size.Y/2) end
+ check(top<=glassTop+.10 and math.abs(seat.CFrame:PointToObjectSpace(head.Position).X)<.55,'Tall broad driver and hairstyle fit below GT roof and within the seat')
+ car:SetAttribute('Fuel',1)
  check(call('MeshLoad',{number=1}),'Client loads the detailed GT mesh assets')
  local start=car.Chassis.Position
  call('DriveInput',{gas=1,steer=0,duration=5}); task.wait(1)
@@ -56,6 +64,7 @@ local ok,err=pcall(function()
  start=car.Chassis.Position; call('DriveInput',{gas=1,steer=0,duration=1.4})
  check((car.Chassis.Position-start).Magnitude<2,'An empty tank cannot accelerate')
  human.Sit=false; task.wait(.6)
+ check(not human.SeatPart and math.abs(seat.CFrame:PointToObjectSpace(p.Character.HumanoidRootPart.Position).X)>3,'Driver exits beside the door')
  local pump=city:FindFirstChild('North Avenue Fuel',true):FindFirstChild('Pump face')
  local park=pump.Position+pump.CFrame.LookVector*7
  car:PivotTo(CFrame.new(park.X,2.8,park.Z)); task.wait(1)

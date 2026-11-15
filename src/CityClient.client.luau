@@ -6,6 +6,13 @@ local Tween=game:GetService('TweenService')
 local Debris=game:GetService('Debris')
 local p=Players.LocalPlayer
 local event=game:GetService('ReplicatedStorage'):WaitForChild('CityAction')
+-- The game exposes its own nearby-player roster. The default leaderboard covers the phone and creator controls.
+task.spawn(function()
+ for _=1,12 do
+  if pcall(function() game:GetService('StarterGui'):SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList,false) end) then break end
+  task.wait(.25)
+ end
+end)
 local mouse=p:GetMouse()
 local openPhone
 local catalog=require(game:GetService('ReplicatedStorage'):WaitForChild('WorkCatalog'))

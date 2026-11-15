@@ -8,12 +8,17 @@ assert(not game:GetService('Players').CharacterAutoLoads and not starter.LoadCha
 assert(starter.StarterCharacter:GetAttribute('GameOwnedRig') and game:GetService('ReplicatedStorage').ResidentRig.Humanoid)
 
 for _,model in {starter.StarterCharacter,game:GetService('ReplicatedStorage').ResidentRig} do
- for part,jointName in {Torso='RootJoint',Head='Neck',['Right Arm']='Right Shoulder',['Left Arm']='Left Shoulder',['Right Leg']='Right Hip',['Left Leg']='Left Hip'} do
-  local origin=part=='Torso' and model.HumanoidRootPart or model.Torso
-  local joint=origin:FindFirstChild(jointName)
-  assert(joint and joint:IsA('Motor6D') and joint.Part0==origin and joint.Part1==model[part],model.Name..' missing articulated '..part)
-  assert(((origin.CFrame*joint.C0).Position-(joint.Part1.CFrame*joint.C1).Position).Magnitude<.001,'Disconnected '..jointName)
+ local connected={[model.HumanoidRootPart]=true}
+ local motors={}
+ for _,v in model:GetDescendants() do if v:IsA('Motor6D') then table.insert(motors,v) end end
+ for _=1,#motors do
+  for _,m in motors do
+   assert(m.Part0 and m.Part1 and m.Part0.Parent==model and m.Part1.Parent==model,'Dangling motor')
+   if connected[m.Part0] then connected[m.Part1]=true end
+  end
  end
+ assert(#motors==15 and model.Humanoid.RigType==rb.Enum.HumanoidRigType.R15)
+ for _,v in model:GetChildren() do if v:IsA('BasePart') then assert(connected[v],'Detached R15 limb '..v.Name) end end
 end
 
 local function find(name)

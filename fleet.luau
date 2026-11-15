@@ -45,6 +45,19 @@ return function(part,group,city)
    local p=part(n,{width,depth,(a-b).Magnitude},{0,0,0},c,'Metal',model)
    p.CFrame=origin*cf.lookAt((a+b)/2,b); return p
   end
+  local function fitCabin(seat)
+   local glassTop=-math.huge
+   for _,panel in model:GetChildren() do
+    if panel.Name=='Glass' then
+     local center=origin:PointToObjectSpace(panel.CFrame.Position)
+     glassTop=math.max(glassTop,center.Y+panel.Size.Y/2)
+    end
+   end
+   assert(glassTop>-math.huge,'Cabin glass missing on '..model.Name)
+   local here=origin:PointToObjectSpace(seat.CFrame.Position)
+   seat:SetAttribute('CabinCeiling',glassTop-here.Y-.13)
+   seat:SetAttribute('DoorDistance',(width+.95)*scale.X)
+  end
   local template=({Sport='GT',Saloon='Sedan',Utility='SUV'})[style]
   if template then
    for _,entry in roadLibrary[template] do
@@ -65,6 +78,7 @@ return function(part,group,city)
    end end
    local seat=rb.Instance.new('VehicleSeat'); seat.Name='Driver'; seat.Size=V(2.1,.34,1.9)
    seat.CFrame=origin*cf.new(-1.35,template=='GT' and 1.88 or 2.59,-.07); seat.Transparency=1; seat.Anchored=true; seat.HeadsUpDisplay=false; seat.Parent=model
+   fitCabin(seat)
    if role=='Patrol' then
     box('Lightbar base',4,.13,.72,0,7.05,-.3,trim)
     for _,side in {-1,1} do box('Emergency lens',1.8,.29,.69,side*.95,7.23,-.3,side==-1 and rgb(57,106,239) or rgb(214,50,43),'Glass') end
@@ -150,6 +164,7 @@ return function(part,group,city)
   box('Rear bench',5.7,.58,2,0,3,2.64,trim,'Fabric'); box('Dashboard',6,.62,1.15,0,belt-.24,-2.94,trim)
   local seat=rb.Instance.new('VehicleSeat'); seat.Name='Driver'; seat.Size=V(2.36,.48,2.2)
   seat.CFrame=origin*cf.new(scaled(-1.47,2.97,-.8)); seat.Color=trim; seat.Anchored=true; seat.HeadsUpDisplay=false; seat.Parent=model
+  fitCabin(seat)
   if role=='Cab' then box('Taxi beacon',2.08,.43,.85,0,roof+.38,.25,rgb(249,209,126),'Neon')
   elseif role=='Patrol' or role=='Medic' then
    box('Lightbar base',4.02,.16,.87,0,roof+.24,.2,trim)
