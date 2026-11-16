@@ -48,7 +48,7 @@ def rings(profile):
         faces.extend([(0,i,i+1),(48*samples,48*samples+i+1,48*samples+i)])
     return np.array(vertices, dtype="<f4"), np.array(faces, dtype="<u2")
 
-def export():
+def export(path, models):
     blob = bytearray()
     doc = dict(asset={"version":"2.0"},scene=0,scenes=[{"nodes":[]}],nodes=[],meshes=[],accessors=[],bufferViews=[])
     def accessor(data, kind, component):
@@ -61,8 +61,7 @@ def export():
             item.update(min=data.min(axis=0).tolist(),max=data.max(axis=0).tolist())
         doc["accessors"].append(item)
         return len(doc["accessors"])-1
-    for index,(name,profile) in enumerate(PROFILES.items()):
-        vertices, faces = rings(profile)
+    for index,(name,(vertices,faces)) in enumerate(models):
         normals = np.zeros_like(vertices)
         triangles = vertices[faces]
         area = np.cross(triangles[:,1]-triangles[:,0], triangles[:,2]-triangles[:,0])
@@ -79,7 +78,7 @@ def export():
     meta=json.dumps(doc,separators=(",",":")).encode()
     meta+=b" "*((-len(meta))%4)
     chunks=struct.pack("<I4s",len(meta),b"JSON")+meta+struct.pack("<I4s",len(blob),b"BIN\0")+blob
-    (ROOT/"resident-profiles.glb").write_bytes(struct.pack("<4sII",b"glTF",2,len(chunks)+12)+chunks)
+    path.write_bytes(struct.pack("<4sII",b"glTF",2,len(chunks)+12)+chunks)
 
 if __name__ == "__main__":
-    export()
+    export(ROOT/"resident-profiles.glb", ((name,rings(p)) for name,p in PROFILES.items()))
