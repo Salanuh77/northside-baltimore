@@ -30,6 +30,12 @@ for _,site in city:GetDescendants() do
  end
  assert(localBays>=3 and rows>=localBays*3 and next(lines) and next(lines,next(lines)),site.Name..' stock density')
  local floor=site:FindFirstChild('Shop floor') or site:FindFirstChild('Hall floor') or site:FindFirstChild('Terrazzo floor') or site:FindFirstChild('Tile floor') or site:FindFirstChild('Floor')
+ if floor.Name=='Terrazzo floor' or floor.Name=='Hall floor' then
+  assert(localBays>=8,brand..' leaves large wall runs bare')
+ end
+ if site:FindFirstChild('Window dress form') then
+  assert(stock:FindFirstChild('Apparel wall',true),brand..' needs a visible clothing collection')
+ end
  local staff={}
  for _,p in site:GetChildren() do
   local at=p:GetAttribute('StaffSpot')

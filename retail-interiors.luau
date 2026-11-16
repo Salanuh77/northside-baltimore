@@ -35,7 +35,22 @@ local function branding(p,b)
  local bg,accent=C.fromHex(b[4]),C.fromHex(b[5])
  local g=surface(p,750,150,185)
  local badge=block(g,.027,.13,.155,.73,accent)
- words(badge,b[1]:sub(1,1),0,0,1,.96,bg,'serif')
+ if b[1]=='Goose & Griddle' then
+  for feather=0,2 do
+   local wing=block(badge,.15+feather*.15,.61-feather*.17,.41,.12,bg)
+   wing.Rotation=-24
+  end
+ elseif b[1]=='Crown Roost' then
+  for point=0,2 do
+   local tip=block(badge,.20+point*.22,.31+math.abs(point-1)*.06,.19,.35,bg)
+   tip.Rotation=(point-1)*18
+  end
+  block(badge,.20,.63,.62,.10,bg)
+ elseif b[1]=='Eight Till Late' then
+  words(badge,'8',0,-.01,1,.96,bg)
+ else
+  words(badge,b[1]:sub(1,1),0,0,1,.96,bg,'serif')
+ end
  words(g,string.upper(b[1]),.208,.13,.765,.45,cream)
  block(g,.21,.65,.73,.025,accent)
  words(g,b[6],.21,.70,.73,.18,accent,'medium')
@@ -258,6 +273,47 @@ local function findFloor(site)
   local p=site:FindFirstChild(n);if p and p:IsA('BasePart') then return p end
  end
 end
+local function apparelWall(stock,frame,b)
+ local display=model(stock,'Apparel wall')
+ local ink=C.fromHex(b[4])
+ piece(display,'Walnut slat panel',frame,0,7.25,0,22,9,.38,oak,E.Material.WoodPlanks)
+ for i=0,8 do
+  piece(display,'Slat channel',frame,0,3.42+i*.89,-.23,21.9,.065,.11,iron)
+ end
+ local header=piece(display,'Collection header',frame,0,10.8,-.32,21.9,1.6,.18,ink)
+ printed(header,b[3]=='sneakers' and 'WARMUPS  /  COURT COLLECTION' or 'LAST SEASON  /  WORKWEAR',cream)
+ local fabrics={C.fromRGB(87,111,126),C.fromRGB(167,112,84),C.fromRGB(74,85,71),C.fromRGB(151,144,117)}
+ for i=1,4 do
+  local x=(i-2.5)*5.05
+  local tone=fabrics[i]
+  piece(display,'Wall peg',frame,x,9.3,-.65,.22,.22,1.1,iron)
+  piece(display,'Hanger hook',frame,x,8.94,-1.10,.12,.55,.12,iron)
+  piece(display,'Work jacket',frame,x,6.67,-1.09,2.45,3.45,.42,tone,E.Material.Fabric)
+  for _,side in {-1,1} do
+   local sleeve=piece(display,'Jacket sleeve',frame,x+side*1.37,6.86,-1.09,.73,2.93,.42,tone,E.Material.Fabric)
+   sleeve.CFrame*=CF.Angles(0,0,side*.25)
+   local collar=piece(display,'Folded collar',frame,x+side*.31,8.12,-1.35,.39,.64,.08,cream,E.Material.Fabric)
+   collar.CFrame*=CF.Angles(0,0,-side*.45)
+  end
+  piece(display,'Jacket seam',frame,x,6.53,-1.33,.06,2.92,.06,iron)
+  piece(display,'Patch pocket',frame,x+.62,7.13,-1.34,.57,.53,.08,tone:Lerp(cream,.23),E.Material.Fabric)
+ end
+end
+local function fitLargeSalesFloor(site,stock,frame,width,depth,b)
+ -- Finish the rear corners and side runs; customers can still cross the whole center aisle.
+ for _,side in {-1,1} do
+  local rear=frame*CF.new(side*width*.345,0,depth/2-.87)
+  bay(stock,rear,math.min(13,width*.19),b,side<0 and 4 or 7)
+  local middle=frame*CF.new(side*(width/2-1),0,0)*CF.Angles(0,side*math.pi/2,0)
+  bay(stock,middle,math.min(9.6,depth*.19),b,side<0 and 1 or 5)
+  local lamp=piece(stock,'Merchandise downlight',frame,side*width*.28,11.65,depth*.29,1.55,.22,.88,cream,E.Material.Neon)
+  local light=rb.Instance.new('PointLight');light.Color=C.fromRGB(255,232,196)
+  light.Range=23;light.Brightness=.76;light.Shadows=false;light.Parent=lamp
+ end
+ if site:FindFirstChild('Window dress form') then
+  apparelWall(stock,frame*CF.new(0,0,depth/2-.70),b)
+ end
+end
 local function fit(site,b)
  local floor=assert(findFloor(site),site.Name..' has no sales floor')
  local width,depth=floor.Size.X,floor.Size.Z
@@ -303,6 +359,9 @@ local function fit(site,b)
   end
   extraCounter(stock,frame,b,width,depth)
   retailFeature(site,stock,frame,width,depth,b)
+  if floor.Name=='Terrazzo floor' or floor.Name=='Hall floor' then
+   fitLargeSalesFloor(site,stock,frame,width,depth,b)
+  end
  end
 end
 return function(city)
