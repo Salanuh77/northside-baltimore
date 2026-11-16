@@ -14,17 +14,22 @@ class Groom:
     def __init__(self, seed):
         self.vertices=[]
         self.faces=[]
+        self.uv=[]
         self.random=Random(seed)
 
-    def surface(self,rows):
+    def surface(self,rows,bank):
         start=len(self.vertices)
         count=len(rows[0])
-        for row in rows: self.vertices.extend(row)
+        stride=count+1
+        for r,row in enumerate(rows):
+            self.vertices.extend([*row,row[0]])
+            for i in range(stride):
+                # Half-texel gutters keep neighboring fiber patterns out of the seam.
+                self.uv.append(((bank+.002+.996*i/count)/3,.002+.996*r/(len(rows)-1)))
         for r in range(len(rows)-1):
             for i in range(count):
-                a=start+r*count+i
-                b=start+r*count+(i+1)%count
-                self.faces.extend([(a,a+count,b),(b,a+count,b+count)])
+                a=start+r*stride+i
+                self.faces.extend([(a,a+stride,a+1),(a+1,a+stride,a+stride+1)])
 
     @staticmethod
     def hairline(a):
@@ -50,7 +55,7 @@ class Groom:
                 clearance=.017+.007*cos(16*a+1.3*t)*(1-t)+.2*tight
                 row.append(self.skull(a,y,clearance))
             rows.append(row)
-        self.surface(rows)
+        self.surface(rows,0)
 
     def puff(self,center,scale):
         # Uneven edge lobes on a dense base keep the puff fluffy in silhouette.
@@ -64,7 +69,7 @@ class Groom:
                     grain=1+.065*cos(9*a+seed+2*lat)*cos(lat)**2+.05*sin(7*lat+3*cos(a))
                     row.append((c[0]+s[0]*grain*cos(lat)*sin(a),c[1]+s[1]*grain*sin(lat),c[2]-s[2]*grain*cos(lat)*cos(a)))
                 rings.append(row)
-            self.surface(rings)
+            self.surface(rings,1)
         fleece(center,scale,.5,18,60)
         for i in range(112):
             y=(i+.5)/56-1
@@ -82,7 +87,7 @@ class Groom:
             side=np.cross(tangent,axis);side/=np.linalg.norm(side)
             other=np.cross(side,tangent)
             rows.append([c+radii[i]*(cos(a)*side+sin(a)*other) for a in np.arange(6)*pi/3])
-        self.surface(rows)
+        self.surface(rows,2)
 
     def rope(self,path,radius,turns,double=True):
         path=np.asarray(path,dtype=float)
@@ -149,14 +154,15 @@ def make(style):
     elif style in ("Twists","Twist out","Short locs"): g.twists(style=="Twist out",style=="Short locs")
     elif style in ("Cornrows","Barrel twists"): g.rows(style=="Barrel twists")
     elif style=="Bantu knots": g.knots()
-    return np.array(g.vertices,dtype="<f4"),np.array(g.faces,dtype="<u2")
+    return np.array(g.vertices,dtype="<f4"),np.array(g.faces,dtype="<u2"),np.array(g.uv,dtype="<f4")
 
 if __name__=="__main__":
     styles=["High puff","Twists","Twin buns","Cornrows","Short locs","Low puff","Twist out","Barrel twists","Bantu knots"]
     meshes=[(style,make(style)) for style in styles]
-    export(ROOT/"resident-grooms.glb",meshes)
+    export(ROOT/"resident-grooms.glb",meshes,ROOT/"groom-fibers.png")
     bounds={}
-    for name,(verts,_) in meshes:
+    for name,(verts,_,uv) in meshes:
+        assert len(verts)==len(uv) and len(verts)<65536
         lo,hi=verts.min(axis=0),verts.max(axis=0)
         bounds[name]={"center":((lo+hi)/2).round(5).tolist(),"size":(hi-lo).round(5).tolist()}
     (ROOT/"groom-bounds.json").write_text(json.dumps(bounds,indent=2)+"\n")

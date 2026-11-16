@@ -51,7 +51,7 @@ def rings(profile):
         faces.extend([(0,i,i+1),(48*samples,48*samples+i+1,48*samples+i)])
     return np.array(vertices, dtype="<f4"), np.array(faces, dtype="<u2")
 
-def export(path, models):
+def export(path, models, texture=None):
     blob = bytearray()
     doc = dict(asset={"version":"2.0"},scene=0,scenes=[{"nodes":[]}],nodes=[],meshes=[],accessors=[],bufferViews=[])
     def accessor(data, kind, component):
@@ -64,7 +64,8 @@ def export(path, models):
             item.update(min=data.min(axis=0).tolist(),max=data.max(axis=0).tolist())
         doc["accessors"].append(item)
         return len(doc["accessors"])-1
-    for index,(name,(vertices,faces)) in enumerate(models):
+    for index,(name,geometry) in enumerate(models):
+        vertices,faces=geometry[:2]
         normals = np.zeros_like(vertices)
         triangles = vertices[faces]
         area = np.cross(triangles[:,1]-triangles[:,0], triangles[:,2]-triangles[:,0])
@@ -73,10 +74,22 @@ def export(path, models):
         normals /= np.maximum(np.linalg.norm(normals,axis=1)[:,None],1e-8)
         prim = dict(attributes=dict(POSITION=accessor(vertices,"VEC3",5126), NORMAL=accessor(normals,"VEC3",5126)),
                     indices=accessor(faces.reshape(-1),"SCALAR",5123))
+        if texture:
+            prim["attributes"]["TEXCOORD_0"]=accessor(geometry[2],"VEC2",5126)
+            prim["material"]=0
         doc["meshes"].append(dict(name=name,primitives=[prim]))
         doc["nodes"].append(dict(name=name,mesh=index,translation=[index*2,0,0]))
         doc["scenes"][0]["nodes"].append(index)
-    blob.extend(b"\0"*((-len(blob))%4))
+    if texture:
+        blob.extend(bytes((-len(blob))%4))
+        payload=texture.read_bytes()
+        view=len(doc["bufferViews"])
+        doc["bufferViews"].append(dict(buffer=0,byteOffset=len(blob),byteLength=len(payload)))
+        blob.extend(payload)
+        doc["images"]=[dict(bufferView=view,mimeType="image/png")]
+        doc["textures"]=[dict(source=0)]
+        doc["materials"]=[dict(name="Hair fibers",pbrMetallicRoughness=dict(baseColorTexture=dict(index=0),roughnessFactor=.92,metallicFactor=0))]
+    blob.extend(bytes((-len(blob))%4))
     doc["buffers"]=[dict(byteLength=len(blob))]
     meta=json.dumps(doc,separators=(",",":")).encode()
     meta+=b" "*((-len(meta))%4)
