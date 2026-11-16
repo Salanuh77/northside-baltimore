@@ -1,8 +1,8 @@
 # Northside resident assets
 
-The body uses Robloxian 2.0 with an original Northside face on a rounded head. The fixed game rig is included in the place so joining a server never requires fetching a player’s account avatar. [Robloxian 2.0 by Roblox](https://www.roblox.com/bundles/311/Robloxian-2-0)
+The body uses Robloxian 2.0 with an original sculpted Northside head over the articulated rig. The fixed game rig is included in the place so joining a server never requires fetching a player’s account avatar. [Robloxian 2.0 by Roblox](https://www.roblox.com/bundles/311/Robloxian-2-0)
 
-The hair library uses six cuts from Roblox, fitted to the resident’s head for the creator, barber and street. Asset IDs are also stored on the matching handles.
+Six catalog cuts from Roblox are fitted to the resident for the creator, barber and street. Asset IDs are also stored on the matching handles.
 
 - [Curly Fade](https://www.roblox.com/catalog/7193405096)
 - [Short Curls](https://www.roblox.com/catalog/7193452166)
@@ -11,4 +11,8 @@ The hair library uses six cuts from Roblox, fitted to the resident’s head for 
 - [Black Ponytail](https://www.roblox.com/catalog/376527350)
 - [Short and Sleek](https://www.roblox.com/catalog/9243992729)
 
-Northside’s calm, focused and smiling faces, Harbor warmup jacket, clay workshirt, olive overshirt and denim with sneakers are original textures. The project’s resident-art skill records the East Brickton visual references used to review these designs.
+The six face profiles and nine textured-hair silhouettes were modeled specifically for Baltimore Hood RP. The puff and bun shapes use clustered curls. Twists wind two strands together from staggered parts. The project includes the authored geometry and the Roblox imports in this directory.
+
+The ash pullover, dock denim and field liner are original starter garments. Older Harbor, Clay and Olive items retain their texture IDs for saved residents. The separate eye and lip illustrations were drawn for the sculpted heads.
+
+The independent head and facial-feature controls draw on the approach shown in [MDickie’s Wrestling Empire manual](https://mdickie.com/guides/wempire.pdf).
