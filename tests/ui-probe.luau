@@ -73,6 +73,14 @@ local ok, message = pcall(function()
   end, "missing visible button "..name)
  end
  local function click(button)
+  local scroll=button:FindFirstAncestorOfClass('ScrollingFrame')
+  if scroll then
+   local delta=button.AbsolutePosition.Y-scroll.AbsolutePosition.Y
+   if delta<0 or delta+button.AbsoluteSize.Y>scroll.AbsoluteWindowSize.Y then
+    scroll.CanvasPosition=Vector2.new(0,math.max(0,scroll.CanvasPosition.Y+delta-scroll.AbsoluteWindowSize.Y/2))
+    task.wait(.12)
+   end
+  end
   local point = button.AbsolutePosition + button.AbsoluteSize/2 + guiService:GetGuiInset()
   controls:SendMousePosition(point)
   controls:SendMouseButton(point, Enum.UserInputType.MouseButton1, true, 0)
@@ -107,30 +115,12 @@ local ok, message = pcall(function()
  check("server browser works before file selection",player.Character==nil,player.Character)
  click(findButton(browser,"Close"))
  click(slot)
- click(findButton(studio, "Identity"))
- local nameBox = waitUntil(function()
-  local box = studio:FindFirstChild("ResidentName", true)
-  return box and box:IsA("TextBox") and visible(box) and box
- end, "identity tab missing resident name")
- click(nameBox)
- waitUntil(function() return input:GetFocusedTextBox()==nameBox end, "resident name did not focus")
- local function selectAll()
-  controls:SendKey(true, Enum.KeyCode.LeftControl, false)
-  controls:SendKey(true, Enum.KeyCode.A, false)
-  controls:SendKey(false, Enum.KeyCode.A, false)
-  controls:SendKey(false, Enum.KeyCode.LeftControl, false)
+ click(findButton(studio,"Andre"));click(findButton(studio,"Brooks"))
+ local function labelPresent(value)
+  for _,obj in studio:GetDescendants() do if obj:IsA("TextLabel") and visible(obj) and obj.Text==value then return true end end
  end
- selectAll()
- controls:SendTextInput("River")
- waitUntil(function() return nameBox.Text=="River" end, "name input did not receive typing")
- check("identity accepts typed name", nameBox.Text=="River", nameBox.Text)
- -- Leave the name blank for the multiplayer-independent Studio fixture.
- selectAll()
- controls:SendKey(true, Enum.KeyCode.Backspace, false)
- controls:SendKey(false, Enum.KeyCode.Backspace, false)
- waitUntil(function() return nameBox.Text=="" end, "resident name did not clear")
- click(findButton(studio, "Build"))
- check("changing tabs releases text focus", input:GetFocusedTextBox()==nil, input:GetFocusedTextBox())
+ check("first and last names update the identity",labelPresent("Andre Brooks"))
+ click(findButton(studio,"Continue"))
  local function rig()
   for _, obj in studio:GetDescendants() do
    if obj:IsA("WorldModel") and visible(obj) then
@@ -142,16 +132,22 @@ local ok, message = pcall(function()
  local model = waitUntil(rig, "missing game-owned preview rig")
  check("preview uses game-owned resident rig", model:FindFirstChildOfClass("Humanoid")~=nil, model.Name)
  local baseHeight = model:GetExtentsSize().Y
- click(findButton(studio, "Tall"))
+ click(findButton(studio, "Height next"))
  waitUntil(function() local r=rig(); return r and r:GetExtentsSize().Y>baseHeight+0.01 end, "Tall did not change rendered preview height")
  local torso = function(r) return r and (r:FindFirstChild("Torso") or r:FindFirstChild("UpperTorso")) end
  local baseWidth = assert(torso(rig()), "preview torso missing").Size.X
- click(findButton(studio, "Broad"))
+ click(findButton(studio, "Build next"))
  waitUntil(function() local t=torso(rig()); return t and t.Size.X>baseWidth+0.01 end, "Broad did not change rendered preview width")
  check("build edits change preview proportions", true, tostring(rig():GetExtentsSize()))
- click(findButton(studio, "Style"))
+ local baseDepth=torso(rig()).Size.Z
+ click(findButton(studio,"Depth next"))
+ check("torso depth changes independently",torso(rig()).Size.Z>baseDepth)
+ click(findButton(studio,"Pants next"));click(findButton(studio,"Shoes next"))
+ local pants=rig():FindFirstChildOfClass("Pants")
+ check("washed denim and black shoes combine",pants.PantsTemplate:find(game.ReplicatedStorage.StreetStyle:GetAttribute("washed-denim-black"),1,true)~=nil)
+
  local baseColor = rig().Head.Color
- click(findButton(studio, "Copper"))
+ click(findButton(studio, "Tone previous"))
  local function previewColor() local r=rig(); return r and r.Head.Color end
  waitUntil(function() return previewColor() and previewColor()~=baseColor end, "tone swatch did not change preview skin")
  check("skin swatch changes preview", true, previewColor())
@@ -160,7 +156,7 @@ local ok, message = pcall(function()
   return mesh and mesh:GetAttribute('CatalogId')
  end
  local initialHair=haircutId()
- click(findButton(studio,'Curls'))
+ click(findButton(studio,'Hair next'))
  waitUntil(function() return haircutId()==7193452166 and haircutId()~=initialHair end,'Curls mesh did not render')
  check('style tab changes rendered hair',true,haircutId())
  local head=rig().Head;local cap=head:FindFirstChild('Hair mesh',true)
@@ -175,16 +171,18 @@ local ok, message = pcall(function()
  click(findButton(studio, "Turn right"))
  waitUntil(function() local pose=viewPose(); return pose and angle.LookVector:Dot(pose.LookVector)<0.999 end, "Turn right did not rotate preview")
  check("turn control changes preview angle", true, viewPose().LookVector)
- click(findButton(studio,"Face"))
- click(findButton(studio,"Smile"))
- click(findButton(studio,"Hazel"))
- check("facial features render on the mesh head",rig().Head["Resident face"].Texture:find("75621785500994",1,true)~=nil,rig().Head.ClassName)
+ click(findButton(studio,"Face view"))
+ click(findButton(studio,"Expression next"));click(findButton(studio,"Eye next"))
+ local baseEyes=rig().Head["Resident face"].Texture
+ click(findButton(studio,"Mouth next"))
+ check("eye and mouth selectors render separately",rig().Head["Resident face"].Texture==baseEyes and rig().Head["Resident mouth"].Texture:find(game.ReplicatedStorage.StreetStyle:GetAttribute("mouth-smile"),1,true)~=nil)
  click(findButton(studio, "Enter city"))
  local character = waitUntil(function()
   local c = player.Character
   return c and c:FindFirstChild("HumanoidRootPart") and c
  end, "enter city did not spawn resident")
  waitUntil(function() return not studio.Parent or not studio.Enabled end, "resident studio remained open after entry")
+ check("selected fictional name applies to the live resident", character.Humanoid.DisplayName=="Andre Brooks",character.Humanoid.DisplayName)
  check("enter city spawns game-owned resident", character:GetAttribute("GameOwnedRig")==true, character.Name)
  local gui = playerGui:WaitForChild("NorthsideHUD", 12)
  local content = waitUntil(function() return gui:FindFirstChildWhichIsA("ScrollingFrame", true) end, "missing scrolling frame")

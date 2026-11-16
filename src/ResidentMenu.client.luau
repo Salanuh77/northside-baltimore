@@ -35,11 +35,6 @@ end
 local set=frame(page,paper)
 set.ClipsDescendants=true
 make('UIGradient',{Rotation=30,Color=ColorSequence.new(Color3.fromRGB(240,236,213),Color3.fromRGB(151,178,175))},set)
--- Painted measuring marks provide a fixed reference as the resident's height changes.
-for i=1,15 do
- local tick=frame(set,Color3.fromRGB(124,141,135))
- tick.Position=UDim2.fromScale(.04,i/17);tick.Size=UDim2.new(i%3==0 and .17 or .055,0,0,1)
-end
 local viewport=make('ViewportFrame',{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Ambient=Color3.fromRGB(168,176,177),LightColor=Color3.fromRGB(255,237,204),LightDirection=Vector3.new(-1,-.6,-1)},set)
 local world=make('WorldModel',{},viewport)
 local camera=make('Camera',{FieldOfView=35},viewport)
@@ -47,12 +42,33 @@ viewport.CurrentCamera=camera
 local panel=frame(page,ink)
 local imprint=label(panel,'NORTHSIDE   /   BALTIMORE',11,gold)
 local title=label(panel,'Resident files',29,cream);title.Font=Enum.Font.GothamBold
-local tabs=frame(panel,ink)
-local pane=make('ScrollingFrame',{CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollingDirection=Enum.ScrollingDirection.Y,ScrollBarThickness=4,BackgroundTransparency=1,BorderSizePixel=0},panel)
-local footer=label(panel,'Loading your files…',12,gold);footer.TextWrapped=true
+local function scroller(parent)
+ return make('ScrollingFrame',{CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollingDirection=Enum.ScrollingDirection.Y,ScrollBarThickness=3,BackgroundTransparency=1,BorderSizePixel=0},parent)
+end
+local west=frame(page,ink);local east=frame(page,ink)
+west.BackgroundTransparency=.08;east.BackgroundTransparency=.08
+local pane=scroller(west);local sidePane=scroller(east)
+local footer=label(panel,'Loading your files?',14,cream);footer.TextWrapped=true
 local slot,tab,waiting=nil,'Identity',false
+local closeup=false
+local room=make('Model',{Name='Fitting room'},world)
+local function furnishing(name,size,position,color,material)
+ return make('Part',{Name=name,Size=size,CFrame=CFrame.new(position),Anchored=true,Color=Color3.fromRGB(table.unpack(color)),Material=material or Enum.Material.SmoothPlastic},room)
+end
+furnishing('Studio floor',Vector3.new(28,.4,24),Vector3.new(0,-.22,0),{124,90,68},Enum.Material.WoodPlanks)
+furnishing('Rear brick',Vector3.new(28,13,.6),Vector3.new(0,6.4,5),{145,102,80},Enum.Material.Brick)
+for i=-2,2 do
+ local x=i*4.6
+ furnishing('Window reveal',Vector3.new(3.65,5.4,.3),Vector3.new(x,6,4.55),{49,60,61})
+ furnishing('Daylight',Vector3.new(3.3,5,.2),Vector3.new(x,6,4.32),{183,208,203},Enum.Material.Neon)
+ furnishing('Crossbar',Vector3.new(3.4,.12,.25),Vector3.new(x,6.3,4.16),{66,69,66})
+ furnishing('Sash',Vector3.new(.12,5,.25),Vector3.new(x,6,4.16),{66,69,66})
+end
+furnishing('Bench',Vector3.new(6,.35,1.5),Vector3.new(-5.8,1.45,3),{104,66,49},Enum.Material.Wood)
+for _,x in {-8,-3.6} do furnishing('Bench foot',Vector3.new(.25,1.4,1.3),Vector3.new(x,.7,3),{63,61,57}) end
+local roomOrigin=room:GetPivot()
 local rows={}
-local function fresh() return {Height='Medium',Build='Average',Tone='Amber',Hair='Close crop',Name='',Starter='Harbor',Detail='Clean',HairColor='Black',Eye='Brown',Expression='Calm'} end
+local function fresh() return {Height='Medium',Build='Average',Tone='Amber',Hair='Close crop',Name='Avery Bell',FirstName='Avery',LastName='Bell',Depth='Standard',Pants='Dark denim',Shoes='Bone low-tops',Mouth='Level',HairDetail='Natural',Starter='Harbor',Detail='Clean',HairColor='Black',Eye='Brown',Expression='Calm'} end
 local draft=fresh()
 local yaw=.22
 local rig
@@ -62,10 +78,10 @@ local function pose()
  local bounds,size=rig:GetBoundingBox()
  local center=bounds.Position
  local aspect=viewport.AbsoluteSize.X/math.max(1,viewport.AbsoluteSize.Y)
- local distance=math.max(size.Y*1.17,size.X/math.max(.5,aspect))*1.95
- if slot and (tab=='Face' or tab=='Style') then
-  center=rig.Head.Position-Vector3.new(0,tab=='Face' and .08 or .33,0)
-  distance=math.max(tab=='Face' and 2.8 or 4.3,2.2/math.max(.5,aspect))
+ room:PivotTo(CFrame.new(0,center.Y-size.Y/2,0)*roomOrigin)
+ local distance=math.max(size.Y*1.04,size.X/math.max(.5,aspect))*1.82
+ if closeup and slot and tab=='Appearance' then
+  center=rig.Head.Position-Vector3.new(0,.18,0);distance=math.max(3.8,2.7/math.max(.5,aspect))
  end
  camera.CFrame=CFrame.lookAt(center+Vector3.new(0,.24,-distance),center)
 end
@@ -103,88 +119,101 @@ local function send()
  event:FireServer('SelectFile',{Index=slot})
  event:FireServer('CreateResident',table.clone(draft))
 end
-local enter=button(panel,'Enter city',send);enter.BackgroundColor3=gold;enter.TextColor3=ink
-local back=button(panel,'Files',function()
- if waiting or player:GetAttribute('ResidentSlot') then return end
- slot=nil;draft=fresh();footer.Text='';rebuild();draw()
+local enter=button(panel,'Continue',function()
+ if tab=='Identity' then tab='Appearance';draw() else send() end
+end)
+enter.BackgroundColor3=gold;enter.TextColor3=ink
+local back=button(panel,'Back',function()
+ if waiting then return end
+ if tab=='Appearance' then tab='Identity' else slot=nil;draft=fresh() end
+ closeup=false;footer.Text='';rebuild();draw()
 end)
 local servers=button(panel,'City servers',function() require(storage.ServerBrowser).open() end)
+local zoom=button(set,'Face view',function() closeup=not closeup;pose() end)
+zoom.Activated:Connect(function() zoom.Text=closeup and 'Full body' or 'Face view' end)
 local function layout()
  local w,h=page.AbsoluteSize.X,page.AbsoluteSize.Y
- local portrait=w<h and w<650
- local sw=portrait and w or math.floor(w*(w>880 and .55 or .47))
- local sh=portrait and math.floor(h*.34) or h
- at(set,0,0,sw,sh)
- local pw=portrait and w or w-sw
- local ph=portrait and h-sh or h
- at(panel,portrait and 0 or sw,portrait and sh or 0,pw,ph)
- local pad=pw<390 and 12 or 22
- local top=ph<360 and 5 or 18
- at(imprint,pad,top,pw-2*pad,14);at(title,pad,top+17,pw-2*pad,35)
- at(servers,pw-100-pad,top+16,100,33)
- at(tabs,pad,top+54,pw-2*pad,31)
- local contentTop=top+(slot and 92 or 58)
- at(pane,pad,contentTop,pw-pad*2,ph-contentTop-(slot and 77 or 30))
- at(footer,pad,ph-(slot and 73 or 27),pw-pad*2,24)
- at(enter,pw-146-pad,ph-45,146,37);at(back,pad,ph-45,70,37)
- at(left,10,sh-41,77,31);at(right,sw-94,sh-41,84,31)
+ local compact=w<620
+ local header=h<420 and 41 or 57
+ local footerHeight=h<420 and 42 or 52
+ local top=compact and math.floor(h*.49) or header+8
+ local column=compact and math.floor((w-18)/2) or math.min(252,math.floor(w*.265))
+ local available=h-top-footerHeight-8
+ at(set,0,header,w,compact and top-header or h-header-footerHeight)
+ at(panel,0,0,w,header);panel.ClipsDescendants=false
+ at(imprint,14,3,w-28,13);at(title,14,15,w-30,header-16);title.TextSize=header<50 and 19 or 25
+ at(servers,w-117,6,106,30)
+ at(west,7,top,column,available);at(east,w-column-7,top,column,available)
+ at(pane,5,4,column-10,available-8);at(sidePane,5,4,column-10,available-8)
+ at(back,8,h-footerHeight+5,73,footerHeight-10);at(enter,w-111,h-footerHeight+5,103,footerHeight-10)
+ at(footer,89,h-footerHeight+4,w-206,footerHeight-8)
+ local center=w/2;local yy=set.AbsoluteSize.Y-36
+ at(left,center-71,yy,35,32);at(right,center+36,yy,35,32);at(zoom,center-35,yy,70,32)
+ left.Text='?';right.Text='?';zoom.TextSize=11
  pose()
 end
 local function clear(parent) for _,v in parent:GetChildren() do v:Destroy() end end
+local function chosenName()
+ draft.Name=draft.FirstName..' '..draft.LastName
+ footer.Text=draft.Name
+end
 draw=function()
- clear(pane);clear(tabs);pane.CanvasPosition=Vector2.zero
- title.Text=slot and 'Create your resident' or 'Resident files'
- enter.Visible=slot~=nil;back.Visible=slot~=nil and not player:GetAttribute('ResidentSlot')
- servers.Visible=slot==nil
- tabs.Visible=slot~=nil
+ clear(pane);clear(sidePane)
+ pane.CanvasPosition=Vector2.zero;sidePane.CanvasPosition=Vector2.zero
+ title.Text=not slot and 'Resident files' or tab=='Identity' and 'Choose a roleplay name' or 'Customize your resident'
+ servers.Visible=slot==nil;east.Visible=slot~=nil
+ back.Visible=slot~=nil;enter.Visible=slot~=nil
+ zoom.Visible=slot~=nil and tab=='Appearance'
+ enter.Text=tab=='Identity' and 'Continue' or 'Enter city'
+ if slot then chosenName() end
  layout()
- local y=0
- local function line(text)
-  local l=label(pane,text,13,paper);l.Position=UDim2.fromOffset(0,y);l.Size=UDim2.new(1,-5,0,20);y+=23
- end
- local function options(key,caption,values,columns)
-  line(caption)
-  local first=y
-  for i,v in values do
-   local b=button(pane,v,function() draft[key]=v;rebuild();draw() end)
-   local column=(i-1)%columns
-   b.Position=UDim2.new(column/columns,0,0,first+math.floor((i-1)/columns)*34);b.Size=UDim2.new(1/columns,-4,0,30)
-   if key=='Tone' then
-    b.BackgroundColor3=style.Skin[i];b.Text='';b.Name=v
-    if draft[key]==v then make('UIStroke',{Color=gold,Thickness=2,ApplyStrokeMode=Enum.ApplyStrokeMode.Border},b) end
-   elseif draft[key]==v then b.BackgroundColor3=gold;b.TextColor3=ink end
-  end
-  y=first+math.ceil(#values/columns)*34+5
+ local function hint(parent,text)
+  local v=label(parent,text,13,gold);v.Size=UDim2.new(1,-4,0,26)
  end
  if not slot then
+  hint(pane,'Your save files')
   for i,record in rows do
-   line('FILE 0'..i..(record.Cash~=nil and '  /  $'..math.floor(record.Cash) or ''))
    local b=button(pane,record.Name or 'New resident',function() chooseFile(i) end)
-   b.Position=UDim2.fromOffset(0,y);b.Size=UDim2.new(1,-6,0,38);y+=45
+   b.Text=string.format('%02d   %s',i,record.Name or 'New resident')
+   b.Position=UDim2.fromOffset(0,30+(i-1)*43);b.Size=UDim2.new(1,-4,0,39)
   end
   return
  end
- for i,v in {'Identity','Build','Style','Face'} do
-  local b=button(tabs,v,function() tab=v;draw() end)
-  b.Position=UDim2.fromScale((i-1)/4,0);b.Size=UDim2.new(1/4,-3,1,0)
-  if v==tab then b.BackgroundColor3=paper;b.TextColor3=ink end
- end
  if tab=='Identity' then
-  line('Resident name')
-  local name=make('TextBox',{Name='ResidentName',Position=UDim2.fromOffset(0,y),Size=UDim2.new(1,-6,0,40),BackgroundColor3=slate,BorderSizePixel=0,ClearTextOnFocus=false,PlaceholderText=player.DisplayName,Text=draft.Name,TextColor3=cream,PlaceholderColor3=paper,Font=Enum.Font.Gotham,TextSize=16},pane)
-  name:GetPropertyChangedSignal('Text'):Connect(function() draft.Name=name.Text end)
-  y+=50;options('Starter','Starter outfit',style.Starters,3)
- elseif tab=='Build' then
-  options('Height','Height',style.Heights,3);options('Build','Build',style.Builds,3)
- elseif tab=='Style' then
-  options('Tone','Skin tone  /  '..draft.Tone,style.Tones,7)
-  options('Hair','Haircut',style.Hair,3)
-  options('HairColor','Hair color',style.HairColors,3)
- else
-  options('Expression','Expression',style.Expressions,3)
-  options('Eye','Eye color',style.Eyes,3)
-  options('Detail','Face detail',style.Details,3)
+  local function names(parent,field,caption,list)
+   hint(parent,caption)
+   local buttons={}
+   for i,value in list do
+    local b=button(parent,value,function()
+     draft[field]=value;chosenName()
+     for name,item in buttons do item.BackgroundColor3=name==value and gold or slate;item.TextColor3=name==value and ink or cream end
+    end)
+    buttons[value]=b;b.Position=UDim2.fromOffset(0,28+(i-1)*34);b.Size=UDim2.new(1,-4,0,30)
+    if draft[field]==value then b.BackgroundColor3=gold;b.TextColor3=ink end
+   end
+  end
+  names(pane,'FirstName','First name',style.FirstNames);names(sidePane,'LastName','Last name',style.LastNames)
+  return
  end
+ local function controls(parent,fields)
+  for i,field in fields do
+   local key,caption,values=table.unpack(field)
+   local y=(i-1)*49
+   local l=label(parent,caption,12,paper);l.Position=UDim2.fromOffset(3,y);l.Size=UDim2.new(1,-6,0,16)
+   local current=label(parent,draft[key],13,cream);current.TextXAlignment=Enum.TextXAlignment.Center
+   current.Position=UDim2.fromOffset(30,y+17);current.Size=UDim2.new(1,-64,0,27)
+   for _,delta in {-1,1} do
+    local b=button(parent,delta==1 and '?' or '?',function()
+     local index=table.find(values,draft[key]) or 1
+     draft[key]=values[(index-1+delta)%#values+1];current.Text=draft[key];rebuild()
+    end)
+    b.Name=key..(delta==1 and ' next' or ' previous');b.TextSize=20
+    b.Position=UDim2.new(delta==1 and 1 or 0,delta==1 and -32 or 0,0,y+16);b.Size=UDim2.fromOffset(28,30)
+   end
+  end
+ end
+ controls(pane,{{'Hair','Primary hair',style.Hair},{'HairDetail','Hair detail',style.HairDetails},{'HairColor','Hair color',style.HairColors},{'Starter','Shirt',style.Starters},{'Pants','Pants',style.Pants},{'Shoes','Shoes',style.Shoes}})
+ controls(sidePane,{{'Expression','Eye shape',style.Expressions},{'Mouth','Mouth',style.Mouths},{'Eye','Eye color',style.Eyes},{'Tone','Skin',style.Tones},{'Height','Height',style.Heights},{'Build','Width',style.Builds},{'Depth','Depth',style.Depths},{'Detail','Facial hair & details',style.Details}})
 end
 local function files()
  local encoded=player:GetAttribute('ResidentFiles')

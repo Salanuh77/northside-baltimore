@@ -9,8 +9,9 @@ local function fixture()
  local profiles={[p]=profile}
  local state={tools=0,canSave=true}
  local services={Players={GetPlayerByUserId=function(_,id) return id==8 and p or nil end},MarketplaceService={}}
- local game={ReplicatedStorage={WaitForChild=function() end},GetService=function(_,key) return services[key] or {} end}
- local factory=luau.load(source,{environment={game=game,Enum=enum,require=function() return {} end},injectGlobals=true})()
+ local game={ReplicatedStorage={WaitForChild=function(_,name) return name end},GetService=function(_,key) return services[key] or {} end}
+ local catalog=require('../src/ShopProducts')
+ local factory=luau.load(source,{environment={game=game,Enum=enum,require=function(name) return name=='ShopProducts' and catalog or {} end},injectGlobals=true})()
  local noop=function() end
  factory(profiles,{}, {},noop,noop,noop,function() return state.canSave end,function() state.tools+=1 end)
  local function buy(product,id,player)
@@ -30,6 +31,9 @@ local cases={
  {'replayed receipt after trade',function(buy,d,s) buy(gun);d.Items.Pistol=nil;d.Stock.Sidearm=0;s.tools=0;assert(buy(gun)==decision.PurchaseGranted and s.tools==0,'reissued a traded item') end},
  {'glow pack',function(buy,d) buy(glow);buy(glow);assert(d.Stock.Glow==5) end},
  {'confetti packs',function(buy,d) buy(confetti);buy(confetti,'second');assert(d.Stock.Confetti==10) end},
+ {'bubble pack',function(buy,d) buy(3732068670);assert(d.Stock.Bubbles==5) end},
+ {'streamers',function(buy,d) buy(3732068672);assert(d.Stock.Streamers==5) end},
+ {'sampler survives a receipt retry',function(buy,d,s) s.canSave=false;assert(buy(3732068679)==decision.NotProcessedYet);s.canSave=true;assert(buy(3732068679)==decision.PurchaseGranted);for _,k in {'Glow','Confetti','Bubbles','Streamers'} do assert(d.Stock[k]==3,k) end end},
 }
 local failures=0
 for _,case in cases do

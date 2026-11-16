@@ -222,7 +222,8 @@ local starterRig=rig:Clone();starterRig.Name='StarterCharacter';starterRig.Paren
 local menu=Instance.new('LocalScript');menu.Name='ResidentMenu';menu.Source=fs.readFile('src/ResidentMenu.client.luau');menu.Parent=starter:FindFirstChildOfClass('StarterPlayerScripts')
 local style=Instance.new('ModuleScript'); style.Name='StreetStyle'; style.Source=fs.readFile('src/StreetStyle.luau'); style.Parent=rs
 local art=require('@lune/serde').decode('json',fs.readFile('art/assets.json'))
-for _,key in {'fleet-track','foundry-work','pier-varsity','indigo-denim','harbor-warmup','clay-workshirt','olive-overshirt','street-denim','resident-calm','resident-smile','resident-focused'} do style:SetAttribute(key,art[key]) end
+for _,key in {'fleet-track','foundry-work','pier-varsity','indigo-denim','harbor-warmup','clay-workshirt','olive-overshirt','street-denim','washed-denim','canvas-trousers','street-denim-black','washed-denim-black','canvas-trousers-black','resident-calm','resident-smile','resident-focused','mouth-level','mouth-smile','mouth-set'} do style:SetAttribute(key,assert(art[key],key)) end
+local catalog=Instance.new('ModuleScript');catalog.Name='ShopProducts';catalog.Source=fs.readFile('src/ShopProducts.luau');catalog.Parent=rs
 local clock=Instance.new('Script'); clock.Name='CityClock'; clock.Source=fs.readFile('src/CityClock.server.luau'); clock.Parent=game:GetService('ServerScriptService')
 local styleUI=Instance.new('ModuleScript');styleUI.Name='RetailUI';styleUI.Source=fs.readFile('src/RetailUI.luau');styleUI.Parent=rs
 local server=Instance.new('Script'); server.Name='CityServer'; server.Source=fs.readFile('src/CityServer.server.luau'); server.Parent=game:GetService('ServerScriptService')

@@ -3,9 +3,9 @@ local Market=game:GetService('MarketplaceService')
 local Text=game:GetService('TextService')
 local Policy=game:GetService('PolicyService')
 local Style=require(game.ReplicatedStorage:WaitForChild('StreetStyle'))
-local products={Sidearm=3732000729,Glow=3732000733,Confetti=3732000737}
+local products=require(game.ReplicatedStorage:WaitForChild('ShopProducts'))
 local types={}
-for name,id in products do types[id]=name end
+for name,product in products do types[product.Id]=name end
 return function(profiles,jobs,event,closest,sync,tell,save,tool)
  local requests=setmetatable({},{__mode='k'})
  local function dress(p,d) Style.apply(p.Character,d.Look,d.Outfit) end
@@ -27,22 +27,27 @@ return function(profiles,jobs,event,closest,sync,tell,save,tool)
   end
   d.Cash-=30; d.Look.Hair=request.Style; dress(customer,d); sync(customer); tell(customer,'Your haircut is saved.')
  end
- local actions={CreateResident=true,Outfit=true,Cut=true,ServeCut=true,Premium=true,PartyItem=true}
+ local actions={CreateResident=true,Outfit=true,Cut=true,ServeCut=true,Premium=true,PartyItem=true,ArmoryFinish=true}
  local function handle(p,kind,data)
   if not actions[kind] then return false end
   local d=profiles[p]
   if kind=='CreateResident' then
    if d.Look or d.Creating or not Style.valid(data) or type(data.Name)~='string' or #data.Name>40 then return true end
    local name=data.Name:match('^%s*(.-)%s*$')
-   if name~='' and name~=p.DisplayName then
+   if data.FirstName and data.LastName then
+    name=data.FirstName..' '..data.LastName
+   elseif name=='' then
+    name=Style.FirstNames[1]..' '..Style.LastNames[1]
+   elseif name~=p.DisplayName then
     d.Creating=true
     local ok,filtered=pcall(function() return Text:FilterStringAsync(name,p.UserId):GetNonChatStringForBroadcastAsync() end)
     d.Creating=nil
     if profiles[p]~=d then return true end
-    if not ok or filtered=='' or filtered:find('#',1,true) then tell(p,'Choose another name or leave it blank to use your Roblox display name.'); return true end
+    if not ok or filtered=='' or filtered:find('#',1,true) then tell(p,'Choose another roleplay name.'); return true end
     name=filtered
    end
    d.Look={Name=name=='' and p.DisplayName or name,Height=data.Height,Build=data.Build,Hair=data.Hair,Tone=data.Tone,Starter=data.Starter or 'Harbor',Detail=data.Detail or 'Clean',Eye=data.Eye or 'Brown',Expression=data.Expression or 'Calm',HairColor=data.HairColor or 'Black'}
+   for _,field in {'Depth','Pants','Shoes','Mouth','HairDetail','FirstName','LastName'} do d.Look[field]=data[field] end
    p:SetAttribute('NeedsCharacter',false); dress(p,d); sync(p); event:FireClient(p,'StyleSaved')
   elseif kind=='Outfit' then
    if not closest(p,'Clothing') or not d.Look then return true end
@@ -76,11 +81,18 @@ return function(profiles,jobs,event,closest,sync,tell,save,tool)
     local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
     if root and (root.Position-req.Chair.Position).Magnitude<=14 then requests[customer]=nil; haircut(customer,p,req) end
    end
+  elseif kind=='ArmoryFinish' then
+   if not d.Look or not d.Items.Pistol or not closest(p,'GunStore') or not table.find({'Slate compact','Silver service','Field carbine'},data.Finish) then return true end
+   local bag=p:FindFirstChildOfClass('Backpack');local existing=(p.Character and p.Character:FindFirstChild('Pistol')) or (bag and bag:FindFirstChild('Pistol'))
+   if existing and existing:GetAttribute('Reloading') then return true end
+   d.Look.Armory=data.Finish
+   if existing then existing:Destroy() end
+   tool(p,'Pistol');tell(p,data.Finish..' equipped in your inventory.')
   elseif kind=='Premium' then
    local key=data.Item
-   if products[key] and (key~='Sidearm' or closest(p,'GunStore')) then event:FireClient(p,'Checkout',products[key]) end
+   if products[key] and (key~='Sidearm' or closest(p,'GunStore')) then event:FireClient(p,'Checkout',products[key].Id) end
   elseif kind=='PartyItem' then
-   local key=data.Item; if key~='Glow' and key~='Confetti' then return true end
+   local key=data.Item; if not products[key] or not products[key].Use then return true end
    local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
    if not root or (d.Stock[key] or 0)<1 then tell(p,'Your party bag is empty.');return true end
    if key=='Glow' and root:FindFirstChild('Harbor glow') then tell(p,'Your glow stick is still lit.');return true end
@@ -91,6 +103,17 @@ return function(profiles,jobs,event,closest,sync,tell,save,tool)
     local hand=p.Character:FindFirstChild('LeftHand') or p.Character:FindFirstChild('Left Arm') or root;rod.CFrame=hand.CFrame*CFrame.new(0,-.35,-.2);rod.Parent=p.Character
     local weld=Instance.new('WeldConstraint');weld.Part0=hand;weld.Part1=rod;weld.Parent=rod
     game.Debris:AddItem(light,60);game.Debris:AddItem(rod,60)
+   elseif key=='Bubbles' or key=='Streamers' then
+    local bubbles=key=='Bubbles'
+    local emitter=Instance.new('ParticleEmitter');emitter.Name=key
+    emitter.Texture=bubbles and 'rbxasset://textures/particles/explosion01_shockwave_main.dds' or 'rbxasset://textures/particles/SquareParticle.png'
+    emitter.Color=ColorSequence.new(bubbles and Color3.fromRGB(144,209,242) or Color3.fromRGB(137,83,182),bubbles and Color3.fromRGB(227,185,228) or Color3.fromRGB(251,194,83))
+    emitter.Rate=0;emitter.Size=NumberSequence.new(bubbles and .45 or .23)
+    emitter.Lifetime=NumberRange.new(2,3);emitter.Speed=NumberRange.new(5,10);emitter.SpreadAngle=Vector2.new(65,65)
+    emitter.Transparency=NumberSequence.new(bubbles and .36 or .08,1)
+    if not bubbles then emitter.Squash=NumberSequence.new(1.4) end
+    emitter.Acceleration=Vector3.new(0,bubbles and 1.6 or -7,0);emitter.RotSpeed=NumberRange.new(-90,90)
+    emitter.Parent=root;emitter:Emit(bubbles and 24 or 65);game.Debris:AddItem(emitter,4)
    else
     local effect=Instance.new('ParticleEmitter');effect.Texture='rbxasset://textures/particles/sparkles_main.dds';effect.Color=ColorSequence.new(Color3.fromRGB(240,185,67),Color3.fromRGB(53,163,212));effect.Rate=0;effect.Lifetime=NumberRange.new(1.4,2.2);effect.Speed=NumberRange.new(9,16);effect.SpreadAngle=Vector2.new(70,70);effect.Acceleration=Vector3.new(0,-12,0);effect.Parent=root;effect:Emit(75);game.Debris:AddItem(effect,3)
    end
@@ -107,6 +130,8 @@ return function(profiles,jobs,event,closest,sync,tell,save,tool)
    if key=='Sidearm' then
     d.Stock.Sidearm=(d.Stock.Sidearm or 0)+1
     if not d.Items.Pistol then d.Items.Pistol=true;d.Magazine=12;d.Reserve=math.min(120,d.Reserve+12) end
+   elseif key=='Sampler' then
+    for name,product in products do if product.Use then d.Stock[name]=(d.Stock[name] or 0)+3 end end
    else d.Stock[key]=(d.Stock[key] or 0)+5 end
   end
   if not save(p,false) then return Enum.ProductPurchaseDecision.NotProcessedYet end

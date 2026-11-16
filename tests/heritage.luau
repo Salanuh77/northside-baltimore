@@ -4,6 +4,14 @@ local path = require('@lune/process').args[1] or 'Northside Baltimore - Heritage
 local game=rb.deserializePlace(fs.readFile(path))
 local city=game:GetService('Workspace').Baltimore
 local starter=game:GetService('StarterPlayer')
+local hall=assert(city:FindFirstChild('Civic clock tower',true))
+for _,piece in {'Council entrance','Copper dome','Lantern finial','Council gallery bench','Portico capital'} do
+ assert(hall:FindFirstChild(piece,true),'Missing civic architecture: '..piece)
+end
+local styles=game:GetService('ReplicatedStorage').StreetStyle
+for _,key in {'mouth-level','mouth-smile','mouth-set','washed-denim','canvas-trousers'} do
+ assert(styles:GetAttribute(key),'Missing separate appearance layer: '..key)
+end
 assert(not game:GetService('Players').CharacterAutoLoads and not starter.LoadCharacterAppearance)
 assert(starter.StarterCharacter:GetAttribute('GameOwnedRig') and game:GetService('ReplicatedStorage').ResidentRig.Humanoid)
 

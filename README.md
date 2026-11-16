@@ -42,7 +42,7 @@ Press **Play**. Open **MAP** to see the streets, neighborhoods and your location
 - Credit union ATM: deposit / withdraw. Clinic: heal for $50. Medkit restores up to 60 health.
 - Death charges up to $75 and removes carried stolen goods; owned equipment returns on respawn.
 
-The city wallet tracks earned cash. Roblox handles optional sidearm purchases and five-use glow stick and confetti packs. The phone displays the current Roblox product price at checkout.
+The city wallet tracks earned cash. Roblox handles optional sidearm purchases, five-use packs of bubbles, glow sticks, confetti and streamers, and a twelve-use party sampler. The phone displays the current Roblox product price at checkout.
 
 New residents choose their name, height, build, skin tone, and haircut. Exchange Streetwear sells three original jackets with denim for city cash. A saved outfit can be worn again at the counter. Juniper and Waverly barbershops offer $30 cuts, and a player employed as a barber can serve another customer after clocking in at Juniper.
 

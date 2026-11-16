@@ -37,7 +37,7 @@ local ok,err=pcall(function()
  check(a:GetAttribute('Cash')==470 and b:GetAttribute('Wages')==30,'Customer pays working barber')
  local clothing=marker('Clothing');approach(a,clothing)
  call(a,'Outfit',{Item='pier-varsity'});call(a,'Outfit',{Item='pier-varsity'})
- check(a:GetAttribute('Cash')==375 and a.Character:FindFirstChildOfClass('Shirt').ShirtTemplate:find('104978973801561')~=nil,'Original varsity outfit bought once and equipped')
+ check(a:GetAttribute('Cash')==375 and a.Character:FindFirstChildOfClass('Shirt').ShirtTemplate:find(game.ReplicatedStorage.StreetStyle:GetAttribute('pier-varsity'),1,true)~=nil,'Original varsity outfit bought once and equipped')
  approach(a,marker('Sporting'));call(a,'Buy',{Item='Bat'})
  check(a.Backpack:FindFirstChild('Bat') and a:GetAttribute('Cash')==295,'Athletics sells cash bats')
  approach(a,marker('Market'));call(a,'Buy',{Item='Knife'});call(a,'Buy',{Item='Pistol'})
@@ -47,11 +47,15 @@ local ok,err=pcall(function()
  check(receipt(a,3732000729,'studio-sidearm')=='PurchaseGranted' and receipt(a,3732000729,'studio-sidearm')=='PurchaseGranted','Duplicate sidearm receipt acknowledged')
  check(a.Backpack:FindFirstChild('Pistol'),'Sidearm delivered')
  local spot=marker('GunStore');approach(a,spot,-2);approach(b,spot,2)
+ call(a,'ArmoryFinish',{Finish='Field carbine'})
+ check(a.Backpack.Pistol:FindFirstChild('Stock silhouette') and a.Backpack.Pistol:GetAttribute('Ammo')==12,'Included carbine appearance preserves the purchased loadout')
  call(a,'Offer',{Item='Pistol',Target=b.UserId,Amount=110});call(b,'Accept')
  check(a:GetAttribute('Cash')==350 and b:GetAttribute('Cash')==420 and not a.Backpack:FindFirstChild('Pistol') and b.Backpack:FindFirstChild('Pistol'),'One sidearm transferred once for city cash')
  check(receipt(a,3732000733,'studio-party')=='PurchaseGranted','Party product receipt')
  call(a,'PartyItem',{Item='Glow'});check(a.Character.HumanoidRootPart:FindFirstChild('Harbor glow'),'Purchased glow effect used')
  check(receipt(a,3732000729,'studio-sidearm')=='PurchaseGranted' and not a.Backpack:FindFirstChild('Pistol'),'Receipt replay preserves completed trade')
+ check(receipt(a,3732068679,'studio-sampler')=='PurchaseGranted','Sampler grants on the resident file')
+ for _,item in {'Bubbles','Streamers'} do call(a,'PartyItem',{Item=item});check(a.Character.HumanoidRootPart:FindFirstChild(item),'Purchased party effect: '..item) end
  local images,seen={},{}
  for _,v in city:GetDescendants() do
   if v.Name=='Alley paint' then
@@ -59,10 +63,10 @@ local ok,err=pcall(function()
    if not seen[id] then table.insert(images,id);seen[id]=true end
   end
  end
- for _,key in {'fleet-track','indigo-denim','pier-varsity','foundry-work','harbor-warmup','clay-workshirt','olive-overshirt','street-denim','resident-calm','resident-focused','resident-smile'} do
+ for _,key in {'fleet-track','indigo-denim','pier-varsity','foundry-work','harbor-warmup','clay-workshirt','olive-overshirt','street-denim','mouth-level','mouth-smile','mouth-set','washed-denim','canvas-trousers','washed-denim-black','street-denim-black','canvas-trousers-black','resident-calm','resident-focused','resident-smile'} do
   table.insert(images,'rbxassetid://'..game.ReplicatedStorage.StreetStyle:GetAttribute(key))
  end
- check(#images==15,'Mural sheets, streetwear and face textures present')
+ check(#images==23,'Mural sheets, streetwear and face textures present')
  local loaded,details=call(a,'PreloadArt',images);check(loaded,'Client loaded transparent paint and clothing textures '..tostring(details))
  workspace:SetAttribute('TestMinute',1200);task.wait(1.4)
  check(city:GetAttribute('CityMinute')==1200 and math.abs(game.Lighting.ClockTime-20)<.03,'Night lighting and city time')
