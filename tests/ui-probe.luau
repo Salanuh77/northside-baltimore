@@ -120,6 +120,14 @@ local ok, message = pcall(function()
   for _,obj in studio:GetDescendants() do if obj:IsA("TextLabel") and visible(obj) and obj.Text==value then return true end end
  end
  check("first and last names update the identity",labelPresent("Andre Brooks"))
+ local firstBox=studio:FindFirstChild('FirstName input',true)
+ local lastBox=studio:FindFirstChild('LastName input',true)
+ firstBox.Text='Zora';lastBox.Text="O'Neal"
+ check('typing a name updates the resident preview',labelPresent("Zora O'Neal"))
+ lastBox.Text=''
+ click(findButton(studio,'Continue'))
+ check('empty name stays on the identity screen',studio:FindFirstChild('LastName input',true)~=nil)
+ firstBox.Text='Andre';lastBox.Text='Brooks'
  click(findButton(studio,"Continue"))
  check("appearance controls show both directions", findButton(studio,"Hair previous").Text=="‹" and findButton(studio,"Hair next").Text=="›")
  local function rig()
