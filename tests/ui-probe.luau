@@ -121,6 +121,7 @@ local ok, message = pcall(function()
  end
  check("first and last names update the identity",labelPresent("Andre Brooks"))
  click(findButton(studio,"Continue"))
+ check("appearance controls show both directions", findButton(studio,"Hair previous").Text=="‹" and findButton(studio,"Hair next").Text=="›")
  local function rig()
   for _, obj in studio:GetDescendants() do
    if obj:IsA("WorldModel") and visible(obj) then

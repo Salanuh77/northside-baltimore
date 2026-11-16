@@ -48,7 +48,7 @@ end
 local west=frame(page,ink);local east=frame(page,ink)
 west.BackgroundTransparency=.08;east.BackgroundTransparency=.08
 local pane=scroller(west);local sidePane=scroller(east)
-local footer=label(panel,'Loading your files?',14,cream);footer.TextWrapped=true
+local footer=label(panel,'Loading your files…',14,cream);footer.TextWrapped=true
 local slot,tab,waiting=nil,'Identity',false
 local closeup=false
 local room=make('Model',{Name='Fitting room'},world)
@@ -60,7 +60,7 @@ furnishing('Rear brick',Vector3.new(28,13,.6),Vector3.new(0,6.4,5),{145,102,80},
 for i=-2,2 do
  local x=i*4.6
  furnishing('Window reveal',Vector3.new(3.65,5.4,.3),Vector3.new(x,6,4.55),{49,60,61})
- furnishing('Daylight',Vector3.new(3.3,5,.2),Vector3.new(x,6,4.32),{183,208,203},Enum.Material.Neon)
+ furnishing('Daylight',Vector3.new(3.3,5,.2),Vector3.new(x,6,4.32),{165,195,193})
  furnishing('Crossbar',Vector3.new(3.4,.12,.25),Vector3.new(x,6.3,4.16),{66,69,66})
  furnishing('Sash',Vector3.new(.12,5,.25),Vector3.new(x,6,4.16),{66,69,66})
 end
@@ -149,7 +149,7 @@ local function layout()
  at(footer,89,h-footerHeight+4,w-206,footerHeight-8)
  local center=w/2;local yy=set.AbsoluteSize.Y-36
  at(left,center-71,yy,35,32);at(right,center+36,yy,35,32);at(zoom,center-35,yy,70,32)
- left.Text='?';right.Text='?';zoom.TextSize=11
+ left.Text='‹';right.Text='›';zoom.TextSize=11
  pose()
 end
 local function clear(parent) for _,v in parent:GetChildren() do v:Destroy() end end
@@ -203,7 +203,7 @@ draw=function()
    local current=label(parent,draft[key],13,cream);current.TextXAlignment=Enum.TextXAlignment.Center
    current.Position=UDim2.fromOffset(30,y+17);current.Size=UDim2.new(1,-64,0,27)
    for _,delta in {-1,1} do
-    local b=button(parent,delta==1 and '?' or '?',function()
+    local b=button(parent,delta==1 and '›' or '‹',function()
      local index=table.find(values,draft[key]) or 1
      draft[key]=values[(index-1+delta)%#values+1];current.Text=draft[key];rebuild()
     end)
