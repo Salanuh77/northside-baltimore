@@ -4,7 +4,7 @@ local old='else account=Files.open%(nil%) end'
 local sample=[[
 else
  account=Files.open({Look={Name='Old Harbor',Tone='Olive',Hair='Shaved',Build='Average',Height='Medium'},Cash=983,Bank=102})
- account=Files.write(account,2,{Look={Name='River',Tone='Copper',Hair='Curls',Build='Broad',Height='Tall',Starter='Olive'},Cash=701,Bank=81,Items={Bat=true},Reserve=7,Employment='dock',Wages=86})
+ account=Files.write(account,2,{Look={Name='River',Tone='Copper',Hair='Barrel twists',Build='Broad',Height='Tall',Starter='Olive',FaceShape='Heart',FaceWidth='Narrow',HairColor='Honey',EyeSpacing='Wide',LipFullness='Full'},Cash=701,Bank=81,Items={Bat=true},Reserve=7,Employment='dock',Wages=86})
 end]]
 local source,count=cityServer.Source:gsub(old,sample,1)
 assert(count==1,'Saved-record fixture no longer matches Studio storage adapter');cityServer.Source=source
@@ -22,6 +22,10 @@ local ok,err=pcall(function()
  p:SetAttribute('ProbeChoose',true)
  assert(waitFor(function() return p.Character and p.Character:GetAttribute('GameOwnedRig') and p.Character:FindFirstChild('Head') and p.Character.Head:FindFirstChild('Northside hair') end),'Saved resident did not load')
  assert(p.Character.Humanoid.DisplayName=='River' and p:GetAttribute('ResidentSlot')==2 and p:GetAttribute('NeedsCharacter')==false)
+ local head=p.Character.Head
+ assert(head:FindFirstChild('Head sculpt',true).MeshId==game.ReplicatedStorage.ResidentProfiles:FindFirstChild('Heart',true).MeshId,'Saved head geometry not restored')
+ local hair=head:FindFirstChild('Hair mesh',true)
+ assert(hair.MeshId==game.ReplicatedStorage.ResidentGrooms:FindFirstChild('Barrel twists',true).MeshId and hair.Color==require(game.ReplicatedStorage.StreetStyle).Dyes.Honey,'Saved cut or color lost on rejoin')
  assert(p:GetAttribute('Cash')==701 and p:GetAttribute('Bank')==81 and p:GetAttribute('Wages')==86 and p:GetAttribute('Employment')=='dock')
  assert(p.Character:FindFirstChildOfClass('Shirt') and p.Character:FindFirstChildOfClass('Pants'),'Existing resident missing street clothes')
  assert(p.Backpack:FindFirstChild('Bat') and p:GetAttribute('ReserveAmmo')==7,'Inventory not restored')
