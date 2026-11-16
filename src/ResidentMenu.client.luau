@@ -51,6 +51,9 @@ local pane=scroller(west);local sidePane=scroller(east)
 local footer=label(panel,'Loading your files…',14,cream);footer.TextWrapped=true
 local slot,tab,waiting=nil,'Identity',false
 local closeup=false
+local mirror=false
+local wornOutfit
+local close
 local room=make('Model',{Name='Fitting room'},world)
 local function furnishing(name,size,position,color,material)
  return make('Part',{Name=name,Size=size,CFrame=CFrame.new(position),Anchored=true,Color=Color3.fromRGB(table.unpack(color)),Material=material or Enum.Material.SmoothPlastic},room)
@@ -88,7 +91,7 @@ end
 local function rebuild()
  if rig then rig:Destroy() end
  rig=template:Clone();rig.Parent=world;rig.HumanoidRootPart.Anchored=true
- style.apply(rig,draft,nil);pose()
+ style.apply(rig,draft,wornOutfit);pose()
 end
 local function turn(delta) yaw+=delta;pose() end
 local left=button(set,'Turn left',function() turn(-math.pi/6) end)
@@ -115,6 +118,7 @@ local function chooseFile(index)
 end
 local function send()
  if waiting or not slot then return end
+ if mirror then waiting=true;footer.Text='Updating face…';event:FireServer('MirrorLook',draft);return end
  waiting=true;footer.Text='Saving resident…'
  local request=table.clone(draft);request.Index=slot
  event:FireServer('CreateResident',request)
@@ -132,6 +136,7 @@ end)
 enter.BackgroundColor3=gold;enter.TextColor3=ink
 local back=button(panel,'Back',function()
  if waiting then return end
+ if mirror then close();return end
  if tab=='Appearance' then tab='Identity' else slot=nil;draft=fresh() end
  closeup=false;footer.Text='';rebuild();draw()
 end)
@@ -172,7 +177,8 @@ draw=function()
  back.Visible=slot~=nil;enter.Visible=slot~=nil
  zoom.Visible=slot~=nil and tab=='Appearance';zoom.Text=closeup and 'Full body' or 'Face view'
  enter.Text=tab=='Identity' and 'Continue' or 'Enter city'
- if slot then chosenName() end
+ if mirror then title.Text='Barber mirror';enter.Text='Save face';footer.Text=draft.Name
+ elseif slot then chosenName() end
  layout()
  local function hint(parent,text)
   local v=label(parent,text,13,gold);v.Size=UDim2.new(1,-4,0,26)
@@ -231,6 +237,11 @@ draw=function()
    end
   end
  end
+ if mirror then
+  controls(pane,{{'FaceShape','Head shape',style.FaceShapes},{'FaceWidth','Face width',style.FaceWidths},{'EyeSpacing','Eye spacing',style.EyeSpacings},{'LipFullness','Lip fullness',style.LipFullness}})
+  controls(sidePane,{{'Expression','Eye shape',style.Expressions},{'Mouth','Mouth',style.Mouths},{'Eye','Eye color',style.Eyes},{'Detail','Facial hair & details',style.Details}})
+  return
+ end
  hint(pane,'Starter outfits')
  for i,set in style.Sets do
   local preset=button(pane,set.Name,function()
@@ -262,14 +273,20 @@ local function files()
  local encoded=player:GetAttribute('ResidentFiles')
  if encoded then rows=game.HttpService:JSONDecode(encoded);footer.Text='';draw() end
 end
-local function close()
+close=function()
  if not screen.Enabled then return end
  local focused=input:GetFocusedTextBox();if focused and focused:IsDescendantOf(screen) then focused:ReleaseFocus() end
- screen.Enabled=false
+ screen.Enabled=false;waiting=false;mirror=false;wornOutfit=nil
  if rig then rig:Destroy();rig=nil end
 end
 event.OnClientEvent:Connect(function(kind,data)
- if screen.Enabled and kind=='Notice' and waiting and not player.Character then
+ if kind=='FaceMirror' and player.Character then
+  draft=fresh()
+  for key,value in data.Look do draft[key]=value end
+  wornOutfit=data.Outfit;slot=player:GetAttribute('ResidentSlot');tab='Appearance';mirror=true
+  closeup=true;yaw=.22;waiting=false;screen.Enabled=true;rebuild();draw()
+ elseif kind=='MirrorDone' and mirror then close()
+ elseif screen.Enabled and kind=='Notice' and waiting then
   footer.Text=tostring(data);waiting=false
  end
 end)
