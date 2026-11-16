@@ -61,10 +61,31 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest)
   end
   return true
  end
+ local function canReachPatient(model,character)
+  local root=character:FindFirstChild('HumanoidRootPart')
+  if not root then return false end
+  local origin=model.HumanoidRootPart.Position+Vector3.yAxis
+  local goal=root.Position+Vector3.yAxis
+  if (goal-origin).Magnitude>10 then return false end
+  local ray=RaycastParams.new()
+  ray.FilterType=Enum.RaycastFilterType.Exclude
+  ray.FilterDescendantsInstances={model}
+  ray.RespectCanCollide=true
+  local hit=workspace:Raycast(origin,goal-origin,ray)
+  return not hit or hit.Instance:IsDescendantOf(character)
+ end
  local function request(p,role)
   if not calls[role] then return end
   if not valid(role,p) then return tell(p,role=='medic' and 'Treatment is available when you are injured.' or 'Police processing is available for a wanted character.') end
   if calls[role][p] then return tell(p,'Dispatch already has your call.') end
+  if role=='medic' then
+   for _,unit in field:GetChildren() do
+    if unit:GetAttribute('Service')=='medic' and unit.Humanoid.Health>0 and canReachPatient(unit,p.Character) then
+     settle(role,p,nil,false)
+     return
+    end
+   end
+  end
   calls[role][p]=os.clock()
   for _,other in Players:GetPlayers() do
    if other~=p and jobs[other] and jobs[other].role==role then tell(other,'Dispatch • '..p.DisplayName..' requested assistance. Open Phone → Dispatch.') end
@@ -92,14 +113,10 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest)
     local dest=home+Vector3.new(0,0,patrol and 24 or 0)
     if target and target.Character then dest=target.Character:GetPivot().Position end
     if not target or best>10 then observed=nil end
-    if target and best<=10 then
+    if target and best<=10 and canReachPatient(model,target.Character) then
      if observed~=target then observed=target; observedAt=os.clock() end
      local caught=role=='police' and profiles[target].Heat>=2 and os.clock()-observedAt>=4.5
-     local params=RaycastParams.new(); params.FilterType=Enum.RaycastFilterType.Exclude; params.FilterDescendantsInstances={model}
-     local goal=target.Character:GetPivot().Position
-     local hit=workspace:Raycast(at,goal-at,params)
-     local visible=not hit or hit.Instance:IsDescendantOf(target.Character)
-     if visible and not settle(role,target,nil,caught) and role=='police' and (not model:GetAttribute('Spoke') or os.clock()>model:GetAttribute('Spoke')+12) then model:SetAttribute('Spoke',os.clock()); tell(target,'Officer nearby. Hands up to surrender.') end
+     if not settle(role,target,nil,caught) and role=='police' and (not model:GetAttribute('Spoke') or os.clock()>model:GetAttribute('Spoke')+12) then model:SetAttribute('Spoke',os.clock()); tell(target,'Officer nearby. Hands up to surrender.') end
     elseif (dest-at).Magnitude>4 then
      local path=Path:CreatePath({AgentRadius=2,AgentHeight=5,AgentCanJump=true})
      local ok=pcall(function() path:ComputeAsync(at,dest) end)

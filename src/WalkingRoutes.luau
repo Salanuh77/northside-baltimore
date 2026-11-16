@@ -34,7 +34,7 @@ return function(city, markers, jobs)
         if not marker or (p:GetAttribute('CustodyUntil') or 0)>0 then return end
         nextRequest[p]=os.clock()+2
         computing[p]=true
-        local path=Pathfinding:CreatePath({AgentRadius=2,AgentHeight=5,AgentCanJump=false,WaypointSpacing=8,Costs={Asphalt=.8}})
+        local path=Pathfinding:CreatePath({AgentRadius=2,AgentHeight=5,AgentCanJump=true,WaypointSpacing=8,Costs={Asphalt=.8}})
         local goal=marker.CFrame:PointToWorldSpace(Vector3.new(0,0,-marker.Size.Z/2-3))
         local ok=pcall(function() path:ComputeAsync(root.Position,goal) end)
         computing[p]=nil
