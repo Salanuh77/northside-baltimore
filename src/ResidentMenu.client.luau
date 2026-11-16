@@ -198,16 +198,18 @@ draw=function()
    local box=make('TextBox',{Name=field..' input',Text=draft[field],PlaceholderText=caption,
     ClearTextOnFocus=false,MultiLine=false,TextSize=16,Font=Enum.Font.GothamMedium,TextColor3=cream,
     BackgroundColor3=slate,BorderSizePixel=0,Size=UDim2.new(1,-4,0,38),Position=UDim2.fromOffset(0,28)},parent)
+   local buttons={}
    box:GetPropertyChangedSignal('Text'):Connect(function()
     draft[field]=box.Text;chosenName()
+    for name,item in buttons do
+     item.BackgroundColor3=name==box.Text and gold or slate;item.TextColor3=name==box.Text and ink or cream
+    end
    end)
    local suggestions=label(parent,'Suggestions',12,paper)
    suggestions.Position=UDim2.fromOffset(2,72);suggestions.Size=UDim2.new(1,-4,0,20)
-   local buttons={}
    for i,value in list do
     local b=button(parent,value,function()
      box.Text=value
-     for name,item in buttons do item.BackgroundColor3=name==value and gold or slate;item.TextColor3=name==value and ink or cream end
     end)
     buttons[value]=b;b.Position=UDim2.fromOffset(0,96+(i-1)*34);b.Size=UDim2.new(1,-4,0,30)
     if draft[field]==value then b.BackgroundColor3=gold;b.TextColor3=ink end
@@ -245,7 +247,7 @@ draw=function()
  hint(pane,'Starter outfits')
  for i,set in style.Sets do
   local preset=button(pane,set.Name,function()
-   draft.Starter=set.Starter;draft.Pants=set.Pants;draft.Shoes=set.Shoes
+   closeup=false;draft.Starter=set.Starter;draft.Pants=set.Pants;draft.Shoes=set.Shoes
    rebuild();draw()
   end)
   preset.Name='Preset '..i; preset.Position=UDim2.fromOffset(0,28+(i-1)*33);preset.Size=UDim2.new(1,-4,0,30)
