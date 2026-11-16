@@ -32,10 +32,12 @@ for _,p in city:GetDescendants() do
 end
 for _,r in {'Grocer','Club host','Stylist','Barista','Barber','Mart cashier','Bank teller','Clinic registrar','Booking clerk'} do assert(roles[r],r) end
 local detention=assert(city:FindFirstChild('Patapsco Detention Center',true))
+assert(detention['Intake observation glass'].CanCollide and detention:FindFirstChild('Booking monitor'))
 assert(detention:FindFirstChild('Booking safety glass') and detention:FindFirstChild('Bail receipt'))
 for _,model in city['Gas stations']:GetChildren() do
  local till=model:FindFirstChild('Mart till')
  if till then
+  assert(model:FindFirstChild('Back counter shelf'))
   assert(model['Cash drawer']:GetAttribute('Action')=='Store' and model['Cash drawer']:GetAttribute('SecondaryPrompt'))
   assert(till:FindFirstChild('LCD panel') and model:FindFirstChild('Cooler strip'):FindFirstChildOfClass('SpotLight'))
   assert(model:FindFirstChild('Chilled drink') and model:FindFirstChild('Cooler glass').Transparency>.5)

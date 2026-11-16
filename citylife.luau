@@ -72,7 +72,11 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
    local light=rb.Instance.new('PointLight');light.Range=13;light.Brightness=.85;light.Color=rgb(255,195,126);light.Parent=lamp
    for _,h in {7.61,8.94} do p('Lantern housing',1.07,.19,.91,-8.8,h,15.15,'dark','Metal') end
    for _,dx in {-.40,.40} do p('Lantern frame',.09,1.17,.09,-8.8+dx,8.27,15.50,'dark','Metal') end
+   p('Stone plinth',10.3,1.0,.54,5.36,2.0,14.63,cream,'Limestone')
    if i%3~=1 then
+    for _,side in {-1,1} do
+     p('Curtain drop',.8,4.7,.18,5+side*2.47,8.13,13.28,rgb(164+i%4*8,151+i%3*8,130),'Fabric')
+    end
     p('Rolled window shade',4.96,.96,.16,5,22.65,13.25,rgb(189,175,146),'Fabric')
    end
   end
@@ -217,7 +221,19 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   local menu=p('Coffee counter',6,1.15,.18,-11,3.05,10.62,enamel,'Metal')
   lettering(menu,'FRESH COFFEE   $6')
   action(menu,'Coffee','Buy coffee · $6')
+  -- The stock wall faces the customer and stays behind the cashier's standing area.
+  for tier=1,2 do
+   local y=6.9+(tier-1)*2.0
+   p('Back counter shelf',14,.18,1.35,0,y,16.9,cream,'Metal')
+   for box=1,8 do
+    local u=(box-4.5)*1.55
+    local color=({enamel,rgb(100,128,112),rgb(180,123,61),rgb(132,88,90)})[(box+tier)%4+1]
+    p('Pantry carton',1.25,1.38,.80,u,y+.80,16.78,color,'SmoothPlastic')
+    p('Pantry label',.83,.46,.04,u,y+.91,16.35,cream,'SmoothPlastic')
+   end
+  end
   p('Checkout desk',9,3.2,3,0,3,13,'dark','Wood')
+  p('Counter edge',9.2,.20,3.15,0,4.67,13,cream,'Metal')
   local till=p('Mart till',2,1.5,1.7,0,5.4,12.8,'dark','Metal')
   fixtures.register(till);fixtures.staff(till,'Mart cashier',0,3.1,1.4);action(till,'Mart','Buy supplies')
   local drawer=p('Cash drawer',2.3,.45,.30,2.35,3.65,11.36,'dark','Metal')

@@ -13,7 +13,15 @@ return function(part,group,label,action,city)
  p('Entry court',87,.65,18,0,.5,-38,cream)
  p('Visiting lobby floor',80,.85,22,0,.71,-22,cream,'Marble')
  p('Detention floor',80,.85,54,0,.71,15,cream)
- p('North wall',80,18,1,0,10,-12,brick,'Brick')
+ -- A fixed observation window lines up with the right visitor bay. The panes
+ -- remain collidable across the full opening on the custody side.
+ p('North wall',27,18,1,-26.5,10,-12,brick,'Brick')
+ p('North wall',44,18,1,18,10,-12,brick,'Brick')
+ p('Custody window sill',9,4,1,-8.5,3,-12,brick,'Brick')
+ p('Custody window head',9,8,1,-8.5,15,-12,brick,'Brick')
+ local observation=p('Intake observation glass',9,6,.40,-8.5,8,-12,blue,'Glass')
+ observation.Transparency=.67;observation.CanCollide=true
+ for _,u in {-12.87,-8.5,-4.13} do p('Observation stile',.24,6.1,.56,u,8,-12,blue,'Metal') end
  p('South wall',80,18,1,0,10,42,brick,'Brick')
  for _,s in {-1,1} do
   p('End wall',1,18,75,s*40,10,4.5,brick,'Brick')
@@ -57,6 +65,18 @@ return function(part,group,label,action,city)
  p('Bail receipt',.9,.03,.66,-16.2,4.66,-18.0,cream,'SmoothPlastic')
  local desk=p('Booking desk',9,.32,1.85,-13,4.36,-15.65,trim,'Wood')
  fixtures.staff(desk,'Booking clerk',0,1.84,1.14)
+ p('Booking monitor foot',1.6,.12,.75,-17.1,4.58,-15.4,trim,'Metal')
+ p('Booking monitor stand',.29,1.08,.32,-17.1,5.12,-15.4,trim,'Metal')
+ p('Booking monitor',2.5,1.60,.24,-17.1,6.02,-15.4,trim,'Metal')
+ p('Filing cabinet',3.45,6.0,1.7,-20,4.14,-13.45,rb.Color3.fromRGB(131,137,128),'Metal')
+ for tier=1,3 do
+  p('File drawer',3.2,1.73,.15,-20,1.91+tier*1.6,-14.37,cream,'Metal')
+  p('File pull',.83,.14,.18,-20,2.18+tier*1.6,-14.52,trim,'Metal')
+ end
+ for _,h in {3.5,6.7} do
+  p('Office shelf',5.6,.18,1.1,-28,h,-13.15,trim,'Metal')
+  for i=0,4 do p('Case binder',.62,1.58,.89,-30+i*.86,h+.89,-13.21,i%2==0 and cream or blue,'Fabric') end
+ end
  for _,u in {-18,-8} do
   local diffuser=p('Booking pendant',3.6,.28,1.3,u,12.2,-18.2,rb.Color3.fromRGB(253,219,172),'Neon')
   fixtures.spot(diffuser,rb.Color3.fromRGB(255,215,159),14,1.15)
