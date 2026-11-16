@@ -14,7 +14,7 @@ Style.Pants={'Dark denim','Washed denim','Canvas'}
 Style.Shoes={'Bone low-tops','Black low-tops'}
 Style.Mouths={'Level','Smile','Set'}
 local pantsKeys={'street-denim','washed-denim','canvas-trousers'}
-Style.Hair={'Close crop','Curls','High puff','Twists','Shaved','Cornrows','Twin buns','Short locs','Afro','Braids','Ponytail','Side part'}
+Style.Hair={'Close crop','Curls','High puff','Twists','Shaved','Cornrows','Twin buns','Short locs','Afro','Braids','Ponytail','Side part','Low puff','Twist out','Barrel twists','Bantu knots'}
 Style.Tones={'Espresso','Umber','Copper','Amber','Olive','Sand','Porcelain'}
 Style.Skin={Color3.fromRGB(78,48,39),Color3.fromRGB(106,66,49),Color3.fromRGB(148,90,62),Color3.fromRGB(185,125,86),Color3.fromRGB(189,146,108),Color3.fromRGB(218,178,141),Color3.fromRGB(239,207,181)}
 Style.Outfits={{Id='fleet-track',Name='Fleet track jacket',Price=65},{Id='pier-varsity',Name='Burgundy varsity jacket',Price=95},{Id='foundry-work',Name='Foundry overshirt',Price=55}}
@@ -39,11 +39,10 @@ function Style.valid(data)
  end
  return true
 end
-local function hair(head,style,dye,detail)
+local function hair(head,style,dye,detail,scale)
  local old=head:FindFirstChild('Northside hair'); if old then old:Destroy() end
  if style=='Shaved' then return end
  local folder=Instance.new('Folder'); folder.Name='Northside hair'; folder.Parent=head
- local scale=head.Size
  local function lock(x,y,z,sx,sy,sz,shade)
   local p=Instance.new('Part'); p.Name='Lock'; p.Shape=Enum.PartType.Ball
   p.Color=dye:Lerp(Color3.new(1,1,1),math.max(0,shade-15)/180); p.Material=Enum.Material.Fabric
@@ -51,36 +50,31 @@ local function hair(head,style,dye,detail)
   p.Size=Vector3.new(sx,sy,sz)*scale; p.CFrame=head.CFrame*CFrame.new(Vector3.new(x,y,z)*scale); p.Parent=folder
   local weld=Instance.new('WeldConstraint'); weld.Part0=head; weld.Part1=p; weld.Parent=p
  end
- local foundation=({Twists='Curls',['Short locs']='Braids',Cornrows='Braids',['Twin buns']='Close crop',['High puff']='Close crop'})[style] or style
- local source=game.ReplicatedStorage:WaitForChild('ResidentHair'):FindFirstChild(foundation)
+ local groom=game.ReplicatedStorage.ResidentGrooms:FindFirstChild(style,true)
+ local source=groom or game.ReplicatedStorage.ResidentHair:FindFirstChild(style)
  if source then
-  local handle=source:Clone();handle.Name='Hair mesh';handle.Anchored=false;handle.CanCollide=false;handle.CanTouch=false;handle.CanQuery=false;handle.Massless=true
-  -- These catalog cuts use wrap cages with skeleton-space attachment offsets.
-  -- Fit their rigid render meshes to the game's fixed head shape in both worlds.
+  local handle=source:Clone();handle.Name='Hair mesh';handle.Anchored=false
+  handle.CanCollide=false;handle.CanTouch=false;handle.CanQuery=false;handle.Massless=true
   local cage=handle:FindFirstChildOfClass('WrapLayer');if cage then cage:Destroy() end
-  local proportions={
-   ['Close crop']=Vector3.new(1.08,.76,1.10),Curls=Vector3.new(1.12,.88,1.13),
-   Afro=Vector3.new(1.38,1.12,1.38),Braids=Vector3.new(1.13,1.45,1.21),
-   ['Side part']=Vector3.new(1.09,.88,1.15),Ponytail=Vector3.new(1.16,1.49,1.53)
-  }
-  handle.Size=head.Size*proportions[foundation]
-  if dye~=dyes.Black then
-   local surface=handle:FindFirstChildOfClass('SurfaceAppearance');if surface then surface:Destroy() end
-   handle.TextureID='';handle.Color=dye
+  local offset
+  if groom then
+   handle.Size=source.Size*scale;offset=source:GetAttribute('GroomCenter')
+   handle.Color=dye;handle.Material=Enum.Material.SmoothPlastic
+  else
+   local proportions={
+    ['Close crop']=Vector3.new(1.08,.76,1.10),Curls=Vector3.new(1.12,.88,1.13),
+    Afro=Vector3.new(1.38,1.12,1.38),Braids=Vector3.new(1.13,1.45,1.21),
+    ['Side part']=Vector3.new(1.09,.88,1.15),Ponytail=Vector3.new(1.16,1.49,1.53)
+   }
+   handle.Size=scale*proportions[style]
+   if dye~=dyes.Black then
+    local surface=handle:FindFirstChildOfClass('SurfaceAppearance');if surface then surface:Destroy() end
+    handle.TextureID='';handle.Color=dye
+   end
+   offset=style=='Ponytail' and Vector3.new(0,.18,.23) or style=='Braids' and Vector3.new(0,.16,.11) or Vector3.new(0,.34,.04)
   end
-  local offset=foundation=='Ponytail' and Vector3.new(0,.18,.23) or foundation=='Braids' and Vector3.new(0,.16,.11) or Vector3.new(0,.34,.04)
-  handle.CFrame=head.CFrame*CFrame.new(offset*head.Size);handle.Parent=folder
-  local w=Instance.new('WeldConstraint');w.Part0=head;w.Part1=handle;w.Parent=handle
- end
- if style=='High puff' then lock(0,.65,.11,.76,.65,.76,21)
- elseif style=='Twin buns' then for _,side in {-1,1} do lock(side*.35,.55,.18,.44,.47,.46,21) end
- elseif style=='Twists' or style=='Short locs' then
-  -- Keep the forehead open; shortened strands follow the sideburns and nape.
-  for i=0,12 do
-   local a=(i/12-.5)*math.pi*1.12
-   local length=(style=='Twists' and .27 or .40)+.06*(i%3)
-   lock(.43*math.sin(a),.21-length*.28,.41*math.cos(a),.105,length,.12,18+i%3)
-  end
+  handle.CFrame=head.CFrame*CFrame.new(offset*scale);handle.Parent=folder
+  local weld=Instance.new('WeldConstraint');weld.Part0=head;weld.Part1=handle;weld.Parent=handle
  end
  if detail=='Sideburns' then
   for _,side in {-1,1} do lock(.45*side,.045,-.18,.065,.29,.09,18) end
@@ -132,11 +126,12 @@ function Style.apply(c,look,outfit)
   end
  end
  local dye=dyes[look.HairColor or 'Black']
- Portrait.draw(head,look,script,tone,dye,iris[look.Eye or 'Brown'])
+ local headScale=Portrait.draw(head,look,script,tone,dye,iris[look.Eye or 'Brown'])
+ local scalpWidth=game.ReplicatedStorage.ResidentProfiles:FindFirstChild(look.FaceShape or 'Oval',true).Size.X
  for _,v in c:GetChildren() do
   if v:IsA('Accessory') and (v.AccessoryType==Enum.AccessoryType.Hair or outfit and table.find({'Shirt','Jacket','Sweater','Pants','Shorts','TShirt'},v.AccessoryType.Name)) then v:Destroy() end
  end
- hair(head,look.Hair,dye,look.HairDetail); h.DisplayName=look.Name
+ hair(head,look.Hair,dye,look.HairDetail,headScale*Vector3.new(scalpWidth/.96,1,1)); h.DisplayName=look.Name
  if outfit and script:GetAttribute(outfit) then
   local shirt=c:FindFirstChildOfClass('Shirt') or Instance.new('Shirt'); shirt.ShirtTemplate='rbxassetid://'..script:GetAttribute(outfit); shirt.Parent=c
   local key=pantsKeys[table.find(Style.Pants,look.Pants or 'Dark denim')]..(look.Shoes=='Black low-tops' and '-black' or '')
