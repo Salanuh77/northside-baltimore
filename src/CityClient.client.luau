@@ -99,7 +99,31 @@ local function playersMenu()
  end
  if count==0 then paragraph('No players nearby. Multiplayer actions require a second player.'); end
 end
+local city=workspace:WaitForChild('Baltimore')
+local bearing=require(game.ReplicatedStorage:WaitForChild('JobBearing'))
 local jobMarker
+local firstJobOverride
+local routeCard=make('Frame',{Name='JobDirections',AnchorPoint=Vector2.new(.5,1),Position=UDim2.new(.5,0,1,-66),Size=UDim2.new(.65,0,0,44),BackgroundColor3=dark,BackgroundTransparency=.1,Visible=false,BorderSizePixel=0},gui)
+make('UISizeConstraint',{MaxSize=Vector2.new(360,44)},routeCard)
+make('UICorner',{CornerRadius=UDim.new(0,7)},routeCard)
+local arrow=text(routeCard,'↑',UDim2.fromOffset(30,30),UDim2.fromOffset(7,7),22,gold)
+arrow.TextXAlignment=Enum.TextXAlignment.Center
+local routeText=text(routeCard,'',UDim2.new(1,-47,1,0),UDim2.fromOffset(42,0),13,cream)
+local function showPickup()
+ if firstJobOverride~=nil then return firstJobOverride end
+ return p:GetAttribute('ShowFirstJob')==true
+end
+Run.RenderStepped:Connect(function()
+ local target=jobMarker and jobMarker:GetAttribute('Target') or (showPickup() and city:GetAttribute('CourierDesk'))
+ local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
+ local camera=workspace.CurrentCamera
+ routeCard.Visible=typeof(target)=='Vector3' and root~=nil and camera~=nil and not modal.Visible and (p:GetAttribute('CustodyUntil') or 0)==0
+ if not routeCard.Visible then return end
+ local angle,distance=bearing(camera.CFrame.LookVector,target-root.Position)
+ arrow.Rotation=angle
+ local objective=jobMarker and jobMarker:GetAttribute('Objective') or 'Community Center · pick up a $90 delivery'
+ routeText.Text=objective..'\n'..(distance<=9 and 'Use the nearby prompt' or math.ceil(distance)..' studs')
+end)
 event.OnClientEvent:Connect(function(kind,data)
  if retailUI.handle(kind,data) then return end
  if kind=='Notice' then notify(data)
@@ -152,8 +176,11 @@ event.OnClientEvent:Connect(function(kind,data)
   if jobMarker then jobMarker:Destroy(); jobMarker=nil end
   if data then
    local a=make('Part',{Anchored=true,CanCollide=false,CanQuery=false,CanTouch=false,Transparency=1,Position=data.Position+Vector3.new(0,8,0),Size=Vector3.one},workspace)
+   firstJobOverride=false
+   a:SetAttribute('Target',data.Position)
+   a:SetAttribute('Objective',data.Text)
    local bb=make('BillboardGui',{Size=UDim2.fromOffset(180,60),AlwaysOnTop=true},a)
-   local l=text(bb,'▼ DELIVERY\n'..data.Text,UDim2.fromScale(1,1),UDim2.new(),16,gold); l.TextXAlignment=Enum.TextXAlignment.Center
+   local l=text(bb,'▼ '..data.Text,UDim2.fromScale(1,1),UDim2.new(),16,gold); l.TextXAlignment=Enum.TextXAlignment.Center
    jobMarker=a
   end
  end
@@ -205,7 +232,6 @@ Run.RenderStepped:Connect(function()
   status.Text='Patapsco  '..math.max(0,sentence-math.floor(workspace:GetServerTimeNow()))..'s    Bail $'..(p:GetAttribute('Bail') or 0)
  elseif state and state.Heat then status.Text='Wanted '..state.Heat..'/5   •   Goods '..state.Loot end
 end)
-local city=workspace:WaitForChild('Baltimore')
 local function setClock()
  local minutes=city:GetAttribute('CityMinute') or 864
  local hour=math.floor(minutes/60);local day=({'MON','TUE','WED','THU','FRI','SAT','SUN'})[city:GetAttribute('CityDay') or 1]
@@ -283,6 +309,11 @@ end
 button(gui,'PHONE',UDim2.fromOffset(82,34),UDim2.new(1,-100,0,98),openPhone)
 button(gui,'GUIDE',UDim2.fromOffset(82,34),UDim2.new(1,-100,0,18),function()
  clear('WELCOME TO NORTHSIDE')
+ if not jobMarker then
+  row(showPickup() and 'Hide courier directions' or 'Find the $90 courier desk',function()
+   firstJobOverride=not showPickup(); modal.Visible=false
+  end)
+ end
  paragraph('A Baltimore-inspired neighborhood RP. Start with $500. Community center and credit union are safe zones. This is fictional, non-graphic gameplay.')
  paragraph('On the waterfront, visit Seven Foot Knoll Lighthouse. Board USS Constellation from the eastern timber pier. Find the Douglass and Marshall mural inside Pier 8 Maritime Gallery.')
  paragraph('E / tap prompt: interact. H: surrender. T: nearby players and transactions. Equip pistol and click/tap to fire; R reloads. Hold E on marked registers or lockboxes to start a timed robbery.')

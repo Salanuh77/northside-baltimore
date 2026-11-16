@@ -415,7 +415,10 @@ event.OnServerEvent:Connect(function(p,kind,data)
    d.Spawning=true
    if not saveConfirmed(p,d) then
     if p.Parent then p:Kick('Your resident could not be saved. Rejoin to try again.') end
-   elseif p.Parent then p:LoadCharacterAsync() end
+   elseif p.Parent then
+    p:SetAttribute('ShowFirstJob',true)
+    p:LoadCharacterAsync()
+   end
   end
   return
  end

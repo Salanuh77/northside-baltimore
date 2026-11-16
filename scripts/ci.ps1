@@ -9,7 +9,7 @@ if (!(Test-Path $lune)) {
     Remove-Item -LiteralPath $zip
 }
 if ((Get-FileHash $lune).Hash -ne '95F4A457317237516C347745BF363AA63DD30C97105C9595E6B8914B29267FDB') { throw 'Lune binary checksum mismatch' }
-foreach ($suite in 'tests/save-files','tests/server-directory','tests/retail-unit','tests/custody-unit','build','validate','tests/work-contracts','tests/heritage') {
+foreach ($suite in 'tests/save-files','tests/server-directory','tests/retail-unit','tests/custody-unit','build','validate','tests/work-contracts','tests/job-navigation','tests/heritage') {
     & $lune run $suite
     if ($LASTEXITCODE -ne 0) { throw "$suite failed" }
 }

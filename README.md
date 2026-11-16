@@ -38,7 +38,7 @@ Press **Play**. Open **MAP** to see the streets, neighborhoods and your location
 - House lockbox: equip crowbar and stay nearby for 9 seconds. Sell stolen goods at the warehouse salvage counter for $110 each.
 - Store register: equip pistol and stay nearby for 12 seconds for $225. Locations reset after 3 minutes.
 - Player robbery: target must surrender; remain nearby for 8 seconds. Takes 25% of cash, capped at $200, with a 5 minute victim cooldown. Bank money is protected.
-- Community center: delivery jobs pay $90. Deliver to the marked mailbox.
+- Your new resident gets an optional arrow to the Community Center courier desk. Pick up a parcel and follow the new bearing and distance to the mailbox for $90. Open GUIDE to hide or restore the pickup directions. The same compass follows active shift stops.
 - Credit union ATM: deposit / withdraw. Clinic: heal for $50. Medkit restores up to 60 health.
 - Death charges up to $75 and removes carried stolen goods; owned equipment returns on respawn.
 

@@ -60,6 +60,25 @@ local ok,err=pcall(function()
  local bot=bots:FindFirstChild('City paramedic'); move(b,bot:GetPivot().Position+Vector3.new(3,1,0)); b.Character.Humanoid.Health=42; call(b,'CallResponder',{Role='medic'})
  local limit=os.clock()+15; while b.Character.Humanoid.Health<95 and os.clock()<limit do task.wait(.25) end
  check(b.Character.Humanoid.Health>=95,'NPC paramedic answers and treats an injured player')
+ call(a,'CancelShift')
+ local courierDesk=find('Job')
+ approach(a,courierDesk)
+ local cashBefore=a:GetAttribute('Cash')
+ call(a,'Prompt',courierDesk)
+ local taskText=a:GetAttribute('ShiftTask')
+ local mailbox
+ for _,part in city:GetDescendants() do
+  if part:GetAttribute('Action')=='Delivery' and taskText=='Deliver to '..tostring(part:GetAttribute('Label')) then mailbox=part; break end
+ end
+ check(mailbox~=nil,'Courier pickup names a real mailbox')
+ check(call(a,'JobArrow',{Label=mailbox:GetAttribute('Label')}),'Active courier arrow names the mailbox')
+ approach(a,mailbox)
+ task.wait((mailbox.Position-courierDesk.Position).Magnitude/60+.6)
+ call(a,'Prompt',mailbox)
+ check(a:GetAttribute('Cash')==cashBefore+90 and a:GetAttribute('ShiftTask')=='','Community delivery pays the advertised $90 and ends the route')
+ check(call(a,'JobArrow',{Hidden=true}),'Courier compass clears on payment')
+ call(a,'Prompt',mailbox)
+ check(a:GetAttribute('Cash')==cashBefore+90,'Repeated mailbox prompt cannot duplicate the payout')
  check(#errors==0,'No gameplay script runtime errors')
 end)
 print(ok and 'NORTHSIDE_LIFE_PASS' or 'NORTHSIDE_LIFE_FAIL',err or '')

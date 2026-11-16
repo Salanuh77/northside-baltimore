@@ -196,6 +196,21 @@ local ok, message = pcall(function()
   click(modal:FindFirstChildOfClass("TextButton"))
   waitUntil(function() return not modal.Visible end, "close did not dismiss modal")
  end
+ local directions=waitUntil(function()
+  local card=gui:FindFirstChild("JobDirections")
+  return card and card.Visible and card
+ end,"first job direction missing after creation")
+ local payoutShown=false
+ for _,label in directions:GetChildren() do
+  if label:IsA("TextLabel") and label.Text:find("$90",1,true) then payoutShown=true end
+ end
+ check("first job card advertises real delivery payout",payoutShown,directions.Visible)
+ click(findButton(gui, "GUIDE"))
+ click(findButton(gui,"Hide courier directions"))
+ check("resident can dismiss first job directions",not directions.Visible,directions.Visible)
+ click(findButton(gui, "GUIDE"))
+ click(findButton(gui,"Find the $90 courier desk"))
+ waitUntil(function() return directions.Visible end,"directions did not reopen")
  click(findButton(gui, "GUIDE"))
  opened("WELCOME TO NORTHSIDE")
  local clipped = {}

@@ -70,6 +70,14 @@ remote.OnClientInvoke=function(kind,data)
   return #failures==0,table.concat(failures,', ')
 
  end
+ if kind=='JobArrow' then
+  local card=p.PlayerGui.NorthsideHUD:WaitForChild('JobDirections',5)
+  if data.Hidden then return not card.Visible end
+  for _,label in card:GetChildren() do
+   if label:IsA('TextLabel') and label.Text:find(data.Label,1,true) then return card.Visible end
+  end
+  return false
+ end
  if kind=='HUD' then
   local gui=p:WaitForChild('PlayerGui'):WaitForChild('NorthsideHUD',15)
   assert(gui,'HUD did not start')

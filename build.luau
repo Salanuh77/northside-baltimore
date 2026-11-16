@@ -134,7 +134,8 @@ local clinic=shop('NORTHSIDE CLINIC',63,64,65,46,Color3.fromRGB(99,128,128))
 local medic=part('First aid station',{5,4,3},{63,3,65},'cream',nil,clinic); action(medic,'Heal','Treatment $50')
 sign('+',63,9,63,4,clinic)
 local precinct=shop('COMMUNITY CENTER',164,64,70,46,Color3.fromRGB(84,101,112))
-local work=part('Courier desk',{12,3,4},{164,3,67},'dark',nil,precinct); action(work,'Job','Start delivery route')
+local work=part('Courier desk',{12,3,4},{164,3,67},'dark',nil,precinct); action(work,'Job','Pick up parcel ($90 on delivery)')
+city:SetAttribute('CourierDesk',work.CFrame.Position)
 sign('LEGAL WORK  /  COURIER',164,9,66,30,precinct)
 local spawn=Instance.new('SpawnLocation'); spawn.Name='CommunitySpawn'; spawn.Size=Vector3.new(8,0.3,8); spawn.CFrame=CFrame.new(162,1,37); spawn.Anchored=true; spawn.Neutral=true; spawn.Duration=12; spawn.Transparency=1; spawn.Parent=city
 local zones=group('SafeZones'); local safe=part('Community safe zone',{88,30,82},{164,10,57},'green',nil,zones); safe.Transparency=1; safe.CanCollide=false; safe.CanQuery=false; safe.CanTouch=false
@@ -231,6 +232,7 @@ local client=Instance.new('LocalScript'); client.Name='CityClient'; client.Sourc
 local drive=Instance.new('RemoteEvent'); drive.Name='DriveCar'; drive.Parent=rs
 local traffic=Instance.new('Script'); traffic.Name='TrafficServer'; traffic.Source=fs.readFile('src/Traffic.server.luau'); traffic.Parent=server.Parent
 local input=Instance.new('LocalScript'); input.Name='TrafficClient'; input.Source=fs.readFile('src/Traffic.client.luau'); input.Parent=client.Parent
+local bearing=Instance.new('ModuleScript'); bearing.Name='JobBearing'; bearing.Source=fs.readFile('src/JobBearing.luau'); bearing.Parent=rs
 local catalog=Instance.new('ModuleScript'); catalog.Name='WorkCatalog'; catalog.Source=fs.readFile('src/WorkCatalog.luau'); catalog.Parent=rs
 local jobs=Instance.new('ModuleScript'); jobs.Name='WorkService'; jobs.Source=fs.readFile('src/WorkService.luau'); jobs.Parent=server.Parent
 local lifeUi=Instance.new('ModuleScript'); lifeUi.Name='LifeUI'; lifeUi.Source=fs.readFile('src/LifeUI.luau'); lifeUi.Parent=rs
