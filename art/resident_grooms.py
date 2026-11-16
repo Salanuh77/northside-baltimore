@@ -1,9 +1,14 @@
 """Sculpt rigid, dyeable grooms in the same coordinate frame as the resident's head."""
-from math import sin, cos, pi, sqrt
+from math import sin, cos, pi, sqrt, exp
 from random import Random
 import json
 import numpy as np
+from scipy.interpolate import PchipInterpolator
 from resident_profiles import ROOT, export
+
+CROWN_Y=[-.50,-.44,-.27,-.07,.18,.35,.46,.50,.522]
+CROWN_WIDTH=PchipInterpolator(CROWN_Y,[.05,.18,.39,.48,.50,.47,.34,.13,.04])
+CROWN_DEPTH=PchipInterpolator(CROWN_Y,[.09,.30,.41,.46,.47,.46,.34,.15,.04])
 
 class Groom:
     def __init__(self, seed):
@@ -28,12 +33,11 @@ class Groom:
     @staticmethod
     def skull(a, y, clearance=.012):
         # Follow the superellipse used by the face; a spherical cap cuts into the forehead.
-        levels=[-.50,-.44,-.27,-.07,.18,.35,.46,.50,.522]
-        width=np.interp(y,levels,[.05,.18,.39,.48,.50,.47,.34,.13,.04])
-        depth=np.interp(y,levels,[.09,.30,.41,.46,.46,.45,.33,.14,.04])
+        width=float(CROWN_WIDTH(y));depth=float(CROWN_DEPTH(y))
         across=sin(a);front=cos(a)
         forward=sqrt(max(0,1-abs(across)**3.4)) if front>0 else front
-        return np.array([(width+clearance)*across,y,-(depth+clearance)*forward])
+        bridge=.048*max(0,front)**8*exp(-((y-.16)/.13)**2)
+        return np.array([(width+clearance)*across,y,-(depth+clearance)*forward-bridge])
 
     def scalp(self, tight=.0):
         rows=[]
@@ -61,13 +65,13 @@ class Groom:
                     row.append((c[0]+s[0]*grain*cos(lat)*sin(a),c[1]+s[1]*grain*sin(lat),c[2]-s[2]*grain*cos(lat)*cos(a)))
                 rings.append(row)
             self.surface(rings)
-        fleece(center,scale,.5,14,36)
-        for i in range(36):
-            y=(i+.5)/18-1
+        fleece(center,scale,.5,18,60)
+        for i in range(112):
+            y=(i+.5)/56-1
             a=i*2.399963
             radial=sqrt(1-y*y)
-            c=[center[0]+scale[0]*.91*radial*sin(a),center[1]+scale[1]*.91*y,center[2]+scale[2]*.91*radial*cos(a)]
-            fleece(c,[v*.22 for v in scale],i,5,10)
+            c=[center[0]+scale[0]*.965*radial*sin(a),center[1]+scale[1]*.965*y,center[2]+scale[2]*.965*radial*cos(a)]
+            fleece(c,[v*(.115+.018*sin(i)) for v in scale],i,5,10)
 
     def tube(self,path,radii):
         rows=[]

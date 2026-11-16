@@ -9,9 +9,9 @@ function Portrait.scale(head,look)
  return head.Size*Vector3.new(.84*width,1.19,1.04)
 end
 
-local function fit(part,head,folder,position)
+local function fit(part,head,folder,position,tilt)
  part.Anchored=false;part.CanCollide=false;part.CanQuery=false;part.CanTouch=false;part.Massless=true
- part.CFrame=head.CFrame*CFrame.new(position);part.Parent=folder
+ part.CFrame=head.CFrame*CFrame.new(position)*CFrame.Angles(tilt or 0,0,0);part.Parent=folder
  local weld=Instance.new('WeldConstraint');weld.Part0=head;weld.Part1=part;weld.Parent=part
  return part
 end
@@ -33,7 +33,9 @@ function Portrait.draw(head,look,art,tone,dye,iris)
  local function plate(name,key,color,x,y,z,w,h)
   local surface=Instance.new('Part');surface.Name=name..' plate';surface.Transparency=1;surface.CastShadow=false
   surface.Size=Vector3.new(w*scale.X,h*scale.Y,.01)
-  fit(surface,head,folder,Vector3.new(x,y,z)*scale)
+  -- Tilt the mouth plate along the receding chin before attaching it.
+  local tilt=name=='Resident mouth' and -math.atan(.60*scale.Z/scale.Y) or 0
+  fit(surface,head,folder,Vector3.new(x,y,z)*scale,tilt)
   local ink=Instance.new('Decal');ink.Name=name;ink.Face=Enum.NormalId.Front
   ink.Texture='rbxassetid://'..art:GetAttribute(key);ink.Color3=color;ink.Parent=surface
  end
@@ -41,7 +43,7 @@ function Portrait.draw(head,look,art,tone,dye,iris)
  local lipHeight=({Thin=.085,Medium=.109,Full=.135})[look.LipFullness or 'Medium']
  plate('Resident face','portrait-'..string.lower(look.Expression or 'Calm'),iris:Lerp(Color3.new(1,1,1),.65),0,.092,-.487,span,.178)
  local mouth=look.Mouth or (look.Expression=='Smile' and 'Smile' or 'Level')
- plate('Resident mouth','lips-'..string.lower(mouth),Color3.new(1,1,1),0,-.219,-.436,.345,lipHeight)
+ plate('Resident mouth','lips-'..string.lower(mouth),Color3.new(1,1,1),0,-.219,-.461,.345,lipHeight)
  for _,side in {-1,1} do
   feature('Ear',side*profile.Size.X*.48,-.018,.015,.126,.232,.145,tone)
   if look.Detail=='Freckles' then
