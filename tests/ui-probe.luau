@@ -227,13 +227,21 @@ local ok, message = pcall(function()
  check("enter city spawns game-owned resident", character:GetAttribute("GameOwnedRig")==true, character.Name)
  local wardrobe=game.ReplicatedStorage.StreetStyle
  local assets={character.Head:FindFirstChild('Head sculpt',true),character.Head:FindFirstChild('Hair mesh',true)}
+ local textures={}
  for _,key in {'portrait-calm','portrait-smile','portrait-focused','lips-level','lips-smile','lips-set','ash-pullover','dock-denim','field-liner'} do
-  table.insert(assets,'rbxassetid://'..wardrobe:GetAttribute(key))
+  local image=Instance.new('ImageLabel')
+  image.BackgroundTransparency=1;image.Size=UDim2.fromOffset(1,1)
+  image.Image='rbxassetid://'..wardrobe:GetAttribute(key);image.Parent=playerGui.NorthsideHUD
+  table.insert(assets,image);table.insert(textures,image)
  end
  local missed={}
  game.ContentProvider:PreloadAsync(assets,function(id,status)
   if status~=Enum.AssetFetchStatus.Success then table.insert(missed,id..' '..status.Name) end
  end)
+ for _,image in textures do
+  if not image.IsLoaded then table.insert(missed,image.Image..' did not render') end
+  image:Destroy()
+ end
  check('client loads sculpt, groom, face plates and all starter shirts',#missed==0,table.concat(missed,', '))
  local liveHair=waitUntil(function() return character.Head:FindFirstChild('Hair mesh',true) end,'Live haircut did not load')
  check('preview haircut and dye survive entry',liveHair.MeshId==twists.MeshId and liveHair.Color==twists.Color)
