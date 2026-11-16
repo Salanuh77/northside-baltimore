@@ -240,7 +240,22 @@ draw=function()
   preset.Name='Preset '..i; preset.Position=UDim2.fromOffset(0,28+(i-1)*33);preset.Size=UDim2.new(1,-4,0,30)
   if draft.Starter==set.Starter and draft.Pants==set.Pants and draft.Shoes==set.Shoes then preset.BackgroundColor3=gold;preset.TextColor3=ink end
  end
- controls(pane,{{'Hair','Primary hair',style.Hair},{'HairDetail','Hair detail',style.HairDetails},{'HairColor','Hair color',style.HairColors},{'Starter','Shirt',style.Starters},{'Pants','Pants',style.Pants},{'Shoes','Shoes',style.Shoes}},130)
+ controls(pane,{{'Hair','Haircut',style.Hair},{'HairDetail','Edges',style.HairDetails}},130)
+ local palette=label(pane,'Hair color  /  '..draft.HairColor,12,paper)
+ palette.Position=UDim2.fromOffset(3,230);palette.Size=UDim2.new(1,-6,0,18)
+ local swatches={}
+ for index,color in style.HairColors do
+  local swatch=button(pane,'',function()
+   draft.HairColor=color;palette.Text='Hair color  /  '..color
+   for name,tile in swatches do tile.BorderSizePixel=name==color and 2 or 0 end
+   closeup=true;zoom.Text='Full body';rebuild()
+  end)
+  swatch.Name='Dye '..color;swatch.BackgroundColor3=style.Dyes[color];swatch.BorderColor3=gold
+  swatch.BorderSizePixel=draft.HairColor==color and 2 or 0
+  swatch.Position=UDim2.new((index-1)%6/6,3,0,253+math.floor((index-1)/6)*32)
+  swatch.Size=UDim2.new(1/6,-6,0,26);swatches[color]=swatch
+ end
+ controls(pane,{{'Starter','Shirt',style.Starters},{'Pants','Pants',style.Pants},{'Shoes','Shoes',style.Shoes}},323)
  controls(sidePane,{{'FaceShape','Head shape',style.FaceShapes},{'FaceWidth','Face width',style.FaceWidths},{'EyeSpacing','Eye spacing',style.EyeSpacings},{'LipFullness','Lip fullness',style.LipFullness},{'Expression','Eye shape',style.Expressions},{'Mouth','Mouth',style.Mouths},{'Eye','Eye color',style.Eyes},{'Tone','Skin',style.Tones},{'Height','Height',style.Heights},{'Build','Width',style.Builds},{'Depth','Depth',style.Depths},{'Detail','Facial hair & details',style.Details}})
 end
 local function files()
