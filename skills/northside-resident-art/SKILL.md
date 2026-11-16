@@ -14,3 +14,9 @@ Use the same articulated template and dressing routine for the file preview, liv
 Try the smallest GT and the Foundry V8 with a tall resident and a high-volume haircut. Measure the top of the visible hair relative to the cabin roof, then drive and exit. Check a phone viewport with the file picker and face close-up as well as the desktop layout.
 
 Use the two-stage fitting room when creating a new save. Put curated first and last names on opposite sides with the selected name visible before continuing. Keep the resident centered in a lit room as players step through hair, independent eye and mouth shapes, shirt, trousers, shoes, and body dimensions. Frame the whole outfit by default and provide a face close-up and rotation. Use natural eyelids, understated brows and plain garments with visible collars, cuffs, seams and pockets. Check a saved name, the combined pants and shoe choice, and separate mouth and eye decals on the live character.
+
+## Characters in the gallery
+
+Baltimore Streets 2’s public gallery frames Roblox residents close to the camera. A strong red or blue side light separates groups, and one gesture carries the scene at thumbnail size. For Baltimore Hood RP use the harbor varsity resident on the lead cover. Other compositions can follow the cashier and customer across a register, a resident and officer on a stoop, or a visitor reaching for a bail receipt. Keep the gestures legible against the background and use the game’s own clothing, storefronts and streets. Keep illustrations identified as such in gallery alt text and retain actual gameplay views alongside them. [Reference experience](https://www.roblox.com/games/104551952779032)
+
+When fitting a Meshy groom or uniform accessory, inspect the silhouette from front and profile, trim bust geometry from the hair asset, and attach only the finished cap or hair to the head. Share that fit between the creator, barber and staff where the role uses the same piece.
