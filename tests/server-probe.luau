@@ -81,31 +81,21 @@ local ok,err=pcall(function()
   if part:GetAttribute('Action')=='Door' and math.abs(part.Position.Y-highest.Position.Y)<6 and (not entry or (part.Position-highest.Position).Magnitude<(entry.Position-highest.Position).Magnitude) then entry=part end
  end
  assert(entry,'Missing apartment door')
- move(a,entry.CFrame:PointToWorldSpace(Vector3.new(0,-2,-5)));task.wait(.3)
- call(a,'Prompt',entry);task.wait(.4)
+ local street=apt['Entrance walk'].Position+Vector3.yAxis*3
+ local threshold=entry.CFrame:PointToWorldSpace(Vector3.new(0,-1,-4))
+ path:ComputeAsync(street,threshold)
+ check(path.Status==Enum.PathStatus.Success,'Street and stairs reach the closed top-floor door')
+ move(a,threshold)
+ call(a,'Prompt',entry); task.wait(.4)
  check(entry:GetAttribute('Open') and not entry.CanCollide,'Resident opens a hinged top-floor apartment door')
- -- Move the test resident out of the narrow gallery before measuring its walkable route.
- move(a,entry.CFrame:PointToWorldSpace(Vector3.new(0,0,0))+Vector3.yAxis*85)
- local door=apt['Entrance walk']
- -- Roblox rebuilds the navigation mesh asynchronously when a closed door swings clear.
+ move(a,street)
  local navDeadline=os.clock()+8
  repeat
-  path:ComputeAsync(door.Position+Vector3.new(0,3,0),highest.Position+Vector3.new(0,2,3))
+  path:ComputeAsync(threshold,highest.Position+Vector3.new(0,2,3))
   if path.Status==Enum.PathStatus.Success then break end
   task.wait(.4)
  until os.clock()>=navDeadline
- if path.Status~=Enum.PathStatus.Success then
-  local origin=door.CFrame*CFrame.new(0,.44,28.5)
-  local last=door.Position+Vector3.new(0,3,0)
-  for _,q in {{31,3,-18},{31,16,20},{42,16,-21},{31,29,20},{42,29,-21},{31,42,20},{42,42,-21},{-36,42,-21},{-36,42,-10},{-36,42,8}} do
-   local goal=origin:PointToWorldSpace(Vector3.new(table.unpack(q)))
-   path:ComputeAsync(last,goal)
-   print('NAV_SEGMENT',q[1],q[2],q[3],path.Status.Name)
-   last=goal
-  end
-  error('No complete top-floor navigation path')
- end
- check(path.Status==Enum.PathStatus.Success,'Street entrance connects to a furnished top-floor apartment')
+ check(path.Status==Enum.PathStatus.Success,'Same threshold connects through the open door to the bedroom lockbox')
  move(a,Vector3.new(-240,5,320)); move(b,Vector3.new(-235,5,320))
  call(a,'Pay',{Target=b.UserId,Amount=50})
  check(a:GetAttribute('Cash')==450 and b:GetAttribute('Cash')==550,'Payment conserves currency')
