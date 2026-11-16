@@ -434,15 +434,32 @@ Players.PlayerRemoving:Connect(function(p)
  cancelBusy(p); save(p,true); accounts[p]=nil;profiles[p]=nil; limits[p]=nil; offers[p]=nil; jobs[p]=nil; robbed[p]=nil
  for buyer,o in offers do if o.Seller==p then offers[buyer]=nil end end
 end)
+local naming=setmetatable({},{__mode='k'})
 event.OnServerEvent:Connect(function(p,kind,data)
  if not allowed(p) or typeof(kind)~='string' then return end
+ if naming[p] then return end
+ local approvedName
+ if kind=='CreateResident' and typeof(data)=='table' and data.Index~=nil then
+  local account=accounts[p]
+  if not account or account.Index or not Files.valid(data.Index) or account.State.Files[tostring(data.Index)] then
+   tell(p,'That file is unavailable. Select a free file.');return
+  end
+  if not require(game.ReplicatedStorage.StreetStyle).valid(data) then tell(p,'Choose an available appearance.');return end
+  naming[p]=true
+  local reason
+  approvedName,reason=retail.resolveName(p,data)
+  naming[p]=nil
+  if accounts[p]~=account or not p.Parent then return end
+  if not approvedName then tell(p,reason);return end
+  selectFile(p,data.Index)
+ end
  if kind=='SelectFile' then if typeof(data)=='table' then selectFile(p,data.Index) end;return end
  if not profiles[p] then return end
  local d=profiles[p]; data=typeof(data)=='table' and data or {}
  if kind=='Ready' then sync(p); return end
  if kind=='CreateResident' then
   local before=d.Look
-  retail.handle(p,kind,data)
+  retail.handle(p,kind,data,approvedName)
   if not before and d.Look and not d.Spawning and not p.Character and profiles[p]==d then
    d.Spawning=true
    if not saveConfirmed(p,d) then

@@ -116,8 +116,8 @@ end
 local function send()
  if waiting or not slot then return end
  waiting=true;footer.Text='Saving resident…'
- event:FireServer('SelectFile',{Index=slot})
- event:FireServer('CreateResident',table.clone(draft))
+ local request=table.clone(draft);request.Index=slot
+ event:FireServer('CreateResident',request)
 end
 local enter=button(panel,'Continue',function()
  if tab=='Identity' then tab='Appearance';draw() else send() end
