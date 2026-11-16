@@ -18,13 +18,13 @@ Style.Hair={'Close crop','Curls','High puff','Twists','Shaved','Cornrows','Twin 
 Style.Tones={'Espresso','Umber','Copper','Amber','Olive','Sand','Porcelain'}
 Style.Skin={Color3.fromRGB(78,48,39),Color3.fromRGB(106,66,49),Color3.fromRGB(148,90,62),Color3.fromRGB(185,125,86),Color3.fromRGB(189,146,108),Color3.fromRGB(218,178,141),Color3.fromRGB(239,207,181)}
 Style.Outfits={{Id='fleet-track',Name='Fleet track jacket',Price=65},{Id='pier-varsity',Name='Burgundy varsity jacket',Price=95},{Id='foundry-work',Name='Foundry overshirt',Price=55}}
-Style.Starters={'Harbor','Clay','Olive','Track jacket','Varsity','Overshirt'}
+Style.Starters={'Ash pullover','Dock denim','Field liner','Harbor','Clay','Olive','Track jacket','Varsity','Overshirt'}
 Style.Sets={
- {Name='Harbor warmup',Starter='Harbor',Pants='Dark denim',Shoes='Bone low-tops'},
- {Name='Clay workwear',Starter='Clay',Pants='Washed denim',Shoes='Black low-tops'},
- {Name='Olive canvas',Starter='Olive',Pants='Canvas',Shoes='Black low-tops'},
+ {Name='Ash hoodie & maroon tie',Starter='Ash pullover',Pants='Dark denim',Shoes='Bone low-tops'},
+ {Name='Patched dock denim',Starter='Dock denim',Pants='Washed denim',Shoes='Black low-tops'},
+ {Name='Surplus field layers',Starter='Field liner',Pants='Canvas',Shoes='Black low-tops'},
 }
-local starterShirts={Harbor='harbor-warmup',Clay='clay-workshirt',Olive='olive-overshirt',['Track jacket']='fleet-track',Varsity='pier-varsity',Overshirt='foundry-work'}
+local starterShirts={['Ash pullover']='ash-pullover',['Dock denim']='dock-denim',['Field liner']='field-liner',Harbor='harbor-warmup',Clay='clay-workshirt',Olive='olive-overshirt',['Track jacket']='fleet-track',Varsity='pier-varsity',Overshirt='foundry-work'}
 Style.HairColors={'Black','Chestnut','Auburn','Honey','Silver'}
 local dyes={Black=Color3.fromRGB(31,25,23),Chestnut=Color3.fromRGB(84,53,35),Auburn=Color3.fromRGB(126,60,39),Honey=Color3.fromRGB(173,126,68),Silver=Color3.fromRGB(160,158,151)}
 Style.Expressions={'Calm','Smile','Focused'}

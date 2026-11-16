@@ -68,7 +68,7 @@ furnishing('Bench',Vector3.new(6,.35,1.5),Vector3.new(-5.8,1.45,3),{104,66,49},E
 for _,x in {-8,-3.6} do furnishing('Bench foot',Vector3.new(.25,1.4,1.3),Vector3.new(x,.7,3),{63,61,57}) end
 local roomOrigin=room:GetPivot()
 local rows={}
-local function fresh() return {Height='Medium',Build='Average',Tone='Amber',Hair='Close crop',Name='Avery Bell',FirstName='Avery',LastName='Bell',Depth='Standard',Pants='Dark denim',Shoes='Bone low-tops',Mouth='Level',HairDetail='Natural',Starter='Harbor',Detail='Clean',HairColor='Black',Eye='Brown',Expression='Calm'} end
+local function fresh() return {Height='Medium',Build='Average',Tone='Amber',Hair='Close crop',Name='Avery Bell',FirstName='Avery',LastName='Bell',Depth='Standard',Pants='Dark denim',Shoes='Bone low-tops',Mouth='Level',HairDetail='Natural',Starter='Ash pullover',Detail='Clean',HairColor='Black',Eye='Brown',Expression='Calm'} end
 local draft=fresh()
 local yaw=.22
 local rig
