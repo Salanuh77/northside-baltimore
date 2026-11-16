@@ -68,7 +68,7 @@ furnishing('Bench',Vector3.new(6,.35,1.5),Vector3.new(-5.8,1.45,3),{104,66,49},E
 for _,x in {-8,-3.6} do furnishing('Bench foot',Vector3.new(.25,1.4,1.3),Vector3.new(x,.7,3),{63,61,57}) end
 local roomOrigin=room:GetPivot()
 local rows={}
-local function fresh() return {Height='Medium',Build='Average',Tone='Amber',Hair='Close crop',Name='Avery Bell',FirstName='Avery',LastName='Bell',Depth='Standard',Pants='Dark denim',Shoes='Bone low-tops',Mouth='Level',HairDetail='Natural',Starter='Ash pullover',Detail='Clean',HairColor='Black',Eye='Brown',Expression='Calm'} end
+local function fresh() return {Height='Medium',Build='Average',Tone='Amber',Hair='Close crop',Name='Avery Bell',FirstName='Avery',LastName='Bell',FaceShape='Oval',FaceWidth='Balanced',EyeSpacing='Balanced',LipFullness='Medium',Depth='Standard',Pants='Dark denim',Shoes='Bone low-tops',Mouth='Level',HairDetail='Natural',Starter='Ash pullover',Detail='Clean',HairColor='Black',Eye='Brown',Expression='Calm'} end
 local draft=fresh()
 local yaw=.22
 local rig
@@ -170,7 +170,7 @@ draw=function()
  title.Text=not slot and 'Resident files' or tab=='Identity' and 'Choose a roleplay name' or 'Customize your resident'
  servers.Visible=slot==nil;east.Visible=slot~=nil
  back.Visible=slot~=nil;enter.Visible=slot~=nil
- zoom.Visible=slot~=nil and tab=='Appearance'
+ zoom.Visible=slot~=nil and tab=='Appearance';zoom.Text=closeup and 'Full body' or 'Face view'
  enter.Text=tab=='Identity' and 'Continue' or 'Enter city'
  if slot then chosenName() end
  layout()
@@ -220,7 +220,11 @@ draw=function()
    for _,delta in {-1,1} do
     local b=button(parent,delta==1 and '›' or '‹',function()
      local index=table.find(values,draft[key]) or 1
-     draft[key]=values[(index-1+delta)%#values+1];current.Text=draft[key];rebuild()
+     draft[key]=values[(index-1+delta)%#values+1];current.Text=draft[key]
+     if key=='FaceShape' or key=='FaceWidth' or key=='EyeSpacing' or key=='LipFullness' or key=='Hair' then
+      closeup=true;zoom.Text='Full body'
+     end
+     rebuild()
     end)
     b.Name=key..(delta==1 and ' next' or ' previous');b.TextSize=20
     b.Position=UDim2.new(delta==1 and 1 or 0,delta==1 and -32 or 0,0,y+16);b.Size=UDim2.fromOffset(28,30)
@@ -237,7 +241,7 @@ draw=function()
   if draft.Starter==set.Starter and draft.Pants==set.Pants and draft.Shoes==set.Shoes then preset.BackgroundColor3=gold;preset.TextColor3=ink end
  end
  controls(pane,{{'Hair','Primary hair',style.Hair},{'HairDetail','Hair detail',style.HairDetails},{'HairColor','Hair color',style.HairColors},{'Starter','Shirt',style.Starters},{'Pants','Pants',style.Pants},{'Shoes','Shoes',style.Shoes}},130)
- controls(sidePane,{{'Expression','Eye shape',style.Expressions},{'Mouth','Mouth',style.Mouths},{'Eye','Eye color',style.Eyes},{'Tone','Skin',style.Tones},{'Height','Height',style.Heights},{'Build','Width',style.Builds},{'Depth','Depth',style.Depths},{'Detail','Facial hair & details',style.Details}})
+ controls(sidePane,{{'FaceShape','Head shape',style.FaceShapes},{'FaceWidth','Face width',style.FaceWidths},{'EyeSpacing','Eye spacing',style.EyeSpacings},{'LipFullness','Lip fullness',style.LipFullness},{'Expression','Eye shape',style.Expressions},{'Mouth','Mouth',style.Mouths},{'Eye','Eye color',style.Eyes},{'Tone','Skin',style.Tones},{'Height','Height',style.Heights},{'Build','Width',style.Builds},{'Depth','Depth',style.Depths},{'Detail','Facial hair & details',style.Details}})
 end
 local function files()
  local encoded=player:GetAttribute('ResidentFiles')
