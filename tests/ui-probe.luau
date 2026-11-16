@@ -198,11 +198,12 @@ local ok, message = pcall(function()
  local content = waitUntil(function() return gui:FindFirstChildWhichIsA("ScrollingFrame", true) end, "missing scrolling frame")
  local modal = content.Parent
  local title = modal:FindFirstChildOfClass("TextLabel")
+ check("compact geographic radar replaces full stat panel",gui:FindFirstChild("StreetRadar")~=nil and gui:FindFirstChild("MAP")==nil and gui:FindFirstChild("GUIDE")==nil,gui.Name)
  local function opened(name)
   waitUntil(function() return modal.Visible and title.Text == name end, "did not open "..name)
  end
  local function close()
-  click(modal:FindFirstChildOfClass("TextButton"))
+  click(modal.Close)
   waitUntil(function() return not modal.Visible end, "close did not dismiss modal")
  end
  local directions=waitUntil(function()
@@ -214,13 +215,16 @@ local ok, message = pcall(function()
   if label:IsA("TextLabel") and label.Text:find("$90",1,true) then payoutShown=true end
  end
  check("first job card advertises real delivery payout",payoutShown,directions.Visible)
- click(findButton(gui, "GUIDE"))
+ click(findButton(gui,"PHONE"));opened("CITY PHONE")
+ click(findButton(content,"Guide"))
  click(findButton(gui,"Hide courier directions"))
  check("resident can dismiss first job directions",not directions.Visible,directions.Visible)
- click(findButton(gui, "GUIDE"))
+ click(findButton(gui,"PHONE"));opened("CITY PHONE")
+ click(findButton(content,"Guide"))
  click(findButton(gui,"Find the $90 courier desk"))
  waitUntil(function() return directions.Visible end,"directions did not reopen")
- click(findButton(gui, "GUIDE"))
+ click(findButton(gui,"PHONE"));opened("CITY PHONE")
+ click(findButton(content,"Guide"))
  opened("WELCOME TO NORTHSIDE")
  local clipped = {}
  local guide = {}
@@ -244,10 +248,14 @@ local ok, message = pcall(function()
  check("new page starts at top", content.CanvasPosition.Y < 1, content.CanvasPosition.Y)
  local view = workspace.CurrentCamera.ViewportSize
  local lo, hi = modal.AbsolutePosition, modal.AbsolutePosition + modal.AbsoluteSize
+ check("portrait handset stays at right edge",modal.AbsoluteSize.Y>1.45*modal.AbsoluteSize.X and lo.X>=gui.AbsoluteSize.X*.52 and gui.AbsoluteSize.X-hi.X<=18,modal.AbsoluteSize)
+ check("handset bezel and in-screen apps",modal:FindFirstChild("Handset frame")~=nil and content:FindFirstChild("Apps") and #content.Apps:GetChildren()==10,modal.Name)
  check("phone fits usable viewport", lo.X>=0 and lo.Y>=0 and hi.X<=gui.AbsoluteSize.X+1 and hi.Y<=gui.AbsoluteSize.Y+1,
   string.format("viewport %s, usable %s, modal %s..%s", tostring(view), tostring(gui.AbsoluteSize), tostring(lo), tostring(hi)))
  close()
  click(findButton(gui,'PHONE'));opened('CITY PHONE')
+ click(findButton(content,'City map'));opened('NORTHSIDE STREET MAP')
+ click(findButton(modal,'Home'));opened('CITY PHONE')
  click(findButton(content,'Work'));opened('WORK')
  click(findButton(modal,'Home'));opened('CITY PHONE')
  click(findButton(content,'My bag'))

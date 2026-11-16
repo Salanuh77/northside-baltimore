@@ -14,7 +14,7 @@ task.spawn(function()
  end
 end)
 local mouse=p:GetMouse()
-local openPhone
+local openPhone,showGuide,handset
 local catalog=require(game:GetService('ReplicatedStorage'):WaitForChild('WorkCatalog'))
 local gui=Instance.new('ScreenGui'); gui.Name='NorthsideHUD'; gui.ResetOnSpawn=false; gui.IgnoreGuiInset=false; gui.Parent=p:WaitForChild('PlayerGui')
 gui.Enabled=p.Character~=nil
@@ -30,15 +30,8 @@ local function button(parent,value,size,pos,fn)
  local b=make('TextButton',{Text=value,Size=size,Position=pos,BackgroundColor3=Color3.fromRGB(45,57,59),TextColor3=cream,TextSize=15,Font=Enum.Font.GothamMedium,AutoButtonColor=true,BorderSizePixel=0},parent)
  make('UICorner',{CornerRadius=UDim.new(0,6)},b); b.Activated:Connect(fn); return b
 end
-local top=make('Frame',{Size=UDim2.new(0,310,0,147),Position=UDim2.fromOffset(18,16),BackgroundColor3=dark,BackgroundTransparency=0.08,BorderSizePixel=0},gui)
-make('UICorner',{CornerRadius=UDim.new(0,8)},top)
-text(top,'N O R T H S I D E',UDim2.fromOffset(270,25),UDim2.fromOffset(16,9),19,gold)
-local clockText=text(top,'BALTIMORE',UDim2.fromOffset(280,20),UDim2.fromOffset(16,33),11)
-local wallet=text(top,'Cash $500   Bank $0',UDim2.fromOffset(280,25),UDim2.fromOffset(16,57),16)
-local status=text(top,'Wanted 0/5   •   Goods 0',UDim2.fromOffset(280,20),UDim2.fromOffset(16,82),12)
-local vital=text(top,'Health 100',UDim2.fromOffset(280,19),UDim2.fromOffset(16,103),12)
-local healthTrack=make('Frame',{Size=UDim2.fromOffset(278,5),Position=UDim2.fromOffset(16,128),BackgroundColor3=Color3.fromRGB(55,67,65),BorderSizePixel=0},top)
-local healthFill=make('Frame',{Size=UDim2.fromScale(1,1),BackgroundColor3=Color3.fromRGB(109,185,155),BorderSizePixel=0},healthTrack)
+local city=workspace:WaitForChild('Baltimore')
+local hud=require(game.ReplicatedStorage:WaitForChild('StreetHUD'))(gui,make,text,city)
 local notice=text(gui,'',UDim2.new(0.8,0,0,60),UDim2.fromScale(0.1,0.75),18)
 notice.TextXAlignment=Enum.TextXAlignment.Center; notice.TextStrokeTransparency=0.3
 local noticeId=0
@@ -46,8 +39,6 @@ local function notify(s)
  noticeId+=1; local id=noticeId; notice.Text=s
  task.delay(6,function() if noticeId==id then notice.Text='' end end)
 end
-local hint=text(gui,'E · interact    H · surrender    T · players    R · reload',UDim2.new(0.8,0,0,26),UDim2.fromScale(0.1,0.94),13)
-hint.TextXAlignment=Enum.TextXAlignment.Center; hint.TextStrokeTransparency=0.4
 local ammo=text(gui,'',UDim2.fromOffset(200,40),UDim2.new(1,-220,1,-110),22,gold)
 local progress=make('Frame',{Size=UDim2.fromOffset(300,5),Position=UDim2.new(0.5,-150,0.73,0),BackgroundColor3=gold,BorderSizePixel=0,Visible=false},gui)
 local progressTween
@@ -57,7 +48,10 @@ make('UICorner',{CornerRadius=UDim.new(0,10)},modal)
 local title=text(modal,'',UDim2.new(1,-70,0,40),UDim2.fromOffset(18,10),20,gold)
 local content=make('ScrollingFrame',{Size=UDim2.new(1,-30,1,-65),Position=UDim2.fromOffset(15,58),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=4,AutomaticCanvasSize=Enum.AutomaticSize.Y,CanvasSize=UDim2.new()},modal)
 make('UIListLayout',{Padding=UDim.new(0,10),SortOrder=Enum.SortOrder.LayoutOrder},content)
-button(modal,'×',UDim2.fromOffset(35,35),UDim2.new(1,-48,0,12),function() modal.Visible=false end)
+local closeButton=button(modal,'×',UDim2.fromOffset(35,35),UDim2.new(1,-48,0,12),function() modal.Visible=false end)
+closeButton.Name='Close'
+handset=require(game.ReplicatedStorage:WaitForChild('Handset'))(gui,modal,title,content,closeButton,make,text,button,function() openPhone() end)
+if UIS.TouchEnabled then handset.launcher.Position=UDim2.new(1,-54,0,106) end
 local order=0
 local function clear(name)
  if not modal.Visible or title.Text~=name then content.CanvasPosition=Vector2.zero end
@@ -68,7 +62,7 @@ local function row(s,fn)
  order+=1; local b=button(content,s,UDim2.new(1,-6,0,43),UDim2.new(),fn); b.LayoutOrder=order; return b
 end
 local function paragraph(s)
- order+=1; local l=text(content,s,UDim2.new(1,-6,0,70),UDim2.new(),14); l.LayoutOrder=order; return l
+ order+=1; local l=text(content,s,UDim2.new(1,-6,0,22),UDim2.new(),14); l.AutomaticSize=Enum.AutomaticSize.Y; l.LayoutOrder=order; return l
 end
 local function input(placeholder)
  order+=1
@@ -91,6 +85,8 @@ local function playerDetail(other)
 end
 local function playersMenu()
  clear('NEARBY PLAYERS')
+ paragraph('Cash $'..tostring(p:GetAttribute('Cash') or 0)..'   ·   Bank $'..tostring(p:GetAttribute('Bank') or 0))
+ row('Raise hands',function() event:FireServer('Surrender');modal.Visible=false end)
  paragraph('Select a player to pay, trade, or rob. Robbery requires an equipped pistol, a surrendered target, and no safe zone.')
  local count=0; local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
  for _,other in Players:GetPlayers() do
@@ -99,12 +95,12 @@ local function playersMenu()
  end
  if count==0 then paragraph('No players nearby. Multiplayer actions require a second player.'); end
 end
-local city=workspace:WaitForChild('Baltimore')
 local bearing=require(game.ReplicatedStorage:WaitForChild('JobBearing'))
 local jobMarker
 local shopRoute=false
 local updateTrail=require(game.ReplicatedStorage.StreetTrail)()
 local nextTrail=0
+local radarTarget
 local firstJobOverride
 local routeCard=make('Frame',{Name='JobDirections',AnchorPoint=Vector2.new(.5,1),Position=UDim2.new(.5,0,1,-66),Size=UDim2.new(.65,0,0,44),BackgroundColor3=dark,BackgroundTransparency=.1,Visible=false,BorderSizePixel=0},gui)
 make('UISizeConstraint',{MaxSize=Vector2.new(360,44)},routeCard)
@@ -121,6 +117,7 @@ Run.RenderStepped:Connect(function()
  local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
  local camera=workspace.CurrentCamera
  routeCard.Visible=typeof(target)=='Vector3' and root~=nil and camera~=nil and not modal.Visible and (p:GetAttribute('CustodyUntil') or 0)==0
+ radarTarget=target
  if os.clock()>=nextTrail then
   nextTrail=os.clock()+.12
   updateTrail(root,routeCard.Visible and target or nil,root~=nil and not modal.Visible and (p:GetAttribute('CustodyUntil') or 0)==0)
@@ -132,10 +129,11 @@ Run.RenderStepped:Connect(function()
  routeText.Text=objective..'\n'..(distance<=9 and 'Use the nearby prompt' or math.ceil(distance)..' studs')
 end)
 event.OnClientEvent:Connect(function(kind,data)
+ if handset.isOpen() and table.find({'Mart','GunStore','Market','Bank','BailDesk','Barber','Clothing','Sporting','Club','Lift','Residence','LightRun','PartyInvite','Offer'},kind) then handset.reset() end
  if kind=='GunStore' then shopRoute=false end
  if retailUI.handle(kind,data) then return end
  if kind=='Notice' then notify(data)
- elseif kind=='State' then state=data; wallet.Text='Cash $'..data.Cash..'   Bank $'..data.Bank; status.Text='Wanted '..data.Heat..'/5   •   Goods '..data.Loot
+ elseif kind=='State' then state=data; hud.wallet.Text='$'..tostring(data.Cash)
  elseif kind=='BailDesk' then
   clear('PATAPSCO  /  BAIL')
   if #data==0 then paragraph('There are no active bookings.') end
@@ -215,7 +213,8 @@ UIS.InputBegan:Connect(function(key,processed)
  if processed or not p.Character then return end
  if key.KeyCode==Enum.KeyCode.H then event:FireServer('Surrender')
  elseif key.KeyCode==Enum.KeyCode.T then playersMenu()
- elseif key.KeyCode==Enum.KeyCode.P and openPhone then openPhone()
+ elseif (key.KeyCode==Enum.KeyCode.P or key.KeyCode==Enum.KeyCode.DPadUp) and openPhone then
+  if handset.isOpen() then modal.Visible=false else openPhone() end
  elseif key.KeyCode==Enum.KeyCode.R then event:FireServer('Reload')
  elseif key.KeyCode==Enum.KeyCode.Escape then modal.Visible=false; event:FireServer('Cancel') end
 end)
@@ -223,29 +222,42 @@ local function bind(name,label,pos,fn)
  CAS:BindAction(name,function(_,phase) if phase==Enum.UserInputState.Begin then fn() end end,true)
  CAS:SetTitle(name,label); CAS:SetPosition(name,pos)
 end
-bind('NorthsidePlayers','Players',UDim2.new(1,-80,0.4,0),playersMenu)
-bind('NorthsideHands','Hands up',UDim2.new(1,-160,0.4,0),function() event:FireServer('Surrender') end)
-bind('NorthsideReload','Reload',UDim2.new(1,-80,0.6,0),function() event:FireServer('Reload') end)
-Run.RenderStepped:Connect(function()
+local reloadBound=false
+local lastHud=0
+Run.Heartbeat:Connect(function()
+ if os.clock()-lastHud<.1 then return end
+ lastHud=os.clock()
  local t=weapon()
- local hum=p.Character and p.Character:FindFirstChildOfClass('Humanoid')
- if hum then
-  local seat=hum.SeatPart; local fuel=seat and seat.Parent:GetAttribute('Fuel')
-  vital.Text='Health '..math.ceil(hum.Health)..' / '..math.ceil(hum.MaxHealth)..(fuel and '    Fuel '..fuel..'%' or '')
-  healthFill.Size=UDim2.fromScale(math.clamp(hum.Health/math.max(1,hum.MaxHealth),0,1),1)
+ local character=p.Character
+ local hum=character and character:FindFirstChildOfClass('Humanoid')
+ local root=character and character:FindFirstChild('HumanoidRootPart')
+ if root and hum then hud.update(root,hum,radarTarget) end
+ local armed=t and t.Name=='Pistol'
+ if UIS.TouchEnabled then
+  local needsReload=armed==true and not modal.Visible
+  if needsReload~=reloadBound then
+   reloadBound=needsReload
+   if needsReload then bind('NorthsideReload','Reload',UDim2.new(1,-90,.55,0),function() event:FireServer('Reload') end)
+   else CAS:UnbindAction('NorthsideReload') end
+  end
  end
- ammo.Text=t and t.Name=='Pistol' and (t:GetAttribute('Reloading') and 'RELOADING' or tostring(t:GetAttribute('Ammo') or 0)..' loaded  ·  '..tostring(p:GetAttribute('ReserveAmmo') or 0)..' spare') or ''
+ ammo.Text=armed and (t:GetAttribute('Reloading') and 'RELOADING' or tostring(t:GetAttribute('Ammo') or 0)..' / '..tostring(p:GetAttribute('ReserveAmmo') or 0)) or ''
  local sentence=p:GetAttribute('CustodyUntil') or 0
  if sentence>0 then
-  status.Text='Patapsco  '..math.max(0,sentence-math.floor(workspace:GetServerTimeNow()))..'s    Bail $'..(p:GetAttribute('Bail') or 0)
- elseif state and state.Heat then status.Text='Wanted '..state.Heat..'/5   •   Goods '..state.Loot end
+  hud.status.Text='Custody '..math.max(0,sentence-math.floor(workspace:GetServerTimeNow()))..'s   Bail $'..(p:GetAttribute('Bail') or 0)
+ else
+  local heat=math.clamp(state.Heat or 0,0,5)
+  local goods=state.Loot or 0
+  hud.status.Text=(goods>0 and ('Goods '..goods..'  ') or '')..(heat>0 and string.rep('★',heat) or '')
+ end
 end)
 local function setClock()
  local minutes=city:GetAttribute('CityMinute') or 864
- local hour=math.floor(minutes/60);local day=({'MON','TUE','WED','THU','FRI','SAT','SUN'})[city:GetAttribute('CityDay') or 1]
- clockText.Text=string.format('BALTIMORE    /    %s   %d:%02d %s',day,(hour+11)%12+1,minutes%60,hour<12 and 'AM' or 'PM')
+ local hour=math.floor(minutes/60)
+ local day=({'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'})[city:GetAttribute('CityDay') or 1]
+ handset.clock(string.format('%d:%02d %s',(hour+11)%12+1,minutes%60,hour<12 and 'AM' or 'PM'),day)
 end
-setClock();city:GetAttributeChangedSignal('CityMinute'):Connect(setClock)
+setClock();city:GetAttributeChangedSignal('CityMinute'):Connect(setClock);city:GetAttributeChangedSignal('CityDay'):Connect(setClock)
 local mapDot
 local function showMap()
  clear('NORTHSIDE STREET MAP')
@@ -268,7 +280,6 @@ local function showMap()
  if root then mapDot.Position=location(root.Position.X,root.Position.Z) end
  paragraph('Gold dot · your location. North is up. The apartment courts have open galleries and stairs at one end of each building.')
 end
-button(gui,'MAP',UDim2.fromOffset(82,34),UDim2.new(1,-100,0,58),showMap)
 Run.Heartbeat:Connect(function()
  if modal.Visible and mapDot and mapDot.Parent then
   local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
@@ -291,16 +302,6 @@ local function jobBoard()
  end
 end
 local lifeApps=require(game:GetService('ReplicatedStorage'):WaitForChild('LifeUI'))(p,event,modal,title,clear,row,paragraph,notify)
-local phoneSession=false
-local homeButton=button(modal,'Home',UDim2.fromOffset(49,32),UDim2.new(1,-105,0,13),function() openPhone() end)
-homeButton.Visible=false
-modal:GetPropertyChangedSignal('Visible'):Connect(function()
- if not modal.Visible then phoneSession=false;homeButton.Visible=false end
-end)
-title:GetPropertyChangedSignal('Text'):Connect(function()
- homeButton.Visible=phoneSession and title.Text~='CITY PHONE'
- title.Size=UDim2.new(1,homeButton.Visible and -135 or -70,0,40)
-end)
 local function workApp()
  clear('WORK')
  local role=jobOffer()
@@ -317,30 +318,16 @@ local function workApp()
  row('Job applications',jobBoard)
 end
 openPhone=function()
- phoneSession=true
- clear('CITY PHONE');homeButton.Visible=false
- local card=make('Frame',{Name='Wallet',Size=UDim2.new(1,-6,0,63),BackgroundColor3=Color3.fromRGB(33,78,70),BorderSizePixel=0,LayoutOrder=1},content)
- make('UICorner',{CornerRadius=UDim.new(0,10)},card)
- text(card,'CASH',UDim2.new(.48,-12,0,17),UDim2.fromOffset(14,8),11)
- text(card,'BANK',UDim2.new(.48,-12,0,17),UDim2.new(.52,0,0,8),11)
- text(card,'$'..(p:GetAttribute('Cash') or 0),UDim2.new(.48,-12,0,26),UDim2.fromOffset(14,26),21)
- text(card,'$'..(p:GetAttribute('Bank') or 0),UDim2.new(.48,-12,0,26),UDim2.new(.52,0,0,26),21)
- local grid=make('Frame',{Name='Apps',Size=UDim2.new(1,-6,0,194),LayoutOrder=2,BackgroundTransparency=1},content)
- make('UIGridLayout',{CellSize=UDim2.new(1/3,-6,0,58),CellPadding=UDim2.fromOffset(7,7),SortOrder=Enum.SortOrder.LayoutOrder},grid)
- local apps={{'Work',workApp},{'City map',showMap},{'My bag',lifeApps.bag},{'Dispatch',lifeApps.dispatch},{'My home',lifeApps.homes},{'Pay / trade',playersMenu},{'Party supplies',retailUI.bag},{'Servers',function() require(game.ReplicatedStorage.ServerBrowser).open() end}}
- for i,app in apps do
-  local tile=button(grid,app[1],UDim2.new(),UDim2.new(),app[2])
-  tile.LayoutOrder=i;tile.TextSize=14;tile.TextWrapped=true
-  tile.BackgroundColor3=({Color3.fromRGB(52,70,85),Color3.fromRGB(47,76,65),Color3.fromRGB(89,66,55)})[(i-1)%3+1]
- end
+ clear('CITY PHONE')
+ handset.start()
+ local rgb=Color3.fromRGB
+ handset.draw({
+  {'Work',workApp,rgb(195,127,65)},{'City map',showMap,rgb(58,132,104)},{'My bag',lifeApps.bag,rgb(144,92,141)},
+  {'My home',lifeApps.homes,rgb(65,116,157)},{'Pay / trade',playersMenu,rgb(71,139,114)},{'Dispatch',lifeApps.dispatch,rgb(182,83,75)},
+  {'Party supplies',retailUI.bag,rgb(160,99,155)},{'Servers',function() modal.Visible=false;require(game.ReplicatedStorage.ServerBrowser).open() end,rgb(71,119,159)},{'Guide',showGuide,rgb(116,107,149)},
+ },playersMenu)
 end
-for _,attr in {'Employment','ShiftTask','Wages','Cash','Bank'} do
- p:GetAttributeChangedSignal(attr):Connect(function()
-  if modal.Visible and title.Text=='CITY PHONE' then openPhone() end
- end)
-end
-button(gui,'PHONE',UDim2.fromOffset(82,34),UDim2.new(1,-100,0,98),openPhone)
-button(gui,'GUIDE',UDim2.fromOffset(82,34),UDim2.new(1,-100,0,18),function()
+showGuide=function()
  clear('WELCOME TO NORTHSIDE')
  if not jobMarker then
   row(showPickup() and 'Hide courier directions' or 'Find the $90 courier desk',function()
@@ -358,6 +345,6 @@ button(gui,'GUIDE',UDim2.fromOffset(82,34),UDim2.new(1,-100,0,18),function()
  paragraph('Wanted level fades over time. Player robbery takes 8 seconds and at most 25% of cash, capped at $200. The same player is protected from another robbery for 5 minutes.')
  paragraph('Use Drive to enter. Steer with movement controls. Brake with Space, LT or the Brake button. Exit with X, B or Exit car.')
  paragraph('Fuel drops with distance. Park at a dispenser to refill for $1 per 5%. The quay is north of Monument Street, Lanvale Courts is west, and Eastgate Terrace is east.')
-end)
+end
 event:FireServer('Ready')
-notify('Open PHONE to apply for work. MAP shows downtown, the housing courts and the harbor.')
+notify('Open your phone for jobs and the city map.')

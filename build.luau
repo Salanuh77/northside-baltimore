@@ -189,6 +189,14 @@ city:SetAttribute('ReleaseChannel','Alpha')
 require('./districts')(part,group,label,action,city)
 require('./fleet')(part,group,city)
 require('./prison')(part,group,label,action,city)
+local radar={}
+for _,part in city:GetDescendants() do
+ if part:IsA('BasePart') and table.find({'Carriageway','Worn asphalt','Side street connection','Service alley'},part.Name) then
+  local pos,sz=part.CFrame.Position,part.Size
+  table.insert(radar,{pos.X,pos.Z,sz.X,sz.Z})
+ end
+end
+city:SetAttribute('RadarRoads',require('@lune/serde').encode('json',radar))
 local mapBoard=group('Neighborhood directory',city)
 for _,x in {143,155} do part('Directory upright',{.6,10,.6},{x,5,31},'dark','Metal',mapBoard) end
 local panel=part('Street directory',{15,8,.7},{149,6,31},'green','Metal',mapBoard)
@@ -234,6 +242,9 @@ local routes=Instance.new('ModuleScript'); routes.Name='WalkingRoutes'; routes.S
 local bearing=Instance.new('ModuleScript'); bearing.Name='JobBearing'; bearing.Source=fs.readFile('src/JobBearing.luau'); bearing.Parent=rs
 local catalog=Instance.new('ModuleScript'); catalog.Name='WorkCatalog'; catalog.Source=fs.readFile('src/WorkCatalog.luau'); catalog.Parent=rs
 local jobs=Instance.new('ModuleScript'); jobs.Name='WorkService'; jobs.Source=fs.readFile('src/WorkService.luau'); jobs.Parent=server.Parent
+for _,name in {'Handset','StreetHUD'} do
+ local module=Instance.new('ModuleScript'); module.Name=name; module.Source=fs.readFile('src/'..name..'.luau'); module.Parent=rs
+end
 local lifeUi=Instance.new('ModuleScript'); lifeUi.Name='LifeUI'; lifeUi.Source=fs.readFile('src/LifeUI.luau'); lifeUi.Parent=rs
 for _,entry in {{'VehicleHandling','src/VehicleHandling.luau'},{'ResidentFiles','src/ResidentFiles.luau'},{'CityRetail','src/CityRetail.luau'},{'NeighborhoodLife','src/NeighborhoodLife.luau'},{'Responders','src/Responders.luau'},{'Custody','src/Custody.luau'}} do
  local mod=Instance.new('ModuleScript'); mod.Name=entry[1]; mod.Source=fs.readFile(entry[2]); mod.Parent=server.Parent
