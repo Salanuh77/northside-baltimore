@@ -111,7 +111,7 @@ local function bay(stock,frame,width,profile,offset)
   stockTier(rack,frame,width,tier,line)
   printRow(artwork,tier,line)
  end
- local cap=piece(rack,'Department rail',frame,0,5.98,-.8,width,.75,1.82,enamel)
+ local cap=piece(rack,'Department rail',frame,0,6.38,-.8,width,.75,1.82,enamel)
  printed(cap,string.upper(catalog.names[lines[(offset+1)%#lines+1]]),cream)
 end
 local function board(stock,frame,x,y,z,w,title,items,b)
@@ -202,6 +202,27 @@ local function extraCounter(stock,frame,b,width,depth)
   board(stock,frame,0,8.95,depth/2-.65,10,title,menu,b)
  end
 end
+local function vinylBin(stock,frame,x,section,title,tint)
+ piece(stock,'Bin floor',frame,x,3.27,.05,2.75,.26,3.25,oak,E.Material.Wood)
+ for _,s in {-1,1} do
+  piece(stock,'Bin side',frame,x+s*1.34,3.78,.05,.13,1.0,3.25,oak,E.Material.Wood)
+ end
+ for i=0,5 do
+  local jacket=piece(stock,'LP sleeve',frame,x,4.55+i*.044,-.96+i*.42,2.38,2.38,.11,
+   i==0 and tint or i%2==0 and iron or cream,E.Material.SmoothPlastic)
+  jacket.CFrame*=CF.Angles(-.16,0,0)
+  if i==0 then
+   local art=surface(jacket,180,180,65);art.Name='Album cover'
+   local circle=block(art,.23,.1,.58,.58,iron)
+   local round=rb.Instance.new('UICorner');round.CornerRadius=rb.UDim.new(.5,0);round.Parent=circle
+   local dot=block(art,.46,.33,.12,.12,cream)
+   local roundDot=round:Clone();roundDot.Parent=dot
+   words(art,title,.06,.74,.88,.17,cream)
+  end
+ end
+ local lip=piece(stock,'Bin index',frame,x,3.64,-1.63,2.76,.58,.14,iron)
+ printed(lip,section,cream)
+end
 local function retailFeature(site,stock,frame,width,depth,b)
  local kind=b[3];local color=C.fromHex(b[4]);local accent=C.fromHex(b[5])
  -- Replace the original three generic sculptures in converted art halls with the business's wares.
@@ -213,14 +234,17 @@ local function retailFeature(site,stock,frame,width,depth,b)
    local fx=frame*CF.new(side*18,0,4)
    solid(piece(stock,'Browse table',fx,0,1.55,0,10,3.1,4.2,oak,E.Material.Wood))
    if kind=='records' then
-    for slot=0,6 do
-     local sleeve=piece(stock,'LP sleeve',fx,(slot-3)*1.22,3.92,0,1.12,1.7,2.8,slot%2==0 and color or accent)
-     sleeve.CFrame*=CF.Angles(-.12,0,0)
+    vinylBin(stock,fx,-3.1,'SOUL','NIGHT BUS',C.fromRGB(161,69,56))
+    if side<0 then
+     vinylBin(stock,fx,0,'JAZZ','SECOND LINE',C.fromRGB(64,113,123))
+     vinylBin(stock,fx,3.1,'GO-GO','BACKBEAT',C.fromRGB(142,107,44))
     end
     if side==1 then
-     local deck=piece(stock,'Listening deck',fx,0,3.8,-.2,4.3,.55,3.3,iron)
+     local deck=piece(stock,'Listening deck',fx,1.3,3.44,-.2,4.3,.55,3.3,iron)
      local disc=piece(stock,'Turntable platter',deck.CFrame,-.5,.4,0,.13,2.5,2.5,iron)
-     disc.Shape=E.PartType.Cylinder;disc.CFrame*=CF.Angles(0,0,math.pi/2)
+     disc.Color=C.fromRGB(25,28,29);disc.Shape=E.PartType.Cylinder;disc.CFrame*=CF.Angles(0,0,math.pi/2)
+     local label=piece(stock,'Center label',deck.CFrame,-.5,.48,0,.06,.81,.81,accent)
+     label.Shape=E.PartType.Cylinder;label.CFrame*=CF.Angles(0,0,math.pi/2)
      piece(stock,'Tonearm',deck.CFrame,1.2,.55,0,.12,.12,1.65,cream)
     end
    elseif kind=='books' then

@@ -36,6 +36,10 @@ for _,site in city:GetDescendants() do
  if site:FindFirstChild('Window dress form') then
   assert(stock:FindFirstChild('Apparel wall',true),brand..' needs a visible clothing collection')
  end
+ if site:GetAttribute('RetailDepartment')=='records' then
+  local sleeve=assert(stock:FindFirstChild('LP sleeve',true))
+  assert(sleeve.Size.Z<.2 and stock:FindFirstChild('Album cover',true),brand..' needs printed LP sleeves')
+ end
  local staff={}
  for _,p in site:GetChildren() do
   local at=p:GetAttribute('StaffSpot')
