@@ -129,8 +129,42 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
  lettering(g('Pier sign',21,4,.7,0,12,15,blue,'Metal'),'PIER 8  /  MARITIME')
  lounge(g,9,1.3,0,blue); glow(g,-10,12,-4)
  local p=builder(group('Civic clock tower',civic),0,1079)
- p('Civic hall',127,23,29,0,12,0,cream,'Limestone')
- for _,u in {-53,-38,-23,23,38,53} do glass(p,'Civic arch window',7,13,.4,u,12,-14.8); p('Classical pier',2,22,2,u+5.2,12,-15,cream,'Marble') end
+ local bronze=rgb(78,72,58);local copper=rgb(77,116,103)
+ p('Council entrance',128,1.1,32,0,1.1,0,cream,'Marble')
+ p('Council chamber ceiling',129,1,32,0,23.5,0,cream,'Limestone')
+ p('Rear chamber wall',128,22,1,0,12,15.5,cream,'Limestone')
+ for _,side in {-1,1} do
+  p('Gallery end wall',1,22,31,side*63.5,12,0,cream,'Limestone')
+  p('Council gallery bench',15,1.1,3,side*33,3,4,'dark','Wood')
+  p('Bench back',15,3,.5,side*33,4.2,5.4,'dark','Wood')
+  p('Bench pedestal',9,1.3,2,side*33,2,4,cream,'Marble')
+  for i=0,3 do
+   local x=side*(20+12*i)
+   p('Window stall riser',12,4,1.1,x,3.3,-15.2,cream,'Limestone')
+   glass(p,'Chamber sash',10.2,13,.55,x,11.8,-15)
+   p('Sash meeting rail',10.3,.45,.9,x,11.6,-15.45,bronze,'Metal')
+   p('Bronze glazing bar',.32,13,.8,x,11.8,-15.4,bronze,'Metal')
+   p('Window hood',11.7,1.1,2,x,18.6,-15.6,cream,'Marble')
+   p('Facade pier',1.8,21.8,1.6,x+side*5.8,12.2,-15.2,cream,'Limestone')
+  end
+  p('Wing entablature',50,4.7,1.4,side*39,21.3,-15.3,cream,'Limestone')
+  p('Covered wing roof',49,2.4,29,side*39,25.4,0,copper,'Metal')
+  for k=0,6 do p('Cornice bracket',1,1.2,2,side*(16+7*k),22.4,-16.2,cream,'Marble') end
+ end
+ for i=1,4 do p('Portico step',31,.4*i,1.4,0,.6+.2*i,-26.3+i*1.35,cream,'Marble') end
+ p('Portico landing',32,1.6,7.5,0,1.45,-18,cream,'Marble')
+ for _,x in {-13,-8,8,13} do
+  p('Column plinth',2.6,1.3,2.6,x,2.9,-20,cream,'Marble')
+  local shaft=p('Portico shaft',16.8,1.65,1.65,x,11.6,-20,cream,'Marble')
+  shaft.Shape=E.PartType.Cylinder;shaft.CFrame*=cf.Angles(0,0,math.pi/2)
+  p('Portico capital',2.8,1.5,2.8,x,20.4,-20,cream,'Marble')
+ end
+ p('Portico fascia',32,2.8,8,0,22.3,-18,cream,'Limestone')
+ for _,s in {-1,1} do
+  local rake=p('Pediment rake',16.8,.85,8.4,s*7.95,25.7,-18,copper,'Metal')
+  rake.CFrame*=cf.Angles(0,0,-s*.265)
+ end
+ p('Council reception desk',12,3.8,3,0,3.6,8,bronze,'Wood')
  for k,v in {{30,48},{24,24},{20,20}} do local y=({46,82,104})[k]; p('Tower stage',v[1],v[2],v[1],0,y,0,cream,'Limestone'); p('Tower entablature',v[1]+3,1.4,v[1]+3,0,y+v[2]/2,0,cream,'Marble') end
  for _,u in {-11,11} do
   p('Fluted civic column',2.2,45,2.2,u,45,-15.6,cream,'Marble')
@@ -148,8 +182,16 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   local hour=p('Clock hour hand', .5,3.8,.45,0,80,0,'dark','Metal'); hour.CFrame=pivot*cf.new(0,83.8,-13.5); hour:SetAttribute('ClockPivot',pivot*cf.new(0,82,-13.5))
   for n=0,11 do local a=n*math.pi/6; local tick=p('Clock index',.36,.8,.26,0,0,0,'dark','Metal'); tick.CFrame=pivot*cf.new(5*math.sin(a),82+5*math.cos(a),-12.9)*cf.Angles(0,0,-a) end
  end
- local dome=p('Copper dome',18,13,18,0,119,0,blue,'Metal'); dome.Shape=E.PartType.Ball
- p('Lantern',4,7,4,0,127,0,cream,'Metal'); p('Spire',.65,12,.65,0,136,0,'gold','Metal')
+ for _,ring in {{114.8,2,22},{116.8,2.2,20.4},{118.5,1.3,19.3}} do
+  local belt=p('Dome drum',ring[2],ring[3],ring[3],0,ring[1],0,copper,'Metal')
+  belt.Shape=E.PartType.Cylinder;belt.CFrame*=cf.Angles(0,0,math.pi/2)
+ end
+ local dome=p('Copper dome',19,19,19,0,118.8,0,copper,'Metal'); dome.Shape=E.PartType.Ball
+ p('Lantern sill',5.1,.9,5.1,0,127.9,0,bronze,'Metal')
+ for _,x in {-1.7,1.7} do for _,z in {-1.7,1.7} do p('Lantern post',.5,4.7,.5,x,130.5,z,cream,'Marble') end end
+ local crown=p('Lantern roof',5.6,4.8,5.6,0,133.4,0,copper,'Metal');crown.Shape=E.PartType.Ball
+ p('Spire',.48,5.5,.48,0,137.7,0,'gold','Metal')
+ local tip=p('Lantern finial',1.3,1.6,1.3,0,140.5,0,'gold','Metal');tip.Shape=E.PartType.Ball
  -- Assign the alley faces after both rows exist, so opposite homes have individual marks.
  local function rowPaint(address,collection,cell,offset,height,width,fade)
   mural(housing['Hollins Row '..address].Rear,E.NormalId.Front,cell,offset,height,width,fade,collection)
