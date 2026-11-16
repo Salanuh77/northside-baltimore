@@ -28,7 +28,7 @@ local iris={Brown=Color3.fromRGB(69,43,30),Hazel=Color3.fromRGB(108,102,60),Blue
 Style.Details={'Clean','Freckles','Goatee','Mustache','Stubble'}
 function Style.valid(data)
  if type(data)~='table' or (data.Starter~=nil and not table.find(Style.Starters,data.Starter)) or (data.Detail~=nil and not table.find(Style.Details,data.Detail)) then return false end
- for key,list in {HairColor=Style.HairColors,Eye=Style.Eyes,Expression=Style.Expressions,Mouth=Style.Mouths,Pants=Style.Pants,Shoes=Style.Shoes,Depth=Style.Depths,HairDetail=Style.HairDetails,FirstName=Style.FirstNames,LastName=Style.LastNames} do if data[key]~=nil and not table.find(list,data[key]) then return false end end
+ for key,list in {HairColor=Style.HairColors,Eye=Style.Eyes,Expression=Style.Expressions,Mouth=Style.Mouths,Pants=Style.Pants,Shoes=Style.Shoes,Depth=Style.Depths,HairDetail=Style.HairDetails} do if data[key]~=nil and not table.find(list,data[key]) then return false end end
  for key,list in {Height=Style.Heights,Build=Style.Builds,Hair=Style.Hair,Tone=Style.Tones} do
   if not table.find(list,data[key]) then return false end
  end

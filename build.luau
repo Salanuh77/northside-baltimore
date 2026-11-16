@@ -225,6 +225,7 @@ rig.Parent=rs
 local hairLibrary=rb.deserializeModel(fs.readFile('art/resident-hair.rbxm'))[1];hairLibrary.Name='ResidentHair';hairLibrary.Parent=rs
 local starterRig=rig:Clone();starterRig.Name='StarterCharacter';starterRig.Parent=starter
 local menu=Instance.new('LocalScript');menu.Name='ResidentMenu';menu.Source=fs.readFile('src/ResidentMenu.client.luau');menu.Parent=starter:FindFirstChildOfClass('StarterPlayerScripts')
+local names=Instance.new('ModuleScript'); names.Name='ResidentNames'; names.Source=fs.readFile('src/ResidentNames.luau'); names.Parent=rs
 local style=Instance.new('ModuleScript'); style.Name='StreetStyle'; style.Source=fs.readFile('src/StreetStyle.luau'); style.Parent=rs
 local art=require('@lune/serde').decode('json',fs.readFile('art/assets.json'))
 for _,key in {'fleet-track','foundry-work','pier-varsity','indigo-denim','harbor-warmup','clay-workshirt','olive-overshirt','street-denim','washed-denim','canvas-trousers','street-denim-black','washed-denim-black','canvas-trousers-black','resident-calm','resident-smile','resident-focused','mouth-level','mouth-smile','mouth-set'} do style:SetAttribute(key,assert(art[key],key)) end

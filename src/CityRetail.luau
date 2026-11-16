@@ -3,6 +3,7 @@ local Market=game:GetService('MarketplaceService')
 local Text=game:GetService('TextService')
 local Policy=game:GetService('PolicyService')
 local Style=require(game.ReplicatedStorage:WaitForChild('StreetStyle'))
+local Names=require(game.ReplicatedStorage:WaitForChild('ResidentNames'))
 local products=require(game.ReplicatedStorage:WaitForChild('ShopProducts'))
 local types={}
 for name,product in products do types[product.Id]=name end
@@ -28,26 +29,25 @@ return function(profiles,jobs,event,closest,sync,tell,save,tool)
   d.Cash-=30; d.Look.Hair=request.Style; dress(customer,d); sync(customer); tell(customer,'Your haircut is saved.')
  end
  local actions={CreateResident=true,Outfit=true,Cut=true,ServeCut=true,Premium=true,PartyItem=true,ArmoryFinish=true}
- local function handle(p,kind,data)
+ local function resolveName(p,data)
+  return Names.resolve(data,Style.FirstNames,Style.LastNames,function(name)
+   return Text:FilterStringAsync(name,p.UserId):GetNonChatStringForBroadcastAsync()
+  end)
+ end
+ local function handle(p,kind,data,approvedName)
   if not actions[kind] then return false end
   local d=profiles[p]
   if kind=='CreateResident' then
-   if d.Look or d.Creating or not Style.valid(data) or type(data.Name)~='string' or #data.Name>40 then return true end
-   local name=data.Name:match('^%s*(.-)%s*$')
-   if data.FirstName and data.LastName then
-    name=data.FirstName..' '..data.LastName
-   elseif name=='' then
-    name=Style.FirstNames[1]..' '..Style.LastNames[1]
-   elseif name~=p.DisplayName then
-    d.Creating=true
-    local ok,filtered=pcall(function() return Text:FilterStringAsync(name,p.UserId):GetNonChatStringForBroadcastAsync() end)
-    d.Creating=nil
-    if profiles[p]~=d then return true end
-    if not ok or filtered=='' or filtered:find('#',1,true) then tell(p,'Choose another roleplay name.'); return true end
-    name=filtered
-   end
-   d.Look={Name=name=='' and p.DisplayName or name,Height=data.Height,Build=data.Build,Hair=data.Hair,Tone=data.Tone,Starter=data.Starter or 'Harbor',Detail=data.Detail or 'Clean',Eye=data.Eye or 'Brown',Expression=data.Expression or 'Calm',HairColor=data.HairColor or 'Black'}
-   for _,field in {'Depth','Pants','Shoes','Mouth','HairDetail','FirstName','LastName'} do d.Look[field]=data[field] end
+   if d.Look or d.Creating then return true end
+   if not Style.valid(data) then tell(p,'Choose one of the available appearance options.');return true end
+   d.Creating=true
+   local name,reason=approvedName,nil
+   if not name then name,reason=resolveName(p,data) end
+   d.Creating=nil
+   if profiles[p]~=d or d.Leaving then return true end
+   if not name then tell(p,reason);return true end
+   d.Look={Name=name,Height=data.Height,Build=data.Build,Hair=data.Hair,Tone=data.Tone,Starter=data.Starter or 'Harbor',Detail=data.Detail or 'Clean',Eye=data.Eye or 'Brown',Expression=data.Expression or 'Calm',HairColor=data.HairColor or 'Black'}
+   for _,field in {'Depth','Pants','Shoes','Mouth','HairDetail'} do d.Look[field]=data[field] end
    p:SetAttribute('NeedsCharacter',false); dress(p,d); sync(p); event:FireClient(p,'StyleSaved')
   elseif kind=='Outfit' then
    if not closest(p,'Clothing') or not d.Look then return true end
@@ -139,5 +139,5 @@ return function(profiles,jobs,event,closest,sync,tell,save,tool)
   sync(p);return Enum.ProductPurchaseDecision.PurchaseGranted
  end
  Market.ProcessReceipt=receipt
- return {handle=handle,setup=setup,dress=dress,receipt=receipt}
+ return {handle=handle,resolveName=resolveName,setup=setup,dress=dress,receipt=receipt}
 end
