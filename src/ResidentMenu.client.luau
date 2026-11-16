@@ -120,7 +120,14 @@ local function send()
  event:FireServer('CreateResident',request)
 end
 local enter=button(panel,'Continue',function()
- if tab=='Identity' then tab='Appearance';draw() else send() end
+ if waiting then return end
+ if tab=='Identity' then
+  for _,value in {draft.FirstName,draft.LastName} do
+   local length=utf8.len(value:match('^%s*(.-)%s*$'))
+   if not length or length<1 or length>20 then footer.Text='Enter 1 to 20 characters for each name.';return end
+  end
+  tab='Appearance';draw()
+ else send() end
 end)
 enter.BackgroundColor3=gold;enter.TextColor3=ink
 local back=button(panel,'Back',function()
@@ -182,13 +189,21 @@ draw=function()
  if tab=='Identity' then
   local function names(parent,field,caption,list)
    hint(parent,caption)
+   local box=make('TextBox',{Name=field..' input',Text=draft[field],PlaceholderText=caption,
+    ClearTextOnFocus=false,MultiLine=false,TextSize=16,Font=Enum.Font.GothamMedium,TextColor3=cream,
+    BackgroundColor3=slate,BorderSizePixel=0,Size=UDim2.new(1,-4,0,38),Position=UDim2.fromOffset(0,28)},parent)
+   box:GetPropertyChangedSignal('Text'):Connect(function()
+    draft[field]=box.Text;chosenName()
+   end)
+   local suggestions=label(parent,'Suggestions',12,paper)
+   suggestions.Position=UDim2.fromOffset(2,72);suggestions.Size=UDim2.new(1,-4,0,20)
    local buttons={}
    for i,value in list do
     local b=button(parent,value,function()
-     draft[field]=value;chosenName()
+     box.Text=value
      for name,item in buttons do item.BackgroundColor3=name==value and gold or slate;item.TextColor3=name==value and ink or cream end
     end)
-    buttons[value]=b;b.Position=UDim2.fromOffset(0,28+(i-1)*34);b.Size=UDim2.new(1,-4,0,30)
+    buttons[value]=b;b.Position=UDim2.fromOffset(0,96+(i-1)*34);b.Size=UDim2.new(1,-4,0,30)
     if draft[field]==value then b.BackgroundColor3=gold;b.TextColor3=ink end
    end
   end
