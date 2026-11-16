@@ -52,6 +52,7 @@ return function(event,modal,content,clear,row,paragraph,input,state)
     for _,color in Style.HairColors do row(color,function() book(color) end) end
    end
    clear('BARBER CHAIR');paragraph('Choose a haircut and dye for $30.')
+   row('Face mirror',function() event:FireServer('OpenMirror');modal.Visible=false end)
    if state().Hair then row('Dye current haircut',function() chooseDye(state().Hair) end) end
    for _,cut in Style.Hair do row(cut,function() chooseDye(cut) end) end
   elseif kind=='CutRequest' then

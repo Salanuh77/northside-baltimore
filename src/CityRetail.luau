@@ -28,7 +28,7 @@ return function(profiles,jobs,event,closest,sync,tell,save,tool)
   end
   d.Cash-=30; d.Look.Hair=request.Style; d.Look.HairColor=request.Color; dress(customer,d); sync(customer); tell(customer,'Your haircut is saved.')
  end
- local actions={CreateResident=true,Outfit=true,Cut=true,ServeCut=true,Premium=true,PartyItem=true,ArmoryFinish=true}
+ local actions={OpenMirror=true,MirrorLook=true,CreateResident=true,Outfit=true,Cut=true,ServeCut=true,Premium=true,PartyItem=true,ArmoryFinish=true}
  local function resolveName(p,data)
   return Names.resolve(data,Style.FirstNames,Style.LastNames,function(name)
    return Text:FilterStringAsync(name,p.UserId):GetNonChatStringForBroadcastAsync()
@@ -49,6 +49,18 @@ return function(profiles,jobs,event,closest,sync,tell,save,tool)
    d.Look={Name=name,Height=data.Height,Build=data.Build,Hair=data.Hair,Tone=data.Tone,Starter=data.Starter or 'Harbor',Detail=data.Detail or 'Clean',Eye=data.Eye or 'Brown',Expression=data.Expression or 'Calm',HairColor=data.HairColor or 'Black'}
    for _,field in {'Depth','Pants','Shoes','Mouth','HairDetail','FaceShape','FaceWidth','EyeSpacing','LipFullness'} do d.Look[field]=data[field] end
    p:SetAttribute('NeedsCharacter',false); dress(p,d); sync(p); event:FireClient(p,'StyleSaved')
+  elseif kind=='OpenMirror' or kind=='MirrorLook' then
+   if not d.Look or not closest(p,'Barber') then tell(p,'Stand beside the barber mirror.');return true end
+   if kind=='OpenMirror' then
+    event:FireClient(p,'FaceMirror',{Look=d.Look,Outfit=d.Outfit});return true
+   end
+   local nextLook=table.clone(d.Look)
+   for _,key in {'FaceShape','FaceWidth','EyeSpacing','LipFullness','Expression','Mouth','Eye','Detail'} do
+    if type(data[key])~='string' then tell(p,'Choose a value for each face control.');return true end
+    nextLook[key]=data[key]
+   end
+   if not Style.valid(nextLook) then tell(p,'Choose an available face option.');return true end
+   d.Look=nextLook;dress(p,d);sync(p);event:FireClient(p,'MirrorDone')
   elseif kind=='Outfit' then
    if not closest(p,'Clothing') or not d.Look then return true end
    for _,v in Style.Outfits do if v.Id==data.Item then
