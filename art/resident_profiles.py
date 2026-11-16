@@ -4,6 +4,7 @@ import json
 import math
 import struct
 import numpy as np
+from scipy.interpolate import PchipInterpolator
 
 ROOT = Path(__file__).parent
 # Half-widths at chin, jaw, cheeks, temple and crown. Each is a distinct profile.
@@ -21,10 +22,12 @@ def rings(profile):
     chin, jaw, cheek, temple, crown = profile
     widths = [.05, chin, jaw, cheek, temple, temple*.91, crown, .07]
     depths = [.09, .30, .41, .46, .46, .45, .33, .09]
+    width_at=PchipInterpolator(Y, widths)
+    depth_at=PchipInterpolator(Y, depths)
     vertices = []
     samples = 64
     for y in np.linspace(-.50, .50, 49):
-        w, depth = np.interp(y, Y, widths), np.interp(y, Y, depths)
+        w, depth = float(width_at(y)), float(depth_at(y))
         for i in range(samples):
             angle = 2*math.pi*i/samples
             x = w*math.sin(angle)
