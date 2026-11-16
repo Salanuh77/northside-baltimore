@@ -91,7 +91,7 @@ return function(gui,modal,title,content,close,make,text,button,openHome)
   session=true;launcher.Visible=false;home.Visible=true;shell.Visible=true;modal.BackgroundTransparency=1
   fit();style()
   if fresh then
-   modal.Position=UDim2.new(1,-12,1,22)
+   modal.Position=UDim2.new(1,-12,1,0)
    Tween:Create(modal,TweenInfo.new(.16,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),{Position=UDim2.new(1,-12,1,-8)}):Play()
   end
  end
