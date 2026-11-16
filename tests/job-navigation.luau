@@ -21,3 +21,8 @@ assert(angle == 0 and distance == 0)
 local city = candidate:GetService("Workspace").Baltimore
 assert(city:GetAttribute("CourierDesk") == city:FindFirstChild("Courier desk", true).CFrame.Position)
 print("JOB_NAVIGATION_PASS", "cardinal directions, pitched camera, arrival and baked pickup")
+local storage = candidate:GetService("ReplicatedStorage")
+assert(storage:FindFirstChild("StreetTrail"), "Missing street-level route renderer")
+assert(storage:FindFirstChild("WalkingRoute"), "No streaming-independent walking route service")
+local clerkDesk = city:FindFirstChild("Eastern Outfitters", true)["Sales counter"]
+assert(city:GetAttribute("OutfittersDesk") == clerkDesk.CFrame.Position)

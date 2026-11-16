@@ -15,3 +15,9 @@
 ## East Brickton — Windows Roblox Player, November 15, 2026
 
 **Access attempt.** Roblox denied the join with error 524. This session provided no first-hand evidence about East Brickton's character creation or street gameplay. [East Brickton](https://www.roblox.com/games/1923555882/East-Brickton)
+
+## Watching the player's Street Life Remastered session, November 15, 2026
+
+The player had the controls. From the scooter rental area, they crossed a rainy intersection on foot toward Flipsy’s Guns. A chain of bright white arrows extended along the pavement into the distance. The driving instruction stayed on screen while the player continued on foot. Near the shop, the objective changed to visiting the dealer. A white silhouette and location pin identified the NPC through the brick wall. Inside, the outline picked out the Gun Dealer behind the glass counter. The Ammo Dealer stood at the adjoining counter.
+
+The ammo screen showed the item, a $50 in-game price and a Purchase button. The next street view showed $8,877 cash, down from $8,927 on that screen, with the bank still at $2,500. The tutorial arrows had cleared. The hotbar held a Glock17 and Pistol Ammo, and the HUD showed 17 loaded and 34 in reserve. Later the loaded count reached zero. The observations establish the HUD change and leave the target of any shots unknown.

@@ -59,7 +59,7 @@ return function(part,group,label,action,city)
  -- return passage occupy separate lanes, so each landing reaches the next flight.
  local function apartments(district,name,x,z,angle,levels,tint)
   local m=group(name,district); local p=builder(m,x,z,angle)
-  p('Entrance walk',91,.6,10,0,.15,-33,'stone','Concrete')
+  p('Entrance walk',76,.6,4,0,.56,-28.5,'stone','Concrete')
   for level=0,levels-1 do
    local y=level*13+1
    p('Apartment floor',66,.7,48,-9,y,0,'cream','WoodPlanks')
@@ -87,6 +87,9 @@ return function(part,group,label,action,city)
     local u=-25.5+(n-1)*33
     p('Entrance pier',4,12.5,.7,u-14.3,y+6.6,-17,tint,'Brick')
     p('Gallery facade',21,12.5,.7,u+5.7,y+6.6,-17,tint,'Brick')
+    local door=p('Apartment door',6.75,10.3,.42,u-8.7,y+5.55,-17,level%2==0 and garden or blue,'Wood')
+    action(door,'Door','Open / close')
+    p('Door head',7,2.1,.8,u-8.7,y+11.78,-17,tint,'Brick')
     lettering(p('Flat number',2.4,1.1,.15,u-14.2,y+6,-17.55,bronze,'Metal'),tostring((level+1)*100+n))
     for _,side in {-1,1} do
      local pos=u+side*8
@@ -132,7 +135,16 @@ return function(part,group,label,action,city)
      local tread=p('Stair tread',12,.55,1.65,31,y+k*.65-.26,-17+k*1.6,'stone','Concrete')
      tread.CanCollide=false
     end
-    local rail=p('Inclined handrail',.28,.35,35.5,37.1,y+10,-.2,'dark','Metal'); rail.CFrame*=cf.Angles(-math.atan(13/32),0,0)
+   end
+  end
+  for level=0,levels-2 do
+   local y=1+level*13
+   for _,side in {-1,1} do
+    for k=0,4 do
+     p('Stair rail post',.24,3.6,.24,31+side*5.5,y+2.1+k*3.25,-17+k*8,'dark','Metal')
+    end
+    local rail=p('Stair guard',.28,.3,34.55,31+side*5.5,y+10.4,-1,'dark','Metal')
+    rail.CFrame*=cf.Angles(-math.atan(13/32),0,0)
    end
   end
   p('Oversailing roof',90,1.2,55,0,levels*13+1,0,bone,'Concrete')
@@ -322,6 +334,7 @@ return function(part,group,label,action,city)
    local sporting=name=='Union Athletics'
    local counter=p('Sales counter',13,3.8,4,-15,2.9,-10,bronze,'WoodPlanks')
    action(counter,clothing and 'Clothing' or sporting and 'Sporting' or 'GunStore',clothing and 'Shop streetwear' or sporting and 'Shop sports equipment' or 'Browse sidearms')
+   if name=='Eastern Outfitters' then city:SetAttribute('OutfittersDesk',counter.CFrame.Position) end
    local plaque=p('Shop window lettering',24,2.7,.22,-19,8,-21.3,bone,'Metal')
    plaque.Transparency=1; plaque.CanCollide=false; lettering(plaque,name:upper())
    if clothing then
@@ -358,6 +371,14 @@ return function(part,group,label,action,city)
    for _,u in {-12,0,12} do
     p('Mirror surround',8,7,.55,u,7.3,14.4,bronze,'Wood')
     local mirror=p('Mirror',7.2,6.3,.22,u,7.3,14,blue,'Glass'); mirror.Reflectance=.3
+    p('Tool cabinet',8.4,3.4,2,u,2.8,12.6,'dark','Wood')
+    p('Porcelain worktop',8.7,.36,2.3,u,4.65,12.45,bone,'Marble')
+    for _,side in {-1,1} do
+     p('Mirror tube',.28,5.7,.3,u+side*4.18,7.5,13.9,bone,'Neon')
+     p('Chair arm',.54,.6,3.4,u+side*2.28,4.58,6,garden,'Fabric')
+    end
+    for j=1,3 do p('Pomade tin',.72,.43,.7,u-3+j*.84,5.05,12.2,j%2==0 and bronze or garden,'Metal') end
+    p('Chrome footrest',3.4,.36,1.2,u,2.2,9.3,'stone','Metal')
     p('Chair pedestal',2,2,2,u,2.1,6,'stone','Metal')
     local cushion=p('Barber chair',5,1.2,4,u,3.6,6,garden,'Fabric')
     local seat=rb.Instance.new('Seat'); seat.Name='Swivel seat';seat.Size=rb.Vector3.new(3.5,.25,2.8);seat.Anchored=true;seat.Transparency=1;seat.CFrame=cushion.CFrame*cf.new(0,.72,0)*cf.Angles(0,math.pi,0);seat.Parent=room
@@ -366,8 +387,15 @@ return function(part,group,label,action,city)
     if name=='Juniper Barber' and u==0 then tray:SetAttribute('Station','BarberChair') end
     p('Chair back',4.8,3,.55,u,5,4.2,garden,'Fabric')
    end
-   bench(p,-11,-8)
-   if name=='Juniper Barber' then local clock=p('Shift book',2,.3,1.6,-11,3,-8,bone,'Wood'); action(clock,'WorkStop','Sign in'); clock:SetAttribute('Station','BarberDesk') end
+   for _,u in {11,16} do
+    p('Waiting chair base',2.6,1.5,2.7,u,1.85,-8,bronze,'Wood')
+    p('Waiting chair cushion',3.8,.65,3.5,u,2.84,-8,blue,'Fabric')
+    p('Waiting chair back',3.8,2.8,.55,u,3.95,-9.6,blue,'Fabric')
+   end
+   p('Reception cabinet',7,3.3,3.6,-12,2.75,-8,bronze,'Wood')
+   p('Reception counter',7.4,.32,3.9,-12,4.55,-8,bone,'Marble')
+   for j=0,6 do p('Enamel barber pole',1.25,.49,1.25,-7,6+j*.49,-16.15,({bone,blue,bone,rgb(168,62,54)})[j%4+1],'Metal') end
+   if name=='Juniper Barber' then local clock=p('Shift book',2,.3,1.6,-11,4.88,-8,bone,'Wood'); action(clock,'WorkStop','Sign in'); clock:SetAttribute('Station','BarberDesk') end
   else
    for _,u in {-13,13} do
     p('Library case',10,8,2.6,u,5,13,bronze,'Wood')
@@ -383,15 +411,15 @@ return function(part,group,label,action,city)
   local p=builder(group(name..' green',district),x,z)
   p('Garden square',175,.48,145,0,.03,0,garden,'Grass')
   p('Courtyard walk',174,.4,16,0,.42,0,'cream','Concrete')
-  p('Access walk',12,.48,158,0,.42,0,'stone','Concrete')
-  apartments(district,name..' A',x-46,z-41,180,n,tint)
-  apartments(district,name..' B',x+46,z+41,0,n-1,tint)
-  for _,s in {-1,1} do bench(p,s*35,7); tree(p,s*70,4,n); tree(p,s*57,s*-42,n+1) end
+  p('Access walk',12,.48,144,0,.42,0,'stone','Concrete')
+  apartments(district,name..' A',x-41,z-41,180,n,tint)
+  apartments(district,name..' B',x+41,z+41,0,n-1,tint)
+  for _,s in {-1,1} do bench(p,s*35,7); tree(p,s*70,4,n); tree(p,s*13,3,n+1) end
  end
  local function square(district,name,x,z,tint)
   local p=builder(group(name,district),x,z)
   p('Paved square',164,.55,147,0,.08,0,tint,'Cobblestone')
-  for _,u in {-64,64} do for _,v in {-53,-16,22,54} do tree(p,u,v,math.floor(v)); bench(p,u-math.sign(u)*6,v) end end
+  for _,u in {-64,64} do for _,v in {-53,-16,22,54} do if name=='Franklin Square' and u==64 then continue end; tree(p,u,v,math.floor(v)); bench(p,u-math.sign(u)*6,v) end end
   for _,v in {-49,49} do p('Planting bed',58,1,8,0,1,v,garden,'Grass') end
  end
  -- Six harbor blocks between the boulevard and the old neighborhoods.
@@ -410,7 +438,7 @@ return function(part,group,label,action,city)
  walk('Granite seawall',1440,8,3,0,-2,-46,bone,'Concrete')
  local water=walk('Harbor water',1940,2,350,0,-4,-222,rgb(57,128,147),'Glass'); water.Reflectance=.16
  for i=-6,6 do
-  tree(walk,i*104,0,i); bench(walk,i*104+13,-29)
+  tree(walk,i*104,-12,i); bench(walk,i*104+13,-29)
   if i%2==0 then
    walk('Timber pier',13,1.3,62,i*104,0,-73,bronze,'WoodPlanks')
    for _,s in {-1,1} do for _,v in {-62,-88,-103} do walk('Mooring pile',1.8,7,1.8,i*104+s*7,0,v,'dark','Wood') end end
@@ -533,7 +561,7 @@ return function(part,group,label,action,city)
   grounds('Public walk',16,.5,161,0,.45,0,'stone','Concrete')
   grounds('Tower entrances',165,.52,12,0,.48,0,bone,'Concrete')
   apartments(parent,name..' Tower',x-44,z-40,180,floors,tint)
-  apartments(parent,name..' Walkups',x+46,z+39,0,3,tint)
+  apartments(parent,name..' Walkups',x+41,z+39,0,3,tint)
   for _,side in {-1,1} do
    tree(grounds,side*68,3,floors); bench(grounds,side*33,6)
   end

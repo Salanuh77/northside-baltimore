@@ -14,6 +14,11 @@ Style.Tones={'Espresso','Umber','Copper','Amber','Olive','Sand','Porcelain'}
 Style.Skin={Color3.fromRGB(78,48,39),Color3.fromRGB(106,66,49),Color3.fromRGB(148,90,62),Color3.fromRGB(185,125,86),Color3.fromRGB(189,146,108),Color3.fromRGB(218,178,141),Color3.fromRGB(239,207,181)}
 Style.Outfits={{Id='fleet-track',Name='Fleet track jacket',Price=65},{Id='pier-varsity',Name='Burgundy varsity jacket',Price=95},{Id='foundry-work',Name='Foundry overshirt',Price=55}}
 Style.Starters={'Harbor','Clay','Olive','Track jacket','Varsity','Overshirt'}
+Style.Sets={
+ {Name='Harbor warmup',Starter='Harbor',Pants='Dark denim',Shoes='Bone low-tops'},
+ {Name='Clay workwear',Starter='Clay',Pants='Washed denim',Shoes='Black low-tops'},
+ {Name='Olive canvas',Starter='Olive',Pants='Canvas',Shoes='Black low-tops'},
+}
 local starterShirts={Harbor='harbor-warmup',Clay='clay-workshirt',Olive='olive-overshirt',['Track jacket']='fleet-track',Varsity='pier-varsity',Overshirt='foundry-work'}
 Style.HairColors={'Black','Chestnut','Auburn','Honey','Silver'}
 local dyes={Black=Color3.fromRGB(31,25,23),Chestnut=Color3.fromRGB(84,53,35),Auburn=Color3.fromRGB(126,60,39),Honey=Color3.fromRGB(173,126,68),Silver=Color3.fromRGB(160,158,151)}
@@ -112,9 +117,14 @@ function Style.apply(c,look,outfit)
  local tone=Style.Skin[table.find(Style.Tones,look.Tone)]
  local colors=c:FindFirstChildOfClass('BodyColors') or Instance.new('BodyColors')
  for _,name in {'Head','Torso','LeftArm','RightArm','LeftLeg','RightLeg'} do colors[name..'Color3']=tone end
+ local cloth=({['Dark denim']=Color3.fromRGB(38,46,57),['Washed denim']=Color3.fromRGB(86,102,118),Canvas=Color3.fromRGB(125,111,86)})[look.Pants or 'Dark denim']
+ colors.LeftLegColor3=cloth; colors.RightLegColor3=cloth
  colors.Parent=c
  for _,v in c:GetChildren() do
-  if v:IsA('BasePart') and v.Name~='HumanoidRootPart' then v.Color=tone end
+  if v:IsA('BasePart') and v.Name~='HumanoidRootPart' then
+   local covered=v.Name=='LowerTorso' or v.Name:find('Leg') or v.Name:find('Foot')
+   v.Color=covered and cloth or tone
+  end
  end
  local old=head:FindFirstChild('Face detail');if old then old:Destroy() end
  local holder=Instance.new('Folder');holder.Name='Face detail';holder.Parent=head

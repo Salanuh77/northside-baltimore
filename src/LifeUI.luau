@@ -64,5 +64,5 @@ return function(p,event,modal,title,clear,row,paragraph,notify)
    for _,v in data do row('Mark '..v.Name,function() pin('dispatch',{Position=v.Position,Text='DISPATCH • '..v.Name}); modal.Visible=false end); row('Assist '..v.Name..' in person',function() event:FireServer('Assist',{Target=v.Id}); modal.Visible=false end) end
   end
  end)
- return function() row('My bag',bag); row('Home & parties',homes); row('Emergency dispatch',dispatch) end
+ return {bag=bag,homes=homes,dispatch=dispatch}
 end

@@ -1,24 +1,36 @@
 local Players=game:GetService('Players')
 local Path=game:GetService('PathfindingService')
 local function rig(name,home,medical,parent)
- local model=Instance.new('Model'); model.Name=name; model.Parent=parent
- local uniform=medical and Color3.fromRGB(46,116,116) or Color3.fromRGB(38,56,82)
- local function part(name,size,offset,color)
-  local p=Instance.new('Part'); p.Name=name; p.Size=size; p.CFrame=CFrame.new(home+offset); p.Anchored=true; p.CanCollide=false; p.CanQuery=name~='HumanoidRootPart'; p.CanTouch=false; p.Color=color; p.Parent=model; return p
- end
- local root=part('HumanoidRootPart',Vector3.one,Vector3.zero,uniform); root.Transparency=1; model.PrimaryPart=root
- local head=part('Head',Vector3.new(1.6,1.4,1.4),Vector3.new(0,1.72,0),Color3.fromRGB(158,116,86))
- local face=Instance.new('Decal'); face.Texture='rbxasset://textures/face.png'; face.Parent=head
- part('Uniform',Vector3.new(2.2,2,1.15),Vector3.zero,uniform)
- part('Cap',Vector3.new(1.7,.4,1.8),Vector3.new(0,2.43,-.12),uniform)
- part('Badge',Vector3.new(.42,.48,.16),Vector3.new(.55,.5,-.61),medical and Color3.fromRGB(246,242,218) or Color3.fromRGB(243,198,91))
- for _,s in {-1,1} do
-  part('Arm',Vector3.new(.65,1.85,.8),Vector3.new(s*1.43,0,0),uniform)
-  part('Trouser leg',Vector3.new(.85,2,1),Vector3.new(s*.53,-1.95,0),Color3.fromRGB(40,49,59))
- end
- local title=Instance.new('BillboardGui'); title.Size=UDim2.fromOffset(135,24); title.StudsOffset=Vector3.new(0,2,0); title.MaxDistance=42; title.Parent=head
- local label=Instance.new('TextLabel'); label.Size=UDim2.fromScale(1,1); label.BackgroundTransparency=.25; label.BackgroundColor3=uniform; label.TextColor3=Color3.new(1,1,1); label.Text=name; label.TextSize=13; label.Parent=title
- local health=Instance.new('Humanoid'); health.RequiresNeck=false; health.BreakJointsOnDeath=false; health.DisplayDistanceType=Enum.HumanoidDisplayDistanceType.None; health.Parent=model
+ local storage=game:GetService('ReplicatedStorage')
+ local model=storage.ResidentRig:Clone()
+ model.Name=name; model.Parent=parent
+ require(storage.StreetStyle).apply(model,{Name=name,Height='Medium',Build='Average',Tone=medical and 'Copper' or 'Umber',Hair='Close crop',Starter=medical and 'Olive' or 'Harbor'})
+ local health=model.Humanoid
+ health.DisplayDistanceType=Enum.HumanoidDisplayDistanceType.Viewer
+ health.NameDisplayDistance=24;health.HealthDisplayDistance=0;health.WalkSpeed=12
+ health.BreakJointsOnDeath=false
+ local torso=model.UpperTorso
+ local badge=Instance.new('Part'); badge.Name='Service badge'
+ badge.Size=Vector3.new(.27,.32,.07);badge.Color=medical and Color3.fromRGB(236,242,240) or Color3.fromRGB(225,176,72)
+ badge.CanCollide=false;badge.CanTouch=false;badge.Massless=true
+ badge.CFrame=torso.CFrame*CFrame.new(torso.Size.X*.22,torso.Size.Y*.17,-torso.Size.Z*.49)
+ badge.Parent=model
+ local weld=Instance.new('WeldConstraint');weld.Part0=torso;weld.Part1=badge;weld.Parent=badge
+ model:PivotTo(CFrame.new(home))
+ for _,part in model:GetDescendants() do if part:IsA('BasePart') then part.Anchored=false end end
+ model.HumanoidRootPart:SetNetworkOwner(nil)
+ local animator=health:FindFirstChildOfClass('Animator') or Instance.new('Animator',health)
+ task.spawn(function()
+  local anim=Instance.new('Animation');anim.AnimationId='rbxassetid://507777826'
+  local ok,walk=pcall(animator.LoadAnimation,animator,anim)
+  if ok and model.Parent then
+   walk.Looped=true; walk.Priority=Enum.AnimationPriority.Movement
+   health.Running:Connect(function(speed)
+    if speed>1 then if not walk.IsPlaying then walk:Play(.18) end; walk:AdjustSpeed(speed/13)
+    elseif walk.IsPlaying then walk:Stop(.16) end
+   end)
+  end
+ end)
  return model
 end
 return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest)
@@ -93,16 +105,20 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest)
      local ok=pcall(function() path:ComputeAsync(at,dest) end)
      if not model.Parent then break end
      if ok and path.Status==Enum.PathStatus.Success then
-      local budget=target and 45 or 14
+      local start=at
       for _,point in path:GetWaypoints() do
-       local pos=model:GetPivot().Position; local waypoint=point.Position+Vector3.new(0,3,0)
-       local delta=waypoint-pos; local horizontal=Vector3.new(delta.X,0,delta.Z)
-       if horizontal.Magnitude>.6 then
-        local length=math.min(delta.Magnitude,budget); local steps=math.max(1,math.ceil(length/1.65))
-        for k=1,steps do if not model.Parent then return end; local q=pos+delta.Unit*(length*k/steps); model:PivotTo(CFrame.lookAt(q,q+horizontal.Unit)); task.wait(.09) end
-        budget-=length
+       if not model.Parent then return end
+       local root=model.PrimaryPart
+       local planar=(point.Position-root.Position)*Vector3.new(1,0,1)
+       if planar.Magnitude>1.5 then
+        if point.Action==Enum.PathWaypointAction.Jump then health.Jump=true end
+        health:MoveTo(point.Position)
+        local deadline=os.clock()+math.min(3,planar.Magnitude/health.WalkSpeed+1)
+        repeat task.wait(.10) until not model.Parent or os.clock()>=deadline or ((point.Position-root.Position)*Vector3.new(1,0,1)).Magnitude<1.6
+        if not model.Parent then return end
+        if os.clock()>=deadline or (root.Position-start).Magnitude>=14 then break end
+        if target and (not target.Character or (target.Character:GetPivot().Position-dest).Magnitude>6 or (target.Character:GetPivot().Position-root.Position).Magnitude<9) then break end
        end
-       if budget<=.1 then break end
       end
      end
     else patrol=not patrol end

@@ -22,7 +22,9 @@ return function(t,i,district,group,builder,landmark,lettering,glass,action,table
   f('Terrazzo floor',width,.8,48,0,.95,0,'cream','Marble')
   f('Shop rear',width,15,.8,0,8.9,24,base,'Brick')
   for _,s in {-1,1} do
-   f('Store return',.8,15,48,s*width/2,8.9,0,base,'Brick')
+   f('Display base',.8,2.2,48,s*width/2,2.4,0,base,'Brick')
+   f('Display header',.8,3.9,48,s*width/2,14.45,0,base,'Brick')
+   for _,endSign in {-1,1} do f('Shop return pier',.8,10.2,6.5,s*width/2,7.5,endSign*20.75,base,'Brick') end
    glass(f,'Street display bay',.45,10.2,35,s*(width/2+.45),7.4,0)
    for _,v in {-15,-5,5,15} do f('Shopfront pilaster',1.1,12,1.1,s*(width/2+.6),7.6,v,stone,'Concrete') end
    f('Sidewalk shade',4.2,.55,35,s*(width/2+1.4),13.3,0,brass,'Metal')
@@ -40,13 +42,27 @@ return function(t,i,district,group,builder,landmark,lettering,glass,action,table
   local levels=2+(i+(side==1 and 2 or 0))%4
   for k=1,levels do
    local y=16.5+(k-1)*9
-   f('Commercial floor',width,8.5,48,0,y+4.25,0,base,'Brick')
+   f('Office floor slab',width,.5,48,0,y+.25,0,stone,'Concrete')
+   f('Office rear wall',width,8.5,.7,0,y+4.25,23.65,base,'Brick')
+   f('Street spandrel',width,2,.8,0,y+1,-23.65,base,'Brick')
+   f('Street header',width,1.1,.8,0,y+8.05,-23.65,base,'Brick')
+   local bay=width/5
    for j=-2,2 do
-    local bx=j*(width-11)/5
-    glass(f,'Recessed street window',width/5-3,5.5,.45,bx,y+4.7,-24.4)
-    f('Masonry sill',width/5-2,.5,.95,bx,y+1.75,-24.55,stone,'Concrete')
+    local bx=j*bay
+    glass(f,'Recessed street window',bay-2.4,5.5,.28,bx,y+4.75,-23.55)
+    f('Masonry sill',bay-2,.43,1,bx,y+2,-24,stone,'Concrete')
+    f('Window mullion',.23,5.5,.42,bx,y+4.75,-23.8,brass,'Metal')
+    for _,edge in {-1,1} do f('Brick jamb',1.2,5.5,.8,bx+edge*(bay/2-.6),y+4.75,-23.65,base,'Brick') end
    end
-   for _,s in {-1,1} do for v=-16,16,8 do glass(f,'Return sash',.42,5.6,5.5,s*(width/2+.3),y+4.5,v) end end
+   for _,sideWall in {-1,1} do
+    local sx=sideWall*width/2
+    f('Office sill course',.8,2,48,sx,y+1,0,base,'Brick')
+    f('Office side header',.8,1.1,48,sx,y+8.05,0,base,'Brick')
+    for j=-2,2 do
+     glass(f,'Return sash',.28,5.5,7.2,sx,y+4.75,j*9.6)
+     for _,edge in {-1,1} do f('Return jamb',.8,5.5,1.2,sx,y+4.75,j*9.6+edge*4.2,base,'Brick') end
+    end
+   end
    f('Limestone course',width+.6,.6,48.6,0,y+8.7,0,stone,'Concrete')
   end
   f('Flat parapet',width+1.8,1.4,50,0,16.6+levels*9,0,stone,'Concrete')

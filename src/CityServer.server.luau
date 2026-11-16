@@ -178,6 +178,7 @@ for _,part in city:GetDescendants() do
   if kind then markerIndex[kind]=markerIndex[kind] or {}; table.insert(markerIndex[kind],part) end
  end
 end
+require(script.Parent.WalkingRoutes)(city,markerIndex,jobs)
 local function closest(p,kind)
  local root=alive(p); if not root then return end
  local pick,best=nil,11.001
@@ -227,7 +228,13 @@ local function interact(p,marker)
  if (d.CustodyUntil or 0)>0 then return end
  if kind=='Door' then
   local now=os.clock(); if now<(marker:GetAttribute('DoorNext') or 0) then return end; marker:SetAttribute('DoorNext',now+0.8)
-  local open=not marker:GetAttribute('Open'); marker:SetAttribute('Open',open); marker.CanCollide=not open; marker.Transparency=open and 0.8 or 0
+  local open=not marker:GetAttribute('Open'); marker:SetAttribute('Open',open); local closed=marker:GetAttribute('ClosedFrame') or marker.CFrame
+  marker:SetAttribute('ClosedFrame',closed)
+  local hinge=marker.Size.X/2
+  local opened=closed*CFrame.new(-hinge,0,0)*CFrame.Angles(0,-math.pi/2,0)*CFrame.new(hinge,0,0)
+  marker.CanCollide=false
+  game:GetService('TweenService'):Create(marker,TweenInfo.new(.28),{CFrame=open and opened or closed}):Play()
+  task.delay(.3,function() if marker.Parent and not marker:GetAttribute('Open') then marker.CanCollide=true end end)
  elseif kind=='Store' or kind=='Home' then
   if busy[p] or marker:GetAttribute('InUse') then return tell(p,'This location is busy.') end
   if os.time()<(marker:GetAttribute('ReadyAt') or 0) then return tell(p,'Already searched. Come back later.') end

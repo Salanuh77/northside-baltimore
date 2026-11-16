@@ -57,7 +57,10 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   if vacant then
    p('Boarded door',6.2,9,.6,-4.4,6,14.3,rgb(110,91,70),'WoodPlanks')
    p('Chipped stoop fragment',2,.6,1.5,3,.4,18,cream,'Concrete')
-  else lounge(p,2,1.8,-3,blue); lease(p,m.Name,1,5,13.5,0); glow(p,0,12,0) end
+  else
+   local door=p('Rowhouse door',6.4,9.6,.45,-4.4,6.5,14.3,blue,'Wood')
+   action(door,'Door','Open / close')
+   lounge(p,2,1.8,-3,blue); lease(p,m.Name,1,5,13.5,0); glow(p,0,12,0) end
   if i%3==0 then
    p('Utility pole',.85,32,.85,8,16,22,rgb(101,84,69),'Wood')
    p('Crossarm',5,.55,.55,8,30,22,'dark','Wood')
@@ -91,19 +94,44 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   p('Rear elevation',32,27,.8,0,14.5,12,cream,'Limestone'); p('Balcony deck',33,.9,29,0,14.5,0,cream,'Marble')
   glass(p,'Upper bay',31,11,.7,0,20.8,-12.4); p('Penthouse cornice',34,1,27,0,28.5,0,cream,'Concrete')
   for _,u in {-14,0,14} do p('Bronze mullion',.6,12,.8,u,21,-12.8,'gold','Metal') end
-  lounge(p,3,1.55,1,blue); p('Entry bell post',1.1,4.8,1.1,2,2.5,-14,cream,'Limestone'); lease(p,m.Name,2,4.2,-14.85,200); glow(p,0,13,0)
+  local door=p('Townhouse door',11.3,10,.45,0,6.5,-12.5,blue,'Wood')
+  action(door,'Door','Open / close')
+  p('Townhouse transom',11.4,2.4,.4,0,12.7,-12.5,cream,'Limestone')
+  lounge(p,3,1.55,1,blue); p('Entry bell post',1.1,4.8,1.1,7,2.5,-14,cream,'Limestone'); lease(p,m.Name,7,4.2,-14.85,200); glow(p,0,13,0)
  end
  for _,v in {{'North Avenue Fuel',60,148,90,60},{'Franklin Fuel',-510,994,-90,60},{'Eastside Fuel',719,111,90,59}} do
   local m=group(v[1],service); local p=builder(m,v[2],v[3],v[4])
   p('Driveway throat',37,.35,v[5]-17,0,.43,-(v[5]-17)/2,'stone','Concrete')
-  p('Station apron',45,.6,69,0,.38,-15,'stone','Concrete')
-  p('Shop floor',34,.7,24,0,.9,2,cream,'Marble'); p('Rear wall',34,12,.8,0,7.2,14,cream,'Brick')
-  for _,s in {-1,1} do p('Return wall',.8,12,24,s*17,7.2,2,cream,'Brick'); glass(p,'Storefront',11.4,9,.45,s*11,5.9,-10) end
-  p('Store roof',36,1,26,0,13.4,2,'dark','Metal')
-  lettering(p('Store fascia',35,3,.55,0,11.7,-10.5,blue,'Metal'),v[1]:upper()..'  •  MART')
+  p('Station apron',45,.6,60,0,.38,-11.5,'stone','Concrete')
+  m:SetAttribute('SidewalkOffset',-(v[5]-21+3))
+  p('Shop floor',40,.7,30,0,.9,3,cream,'Marble'); p('Rear wall',40,12,.8,0,7.2,18,cream,'Brick')
+  for _,s in {-1,1} do p('Return wall',.8,12,30,s*20,7.2,3,cream,'Brick'); glass(p,'Storefront',13,9,.45,s*13.5,5.9,-12) end
+  p('Store roof',41,1,31,0,13.4,3,'dark','Metal')
+  local brand=({
+   ['North Avenue Fuel']={'NORTH AVE',rgb(162,58,45)},
+   ['Franklin Fuel']={'FRANKLIN',rgb(34,105,89)},
+   ['Eastside Fuel']={'EASTSIDE',rgb(48,88,151)}
+  })[v[1]]
+  local enamel=brand[2]
+  lettering(p('Enamel station wordmark',20,3.4,.52,-6,12,-12.6,enamel,'Metal'),brand[1])
+  for band=0,2 do p('Speed stripe',9-band*1.65,.25,.18,8+band*.8,11.1+band*.63,-12.85,cream,'Neon') end
+  p('Blade bracket',.24,.3,3.4,16,10.6,-13.7,'dark','Metal')
+  local blade=p('Mart projecting blade',5.2,3.2,.4,16,8.9,-15.1,enamel,'Metal')
+  blade.CFrame*=cf.Angles(0,math.pi/2,0)
+  lettering(blade,'MART')
+  local front=blade:FindFirstChildOfClass('SurfaceGui'); local back=front:Clone();back.Face=E.NormalId.Back;back.Parent=blade
+  p('Entry mat',11,.1,4,0,1.3,-9,blue,'Fabric')
+  for _,side in {-1,1} do
+   p('Chiller cabinet',3,7.4,9,side*17.8,5.05,9,'dark','Metal')
+   for j=-1,1 do
+    p('Cooler glass',.18,5.5,2.65,side*16.2,5.2,9+j*2.9,blue,'Glass')
+    p('Cooler pull',.28,1.6,.19,side*16,5.1,10+j*2.9,cream,'Metal')
+   end
+   glow(p,side*11,12,7)
+  end
   for _,s in {-1,1} do p('Shelf',7,3,3,s*11,2.85,4,cream,'Metal'); for k=-2,2 do p('Grocery stock',.8,1.2,1.6,s*11+k,5,4,k%2==0 and 'gold' or 'green','SmoothPlastic') end end
-  p('Checkout desk',9,3.2,3,0,3,9,'dark','Wood')
-  action(p('Mart till',2,1.5,1.7,0,5.4,8.8,'dark','Metal'),'Mart','Buy supplies')
+  p('Checkout desk',9,3.2,3,0,3,13,'dark','Wood')
+  action(p('Mart till',2,1.5,1.7,0,5.4,12.8,'dark','Metal'),'Mart','Buy supplies')
   for _,s in {-1,1} do
    p('Pump island',4.6,.45,9,s*8,.83,-30,'cream','Concrete')
    p('Canopy column',.9,14,.9,s*8,7.4,-27.2,'stone','Metal')
@@ -261,12 +289,22 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   local wall=city:FindFirstChild(v[1],true)['Back wall']
   mural(wall,E.NormalId.Back,v[3],v[4],v[5],v[6],v[7],v[2])
  end
- local function annex(name,x,z,id)
-  local m=group(name,civic); local f=builder(m,x,z)
-  f('Station house floor',28,.8,22,0,1,0,cream,'Concrete'); f('Rear',28,11,1,0,6.8,11,blue,'Brick')
-  for _,side in {-1,1} do f('Side',1,11,22,side*14,6.8,0,blue,'Brick'); glass(f,'Street window',8,9,.6,side*9.5,6,-11) end
-  f('Station roof',29,1,23,0,13,0,'dark','Metal'); lettering(f('Station sign',28,2.8,.55,0,11.7,-11.5,blue,'Metal'),name:upper())
-  local desk=f('Duty desk',9,3.3,3,0,3,5,'dark','Metal'); action(desk,'WorkStop',name); desk:SetAttribute('Station',id)
+ local function annex(name,x,z,id,angle,sidewalk)
+  local m=group(name,civic); local f=builder(m,x,z,angle)
+  m:SetAttribute('SidewalkOffset',sidewalk)
+  f('Public entrance walk',14,.45,-sidewalk-15,0,.62,(sidewalk-15)/2,cream,'Concrete')
+  f('Station house floor',36,.8,30,0,1,0,cream,'Concrete'); f('Rear',36,11,1,0,6.8,15,blue,'Brick')
+  for _,side in {-1,1} do f('Side',1,11,30,side*18,6.8,0,blue,'Brick'); glass(f,'Street window',11,9,.6,side*12.5,6,-15) end
+  f('Station roof',37,1,31,0,13,0,'dark','Metal'); lettering(f('Station sign',36,2.8,.55,0,11.7,-15.5,blue,'Metal'),name:upper())
+  for _,side in {-1,1} do
+   f('Waiting seat base',6.8,1.5,2.6,side*12,2.2,-4,'dark','Metal')
+   f('Waiting seat cushion',7.2,.65,3,side*12,3.2,-4,blue,'Fabric')
+   f('Waiting backrest',7.2,2.4,.48,side*12,4.25,-5.4,blue,'Fabric')
+   glow(f,side*10,11.8,3)
+  end
+  f('Dispatch cabinet',6,4,2,-12,3.45,12,cream,'Metal')
+  lettering(f('Service board',7,3.2,.35,-12,7.2,14.3,blue,'Metal'),id=='PoliceDesk' and 'REPORTS' or 'TRIAGE')
+  local desk=f('Duty desk',12,3.3,3,0,3,10,'dark','Metal'); action(desk,'WorkStop',name); desk:SetAttribute('Station',id)
  end
- annex('District police desk',-69,102,'PoliceDesk'); annex('Medic dispatch',66,152,'MedicDesk')
+ annex('District police desk',-54,124,'PoliceDesk',-90,-33); annex('Medic dispatch',164,153,'MedicDesk',180,-36)
 end

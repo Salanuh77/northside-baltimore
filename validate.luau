@@ -1,7 +1,7 @@
 local fs=require('@lune/fs')
 local luau=require('@lune/luau')
 local rb=require('@lune/roblox')
-for _,name in {'src/ResidentMenu.client.luau','src/ResidentFiles.luau','src/ServerBrowser.luau','src/ServerDirectory.luau','src/CityServer.server.luau','src/CityClient.client.luau','src/RetailUI.luau','src/CityRetail.luau','src/CityClock.server.luau','src/StreetStyle.luau','src/Traffic.server.luau','src/Traffic.client.luau','src/WorkService.luau','src/WorkCatalog.luau','src/NeighborhoodLife.luau','src/Responders.luau','src/Custody.luau','prison.luau','src/LifeUI.luau','downtown.luau','citylife.luau','roads.luau','districts.luau','fleet.luau','build.luau'} do
+for _,name in {'src/ResidentMenu.client.luau','src/ResidentFiles.luau','src/VehicleHandling.luau','src/WalkingRoutes.luau','src/StreetTrail.luau','src/JobBearing.luau','src/ServerBrowser.luau','src/ServerDirectory.luau','src/CityServer.server.luau','src/CityClient.client.luau','src/RetailUI.luau','src/CityRetail.luau','src/CityClock.server.luau','src/StreetStyle.luau','src/Traffic.server.luau','src/Traffic.client.luau','src/WorkService.luau','src/WorkCatalog.luau','src/NeighborhoodLife.luau','src/Responders.luau','src/Custody.luau','prison.luau','src/LifeUI.luau','downtown.luau','citylife.luau','roads.luau','districts.luau','fleet.luau','build.luau'} do
  local f=luau.load(fs.readFile(name),{debugName=name}); assert(f); print('COMPILES',name)
 end
 local game=rb.deserializePlace(fs.readFile('Northside Baltimore - Heritage Harbor.rbxl'))
@@ -16,7 +16,7 @@ for _,v in city:GetDescendants() do
 end
 print('Home and store counts',counts.Home,counts.Store)
 assert(#city['Motor pool']:GetChildren()==20 and #city['Streets & alleys']['Traffic signals']:GetChildren()==120)
-assert(counts.Home==214 and counts.Door==16,'Missing homes or doors')
+assert(counts.Home==214 and counts.Door>=214,'Missing homes or doors')
 assert(counts.Delivery==11 and counts.Store==10 and counts.Market==1 and counts.Fence==1)
 assert(counts.WorkStop==13); assert(counts.Mart==3 and counts.Fuel==6 and counts.Club==1 and counts.Residence>=210); assert(counts.Bank==1 and counts.Heal==1 and counts.Job==1)
 assert(game:GetService('ServerStorage'):FindFirstChild('OriginalMap_Archive'),'Original map not preserved')

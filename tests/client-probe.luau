@@ -33,6 +33,17 @@ remote.OnClientInvoke=function(kind,data)
   local sim=run.PreSimulation:Connect(moveSeat)
   task.wait(data.duration or 1.2); sim:Disconnect(); run:UnbindFromRenderStep('ProbeDrive'); return true
  end
+ if kind=='RouteState' then
+  local directions=workspace:WaitForChild('Local street directions',5)
+  local deadline=os.clock()+8
+  repeat
+   local outline=directions['Nearby contact']
+   local visible=directions:FindFirstChild('Street arrow')~=nil
+   if (data.arrows==nil or visible==data.arrows) and (data.contact==nil or (outline.Enabled and outline.Adornee~=nil)==data.contact) then return true end
+   task.wait(.1)
+  until os.clock()>=deadline
+  return false
+ end
  if kind=='PhoneScreen' then
   local gui=p.PlayerGui:WaitForChild('NorthsideHUD')
   local untilTime=os.clock()+5

@@ -102,6 +102,9 @@ end
 local city=workspace:WaitForChild('Baltimore')
 local bearing=require(game.ReplicatedStorage:WaitForChild('JobBearing'))
 local jobMarker
+local shopRoute=false
+local updateTrail=require(game.ReplicatedStorage.StreetTrail)()
+local nextTrail=0
 local firstJobOverride
 local routeCard=make('Frame',{Name='JobDirections',AnchorPoint=Vector2.new(.5,1),Position=UDim2.new(.5,0,1,-66),Size=UDim2.new(.65,0,0,44),BackgroundColor3=dark,BackgroundTransparency=.1,Visible=false,BorderSizePixel=0},gui)
 make('UISizeConstraint',{MaxSize=Vector2.new(360,44)},routeCard)
@@ -114,17 +117,22 @@ local function showPickup()
  return p:GetAttribute('ShowFirstJob')==true
 end
 Run.RenderStepped:Connect(function()
- local target=jobMarker and jobMarker:GetAttribute('Target') or (showPickup() and city:GetAttribute('CourierDesk'))
+ local target=jobMarker and jobMarker:GetAttribute('Target') or (shopRoute and city:GetAttribute('OutfittersDesk')) or (showPickup() and city:GetAttribute('CourierDesk'))
  local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
  local camera=workspace.CurrentCamera
  routeCard.Visible=typeof(target)=='Vector3' and root~=nil and camera~=nil and not modal.Visible and (p:GetAttribute('CustodyUntil') or 0)==0
+ if os.clock()>=nextTrail then
+  nextTrail=os.clock()+.12
+  updateTrail(root,routeCard.Visible and target or nil,root~=nil and not modal.Visible and (p:GetAttribute('CustodyUntil') or 0)==0)
+ end
  if not routeCard.Visible then return end
  local angle,distance=bearing(camera.CFrame.LookVector,target-root.Position)
  arrow.Rotation=angle
- local objective=jobMarker and jobMarker:GetAttribute('Objective') or 'Community Center · pick up a $90 delivery'
+ local objective=jobMarker and jobMarker:GetAttribute('Objective') or shopRoute and 'Eastern Outfitters · sales counter' or 'Community Center · pick up a $90 delivery'
  routeText.Text=objective..'\n'..(distance<=9 and 'Use the nearby prompt' or math.ceil(distance)..' studs')
 end)
 event.OnClientEvent:Connect(function(kind,data)
+ if kind=='GunStore' then shopRoute=false end
  if retailUI.handle(kind,data) then return end
  if kind=='Notice' then notify(data)
  elseif kind=='State' then state=data; wallet.Text='Cash $'..data.Cash..'   Bank $'..data.Bank; status.Text='Wanted '..data.Heat..'/5   •   Goods '..data.Loot
@@ -176,7 +184,7 @@ event.OnClientEvent:Connect(function(kind,data)
   if jobMarker then jobMarker:Destroy(); jobMarker=nil end
   if data then
    local a=make('Part',{Anchored=true,CanCollide=false,CanQuery=false,CanTouch=false,Transparency=1,Position=data.Position+Vector3.new(0,8,0),Size=Vector3.one},workspace)
-   firstJobOverride=false
+   shopRoute=false; firstJobOverride=false
    a:SetAttribute('Target',data.Position)
    a:SetAttribute('Objective',data.Text)
    local bb=make('BillboardGui',{Size=UDim2.fromOffset(180,60),AlwaysOnTop=true},a)
@@ -283,11 +291,21 @@ local function jobBoard()
  end
 end
 local lifeApps=require(game:GetService('ReplicatedStorage'):WaitForChild('LifeUI'))(p,event,modal,title,clear,row,paragraph,notify)
-openPhone=function()
- clear('CITY PHONE')
+local phoneSession=false
+local homeButton=button(modal,'Home',UDim2.fromOffset(49,32),UDim2.new(1,-105,0,13),function() openPhone() end)
+homeButton.Visible=false
+modal:GetPropertyChangedSignal('Visible'):Connect(function()
+ if not modal.Visible then phoneSession=false;homeButton.Visible=false end
+end)
+title:GetPropertyChangedSignal('Text'):Connect(function()
+ homeButton.Visible=phoneSession and title.Text~='CITY PHONE'
+ title.Size=UDim2.new(1,homeButton.Visible and -135 or -70,0,40)
+end)
+local function workApp()
+ clear('WORK')
  local role=jobOffer()
  local taskText=p:GetAttribute('ShiftTask') or ''
- paragraph('Cash $'..(p:GetAttribute('Cash') or 0)..'   •   Bank $'..(p:GetAttribute('Bank') or 0)..'\nLifetime job pay $'..(p:GetAttribute('Wages') or 0)..'   •   '..(role and role.Title or 'Unemployed'))
+ paragraph((role and role.Title or 'Unemployed')..'  ·  Lifetime pay $'..(p:GetAttribute('Wages') or 0))
  if taskText~='' then
   paragraph(taskText)
   row('Close phone and follow marker',function() modal.Visible=false end)
@@ -296,10 +314,25 @@ openPhone=function()
   row('Start shift  ·  $'..role.Pay,function() event:FireServer('StartShift') end)
   row('Leave '..role.Employer,function() event:FireServer('Resign') end)
  end
- row('Party supplies',retailUI.bag);row('Job applications',jobBoard); lifeApps()
- row('City map',showMap)
- row('City servers',function() require(game.ReplicatedStorage.ServerBrowser).open() end)
- row('Pay or trade with a nearby player',playersMenu)
+ row('Job applications',jobBoard)
+end
+openPhone=function()
+ phoneSession=true
+ clear('CITY PHONE');homeButton.Visible=false
+ local card=make('Frame',{Name='Wallet',Size=UDim2.new(1,-6,0,63),BackgroundColor3=Color3.fromRGB(33,78,70),BorderSizePixel=0,LayoutOrder=1},content)
+ make('UICorner',{CornerRadius=UDim.new(0,10)},card)
+ text(card,'CASH',UDim2.new(.48,-12,0,17),UDim2.fromOffset(14,8),11)
+ text(card,'BANK',UDim2.new(.48,-12,0,17),UDim2.new(.52,0,0,8),11)
+ text(card,'$'..(p:GetAttribute('Cash') or 0),UDim2.new(.48,-12,0,26),UDim2.fromOffset(14,26),21)
+ text(card,'$'..(p:GetAttribute('Bank') or 0),UDim2.new(.48,-12,0,26),UDim2.new(.52,0,0,26),21)
+ local grid=make('Frame',{Name='Apps',Size=UDim2.new(1,-6,0,194),LayoutOrder=2,BackgroundTransparency=1},content)
+ make('UIGridLayout',{CellSize=UDim2.new(1/3,-6,0,58),CellPadding=UDim2.fromOffset(7,7),SortOrder=Enum.SortOrder.LayoutOrder},grid)
+ local apps={{'Work',workApp},{'City map',showMap},{'My bag',lifeApps.bag},{'Dispatch',lifeApps.dispatch},{'My home',lifeApps.homes},{'Pay / trade',playersMenu},{'Party supplies',retailUI.bag},{'Servers',function() require(game.ReplicatedStorage.ServerBrowser).open() end}}
+ for i,app in apps do
+  local tile=button(grid,app[1],UDim2.new(),UDim2.new(),app[2])
+  tile.LayoutOrder=i;tile.TextSize=14;tile.TextWrapped=true
+  tile.BackgroundColor3=({Color3.fromRGB(52,70,85),Color3.fromRGB(47,76,65),Color3.fromRGB(89,66,55)})[(i-1)%3+1]
+ end
 end
 for _,attr in {'Employment','ShiftTask','Wages','Cash','Bank'} do
  p:GetAttributeChangedSignal(attr):Connect(function()
@@ -311,7 +344,10 @@ button(gui,'GUIDE',UDim2.fromOffset(82,34),UDim2.new(1,-100,0,18),function()
  clear('WELCOME TO NORTHSIDE')
  if not jobMarker then
   row(showPickup() and 'Hide courier directions' or 'Find the $90 courier desk',function()
-   firstJobOverride=not showPickup(); modal.Visible=false
+   shopRoute=false; firstJobOverride=not showPickup(); modal.Visible=false
+  end)
+  row(shopRoute and 'Hide shop directions' or 'Directions to Eastern Outfitters',function()
+   shopRoute=not shopRoute; firstJobOverride=false; modal.Visible=false
   end)
  end
  paragraph('A Baltimore-inspired neighborhood RP. Start with $500. Community center and credit union are safe zones. This is fictional, non-graphic gameplay.')
@@ -320,7 +356,7 @@ button(gui,'GUIDE',UDim2.fromOffset(82,34),UDim2.new(1,-100,0,18),function()
  paragraph('Harbor Freight, south of Harbor Way: black market and stolen-goods buyer. Knife $55, crowbar $90, medkit $70. Eastern Outfitters sells sidearms for Robux. Union Athletics sells bats for $80. A crowbar is required for house lockboxes.')
  paragraph('Community center: courier jobs ($90 each). Credit union: deposit and withdraw. Clinic: treatment $50. Death costs up to $75 and loses stolen goods.')
  paragraph('Wanted level fades over time. Player robbery takes 8 seconds and at most 25% of cash, capped at $200. The same player is protected from another robbery for 5 minutes.')
- paragraph('Use Drive at a parked vehicle. Fuel drops with distance. Park at a dispenser to fill up for $1 per 5%. Use movement controls to steer, accelerate and reverse. Jump to exit. The quay is north of Monument Street, Lanvale Courts is west, and Eastgate Terrace is east.')
+ paragraph('Use Drive at a parked vehicle. Fuel drops with distance. Park at a dispenser to fill up for $1 per 5%. Use movement controls to steer, accelerate and reverse. Space, LT or Brake stops the car. Use X, B or Exit car to get out. The quay is north of Monument Street, Lanvale Courts is west, and Eastgate Terrace is east.')
 end)
 event:FireServer('Ready')
 notify('Open PHONE to apply for work. MAP shows downtown, the housing courts and the harbor.')

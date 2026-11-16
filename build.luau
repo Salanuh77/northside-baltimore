@@ -159,13 +159,13 @@ local function tree(x,z)
  local leaf=part('Tree canopy',{13,14,13},{x,17,z},'green','Grass',park); leaf.Shape=Enum.PartType.Ball
 end
 for _,x in {-95,-40,36,91,144,196} do tree(x,175) end
-for _,x in {-75,-10,55,120} do
- part('Park bench seat',{10,0.6,3},{x,2.2,151},'cream','Wood',park)
- part('Bench back',{10,3,0.5},{x,3.3,152.5},'dark','Wood',park)
- for _,dx in {-4,4} do part('Bench legs',{0.6,2,3},{x+dx,1.2,151},'dark','Metal',park) end
+for _,x in {-182,-149} do
+ part('Park bench seat',{10,0.6,3},{x,2.2,185},'cream','Wood',park)
+ part('Bench back',{10,3,0.5},{x,3.3,186.5},'dark','Wood',park)
+ for _,dx in {-4,4} do part('Bench legs',{0.6,2,3},{x+dx,1.2,185},'dark','Metal',park) end
 end
 sign('NORTHSIDE  /  BALTIMORE',32,5,124,46,park)
-part('Park path',{190,0.25,8},{58,0.6,135},'stone',nil,park)
+part('Park path',{80,0.25,8},{-165,0.6,182},'stone',nil,park)
 -- Industrial district / backroom black market with multiple entrances.
 local industrial=group('Harbor industrial district')
 local warehouse=shop('HARBOR FREIGHT',112,273,154,64,Color3.fromRGB(92,78,68))
@@ -232,11 +232,14 @@ local client=Instance.new('LocalScript'); client.Name='CityClient'; client.Sourc
 local drive=Instance.new('RemoteEvent'); drive.Name='DriveCar'; drive.Parent=rs
 local traffic=Instance.new('Script'); traffic.Name='TrafficServer'; traffic.Source=fs.readFile('src/Traffic.server.luau'); traffic.Parent=server.Parent
 local input=Instance.new('LocalScript'); input.Name='TrafficClient'; input.Source=fs.readFile('src/Traffic.client.luau'); input.Parent=client.Parent
+local route=Instance.new('RemoteFunction'); route.Name='WalkingRoute'; route.Parent=rs
+local trail=Instance.new('ModuleScript'); trail.Name='StreetTrail'; trail.Source=fs.readFile('src/StreetTrail.luau'); trail.Parent=rs
+local routes=Instance.new('ModuleScript'); routes.Name='WalkingRoutes'; routes.Source=fs.readFile('src/WalkingRoutes.luau'); routes.Parent=server.Parent
 local bearing=Instance.new('ModuleScript'); bearing.Name='JobBearing'; bearing.Source=fs.readFile('src/JobBearing.luau'); bearing.Parent=rs
 local catalog=Instance.new('ModuleScript'); catalog.Name='WorkCatalog'; catalog.Source=fs.readFile('src/WorkCatalog.luau'); catalog.Parent=rs
 local jobs=Instance.new('ModuleScript'); jobs.Name='WorkService'; jobs.Source=fs.readFile('src/WorkService.luau'); jobs.Parent=server.Parent
 local lifeUi=Instance.new('ModuleScript'); lifeUi.Name='LifeUI'; lifeUi.Source=fs.readFile('src/LifeUI.luau'); lifeUi.Parent=rs
-for _,entry in {{'ResidentFiles','src/ResidentFiles.luau'},{'CityRetail','src/CityRetail.luau'},{'NeighborhoodLife','src/NeighborhoodLife.luau'},{'Responders','src/Responders.luau'},{'Custody','src/Custody.luau'}} do
+for _,entry in {{'VehicleHandling','src/VehicleHandling.luau'},{'ResidentFiles','src/ResidentFiles.luau'},{'CityRetail','src/CityRetail.luau'},{'NeighborhoodLife','src/NeighborhoodLife.luau'},{'Responders','src/Responders.luau'},{'Custody','src/Custody.luau'}} do
  local mod=Instance.new('ModuleScript'); mod.Name=entry[1]; mod.Source=fs.readFile(entry[2]); mod.Parent=server.Parent
 end
 fs.writeFile('Northside Baltimore - Heritage Harbor.rbxl',rb.serializePlace(game))

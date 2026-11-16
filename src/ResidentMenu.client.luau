@@ -195,10 +195,10 @@ draw=function()
   names(pane,'FirstName','First name',style.FirstNames);names(sidePane,'LastName','Last name',style.LastNames)
   return
  end
- local function controls(parent,fields)
+ local function controls(parent,fields,offset)
   for i,field in fields do
    local key,caption,values=table.unpack(field)
-   local y=(i-1)*49
+   local y=(offset or 0)+(i-1)*49
    local l=label(parent,caption,12,paper);l.Position=UDim2.fromOffset(3,y);l.Size=UDim2.new(1,-6,0,16)
    local current=label(parent,draft[key],13,cream);current.TextXAlignment=Enum.TextXAlignment.Center
    current.Position=UDim2.fromOffset(30,y+17);current.Size=UDim2.new(1,-64,0,27)
@@ -212,7 +212,16 @@ draw=function()
    end
   end
  end
- controls(pane,{{'Hair','Primary hair',style.Hair},{'HairDetail','Hair detail',style.HairDetails},{'HairColor','Hair color',style.HairColors},{'Starter','Shirt',style.Starters},{'Pants','Pants',style.Pants},{'Shoes','Shoes',style.Shoes}})
+ hint(pane,'Starter outfits')
+ for i,set in style.Sets do
+  local preset=button(pane,set.Name,function()
+   draft.Starter=set.Starter;draft.Pants=set.Pants;draft.Shoes=set.Shoes
+   rebuild();draw()
+  end)
+  preset.Name='Preset '..i; preset.Position=UDim2.fromOffset(0,28+(i-1)*33);preset.Size=UDim2.new(1,-4,0,30)
+  if draft.Starter==set.Starter and draft.Pants==set.Pants and draft.Shoes==set.Shoes then preset.BackgroundColor3=gold;preset.TextColor3=ink end
+ end
+ controls(pane,{{'Hair','Primary hair',style.Hair},{'HairDetail','Hair detail',style.HairDetails},{'HairColor','Hair color',style.HairColors},{'Starter','Shirt',style.Starters},{'Pants','Pants',style.Pants},{'Shoes','Shoes',style.Shoes}},130)
  controls(sidePane,{{'Expression','Eye shape',style.Expressions},{'Mouth','Mouth',style.Mouths},{'Eye','Eye color',style.Eyes},{'Tone','Skin',style.Tones},{'Height','Height',style.Heights},{'Build','Width',style.Builds},{'Depth','Depth',style.Depths},{'Detail','Facial hair & details',style.Details}})
 end
 local function files()

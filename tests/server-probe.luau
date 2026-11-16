@@ -76,10 +76,18 @@ local ok,err=pcall(function()
  local path=game:GetService('PathfindingService'):CreatePath({AgentRadius=2,AgentHeight=5,AgentCanJump=true})
  local highest
  for _,p in apt:GetChildren() do if p.Name=='Apartment lockbox' and (not highest or p.Position.Y>highest.Position.Y) then highest=p end end
+ local entry
+ for _,part in apt:GetChildren() do
+  if part:GetAttribute('Action')=='Door' and math.abs(part.Position.Y-highest.Position.Y)<6 and (not entry or (part.Position-highest.Position).Magnitude<(entry.Position-highest.Position).Magnitude) then entry=part end
+ end
+ assert(entry,'Missing apartment door')
+ move(a,entry.CFrame:PointToWorldSpace(Vector3.new(0,-2,-5)));task.wait(.3)
+ call(a,'Prompt',entry);task.wait(.4)
+ check(entry:GetAttribute('Open') and not entry.CanCollide,'Resident opens a hinged top-floor apartment door')
  local door=apt['Entrance walk']
  path:ComputeAsync(door.Position+Vector3.new(0,3,0),highest.Position+Vector3.new(0,2,3))
  if path.Status~=Enum.PathStatus.Success then
-  local origin=door.CFrame*CFrame.new(0,.85,33)
+  local origin=door.CFrame*CFrame.new(0,.44,28.5)
   local last=door.Position+Vector3.new(0,3,0)
   for _,q in {{31,3,-18},{31,16,20},{42,16,-21},{31,29,20},{42,29,-21},{31,42,20},{42,42,-21},{-36,42,-21},{-36,42,-10},{-36,42,8}} do
    local goal=origin:PointToWorldSpace(Vector3.new(table.unpack(q)))

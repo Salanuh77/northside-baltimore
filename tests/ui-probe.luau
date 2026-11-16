@@ -132,6 +132,15 @@ local ok, message = pcall(function()
  end
  local model = waitUntil(rig, "missing game-owned preview rig")
  check("preview uses game-owned resident rig", model:FindFirstChildOfClass("Humanoid")~=nil, model.Name)
+ for index,key in {'canvas-trousers-black','washed-denim-black','street-denim'} do
+  click(findButton(studio,'Preset '..(4-index)))
+  waitUntil(function()
+   local r=rig();local pants=r and r:FindFirstChildOfClass('Pants')
+   return pants and pants.PantsTemplate:find(game.ReplicatedStorage.StreetStyle:GetAttribute(key),1,true)
+  end,'Starter outfit did not apply '..key)
+  check('Trouser joint covered '..key,rig().LeftUpperLeg.Color~=rig().Head.Color)
+ end
+ model=rig()
  local baseHeight = model:GetExtentsSize().Y
  click(findButton(studio, "Height next"))
  waitUntil(function() local r=rig(); return r and r:GetExtentsSize().Y>baseHeight+0.01 end, "Tall did not change rendered preview height")
@@ -238,6 +247,12 @@ local ok, message = pcall(function()
  check("phone fits usable viewport", lo.X>=0 and lo.Y>=0 and hi.X<=gui.AbsoluteSize.X+1 and hi.Y<=gui.AbsoluteSize.Y+1,
   string.format("viewport %s, usable %s, modal %s..%s", tostring(view), tostring(gui.AbsoluteSize), tostring(lo), tostring(hi)))
  close()
+ click(findButton(gui,'PHONE'));opened('CITY PHONE')
+ click(findButton(content,'Work'));opened('WORK')
+ click(findButton(modal,'Home'));opened('CITY PHONE')
+ click(findButton(content,'My bag'))
+ check('Bag opens from phone grid',title.Text~='CITY PHONE' and modal.Visible,title.Text)
+ click(findButton(modal,'Home'));opened('CITY PHONE');close()
  local root = player.Character:WaitForChild("HumanoidRootPart")
  local start = root.Position
  controls:SendKey(true, Enum.KeyCode.W, false)

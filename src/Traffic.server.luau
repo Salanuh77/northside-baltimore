@@ -80,6 +80,7 @@ local function exitAtDoor(seat,human)
   end
  end
 end
+local handling=require(script.Parent.VehicleHandling)
 local cars={}
 for _,model in city:WaitForChild('Motor pool'):GetChildren() do
  local base=model.Chassis
@@ -91,7 +92,7 @@ for _,model in city:WaitForChild('Motor pool'):GetChildren() do
  motion.MaxForce=120000; motion.Attachment0=attachment; motion.Parent=base
  local turn=Instance.new('AlignOrientation')
  turn.Mode=Enum.OrientationAlignmentMode.OneAttachment; turn.Attachment0=attachment
- turn.MaxTorque=220000; turn.Responsiveness=15; turn.CFrame=base.CFrame.Rotation; turn.Parent=base
+ turn.MaxTorque=220000; turn.Responsiveness=23; turn.CFrame=base.CFrame.Rotation; turn.Parent=base
  local _,yaw=base.CFrame:ToOrientation()
  local state={model=model,base=base,seat=seat,motion=motion,turn=turn,home=model:GetPivot(),homeYaw=yaw,yaw=yaw,speed=0,gas=0,steer=0,updated=0}
  model:SetAttribute('Fuel',100); state.fuelUsed=0; state.lastPosition=base.Position
@@ -138,18 +139,18 @@ for _,model in city:WaitForChild('Motor pool'):GetChildren() do
     if seat.Occupant==human then alignDriver(seat,human) end
    end)
   end
-  state.gas=0; state.steer=0; state.updated=0; prompt.Enabled=seat.Occupant==nil
+  state.gas=0; state.steer=0; state.brake=false;state.wheel=0;state.updated=0; prompt.Enabled=seat.Occupant==nil
   if base:CanSetNetworkOwnership() then base:SetNetworkOwner(nil) end
  end)
 end
-drive.OnServerEvent:Connect(function(player,gas,steer)
+drive.OnServerEvent:Connect(function(player,gas,steer,brake)
  local human=player.Character and player.Character:FindFirstChildOfClass('Humanoid')
  local car=human and cars[human.SeatPart]
  if not car or car.seat.Occupant~=human or typeof(gas)~='number' or typeof(steer)~='number' then return end
  if not (math.abs(gas)<=1 and math.abs(steer)<=1) then return end
  local now=os.clock()
  if now-car.updated<.035 then return end
- car.gas=gas; car.steer=steer; car.updated=now
+ car.gas=gas; car.steer=steer; car.brake=brake==true; car.updated=now
 end)
 run.Heartbeat:Connect(function(dt)
  for _,c in cars do
@@ -170,10 +171,8 @@ run.Heartbeat:Connect(function(dt)
     c.fuelUsed-=used; fuel=math.max(0,fuel-used); c.model:SetAttribute('Fuel',fuel)
    end
   end
-  local target=(fuel>0 and c.gas or 0)*(c.gas>=0 and 54 or 21)
-  local step=(c.gas==0 and 45 or 31)*math.min(dt,.1)
-  c.speed+=math.clamp(target-c.speed,-step,step)
-  c.yaw-=c.steer*math.clamp(c.speed/16,-1,1)*1.55*math.min(dt,.1)
+  local braking=c.brake or not c.seat.Occupant or os.clock()-c.updated>.5
+  c.speed,c.wheel,c.yaw=handling.step(c.speed,c.wheel or 0,c.yaw,c.gas,c.steer,braking,fuel,dt)
   local heading=CFrame.Angles(0,c.yaw,0)
   c.turn.CFrame=heading
   -- Let the body turn before applying lateral thrust, including when a curb blocks yaw.

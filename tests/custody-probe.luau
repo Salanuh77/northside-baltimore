@@ -116,9 +116,9 @@ local ok,err=pcall(function()
  beside(p,npc,12)
  for i=1,10 do
   if not npc.Parent then break end
-  local hit=workspace:Raycast(p.Character.Head.Position,(npc.Uniform.Position-p.Character.Head.Position).Unit*80,(function()
+  local hit=workspace:Raycast(p.Character.Head.Position,(npc.UpperTorso.Position-p.Character.Head.Position).Unit*80,(function()
    local params=RaycastParams.new(); params.FilterType=Enum.RaycastFilterType.Exclude; params.FilterDescendantsInstances={p.Character}; return params end)())
-  call('Shoot',{Position=npc.Uniform.Position}); print('PATROL_SHOT',i,npc.Parent and npc.Humanoid.Health,p:GetAttribute('Heat'),pistol:GetAttribute('Ammo'),hit and hit.Instance:GetFullName()); task.wait(.1)
+  call('Shoot',{Position=npc.UpperTorso.Position}); print('PATROL_SHOT',i,npc.Parent and npc.Humanoid.Health,p:GetAttribute('Heat'),pistol:GetAttribute('Ammo'),hit and hit.Instance:GetFullName()); task.wait(.1)
  end
  check(not npc.Parent and p:GetAttribute('Heat')>=3,'Player gun defeats an NPC officer and creates a wanted case')
  local officer=field['District officer']; beside(p,officer,5)
@@ -136,7 +136,7 @@ local ok,err=pcall(function()
   local bot=field['Westside officer']; beside(p,bot,7)
   local char=p.Character; local h=char.Humanoid
   local ff=char:FindFirstChildOfClass('ForceField'); if ff then ff:Destroy() end
-  h:EquipTool(p.Backpack.Pistol); call('Shoot',{Position=bot.Uniform.Position})
+  h:EquipTool(p.Backpack.Pistol); call('Shoot',{Position=bot.UpperTorso.Position})
   check(p:GetAttribute('Heat')>=1,'Officer registers the new incident')
   call('Surrender'); check(waitFor(function() return p:GetAttribute('CustodyUntil')>os.time() end,18),'Second booking processed')
  end
