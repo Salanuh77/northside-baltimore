@@ -84,6 +84,8 @@ local ok,err=pcall(function()
  move(a,entry.CFrame:PointToWorldSpace(Vector3.new(0,-2,-5)));task.wait(.3)
  call(a,'Prompt',entry);task.wait(.4)
  check(entry:GetAttribute('Open') and not entry.CanCollide,'Resident opens a hinged top-floor apartment door')
+ -- Move the test resident out of the narrow gallery before measuring its walkable route.
+ move(a,entry.CFrame:PointToWorldSpace(Vector3.new(0,0,0))+Vector3.yAxis*85)
  local door=apt['Entrance walk']
  -- Roblox rebuilds the navigation mesh asynchronously when a closed door swings clear.
  local navDeadline=os.clock()+8
