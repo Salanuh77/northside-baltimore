@@ -20,7 +20,7 @@ return function(p,event,modal,title,clear,row,paragraph,notify)
  end
  local function bag()
   clear('MY BAG')
-  for _,item in {'Water','Sandwich','Bandage','Flashlight'} do row(item..'  × '..(p:GetAttribute('Bag'..item) or 0),function() event:FireServer('UseSupply',{Item=item}) end) end
+  for _,item in {'Water','Coffee','Sandwich','Bandage','Flashlight'} do row(item..'  × '..(p:GetAttribute('Bag'..item) or 0),function() event:FireServer('UseSupply',{Item=item}) end) end
  end
  local function homes()
   clear('HOME & PARTIES')
@@ -42,13 +42,13 @@ return function(p,event,modal,title,clear,row,paragraph,notify)
   row('Request police processing',function() event:FireServer('CallResponder',{Role='police'}) end)
   local role=p:GetAttribute('Employment'); if role=='police' or role=='medic' then row('View calls on duty',function() event:FireServer('DispatchList') end) end
  end
- for _,attr in {'Hosting','Residence','InvitedBy','BagWater','BagSandwich','BagBandage','BagFlashlight'} do
+ for _,attr in {'Hosting','Residence','InvitedBy','BagWater','BagCoffee','BagSandwich','BagBandage','BagFlashlight'} do
   p:GetAttributeChangedSignal(attr):Connect(function() if modal.Visible and title.Text=='HOME & PARTIES' then homes() elseif modal.Visible and title.Text=='MY BAG' then bag() end end)
  end
  event.OnClientEvent:Connect(function(kind,data)
   if kind=='Mart' then
    clear('FUEL MART')
-   for _,v in {{'Water',4,'8 HP'},{'Sandwich',9,'22 HP'},{'Bandage',15,'35 HP'},{'Flashlight',25,'reusable'}} do row(v[1]..'  ·  $'..v[2]..'  ·  '..v[3],function() event:FireServer('BuySupply',{Item=v[1]}) end) end
+   for _,v in {{'Water',4,'8 HP'},{'Coffee',6,'13 HP'},{'Sandwich',9,'22 HP'},{'Bandage',15,'35 HP'},{'Flashlight',25,'reusable'}} do row(v[1]..'  ·  $'..v[2]..'  ·  '..v[3],function() event:FireServer('BuySupply',{Item=v[1]}) end) end
    row('Open my bag',bag)
   elseif kind=='Residence' then
    clear(data.Name:upper()); paragraph(data.Taken and 'This unit has a tenant.' or ('Session lease  •  '..(data.Price==0 and 'No move-in fee' or '$'..data.Price)))

@@ -46,7 +46,7 @@ local function equipped(p,name) return p.Character and p.Character:FindFirstChil
 local function sync(p)
  local d=profiles[p]; if not d then return end
  p:SetAttribute('Cash',d.Cash); p:SetAttribute('Bank',d.Bank); p:SetAttribute('Loot',d.Loot); p:SetAttribute('Heat',d.Heat)
- for _,item in {'Water','Sandwich','Bandage','Flashlight'} do p:SetAttribute('Bag'..item,d.Supplies[item] or 0) end
+ for _,item in {'Water','Coffee','Sandwich','Bandage','Flashlight'} do p:SetAttribute('Bag'..item,d.Supplies[item] or 0) end
  p:SetAttribute('ReserveAmmo',d.Reserve); p:SetAttribute('Employment',d.Employment); p:SetAttribute('Wages',d.Wages)
  local stats=p:FindFirstChild('leaderstats'); if stats then stats.Cash.Value=d.Cash end
  event:FireClient(p,'State',{Cash=d.Cash,Bank=d.Bank,Loot=d.Loot,Heat=d.Heat,Items=d.Items,Stock=d.Stock,Wardrobe=d.Wardrobe})
@@ -258,6 +258,7 @@ local function interact(p,marker)
  elseif kind=='Residence' then
   event:FireClient(p,'Residence',{Name=marker:GetAttribute('Address'),Price=marker:GetAttribute('LeasePrice') or 0,Taken=marker:GetAttribute('Tenant')~=nil})
  elseif kind=='Fuel' then life.refuel(p,marker)
+ elseif kind=='Coffee' then life.handle(p,'BuySupply',{Item='Coffee'})
  elseif kind=='Mart' or kind=='Dance' or kind=='Club' then event:FireClient(p,kind,{})
  elseif kind=='Lift' then
   event:FireClient(p,'Lift',{Floors=marker.Parent:GetAttribute('Floors'),Floor=marker:GetAttribute('Floor'),Name=marker.Parent.Name})
@@ -381,7 +382,7 @@ local function selectFile(p,index)
   d.CustodyUntil=math.min(os.time()+120,math.max(0,math.floor(tonumber(result.CustodyUntil) or 0)))
   d.Bail=math.clamp(math.floor(tonumber(result.Bail) or 0),0,160)
   if type(result.Supplies)=='table' then
-   for _,item in {'Water','Sandwich','Bandage','Flashlight'} do d.Supplies[item]=math.clamp(math.floor(tonumber(result.Supplies[item]) or 0),0,item=='Flashlight' and 1 or 10) end
+   for _,item in {'Water','Coffee','Sandwich','Bandage','Flashlight'} do d.Supplies[item]=math.clamp(math.floor(tonumber(result.Supplies[item]) or 0),0,item=='Flashlight' and 1 or 10) end
   end
  end
  d.Receipts=table.clone(account.State.Receipts or {})

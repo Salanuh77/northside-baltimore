@@ -1,5 +1,5 @@
 local Players=game:GetService('Players')
-local costs={Water={4,8},Sandwich={9,22},Bandage={15,35},Flashlight={25,0}}
+local costs={Water={4,8},Coffee={6,13},Sandwich={9,22},Bandage={15,35},Flashlight={25,0}}
 return function(city,event,profiles,closest,near,sync,tell)
  local homes,open,guests,invites={}, {}, {}, {}
  local club=city:FindFirstChild('DJ console',true)
@@ -36,7 +36,8 @@ return function(city,event,profiles,closest,near,sync,tell)
   end
  end)
  local function buy(p,item)
-  if type(item)~='string' or not costs[item] or not closest(p,'Mart') then return end
+  if type(item)~='string' or not costs[item] then return end
+  if not closest(p,'Mart') and not (item=='Coffee' and closest(p,'Coffee')) then return end
   local d=profiles[p]; local count=d.Supplies[item] or 0
   if count>=(item=='Flashlight' and 1 or 10) then return tell(p,'Your bag is full for this item.') end
   if d.Cash<costs[item][1] then return tell(p,'You need more cash.') end
