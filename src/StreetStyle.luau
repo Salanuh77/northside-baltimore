@@ -25,8 +25,9 @@ Style.Sets={
  {Name='Surplus field layers',Starter='Field liner',Pants='Canvas',Shoes='Black low-tops'},
 }
 local starterShirts={['Ash pullover']='ash-pullover',['Dock denim']='dock-denim',['Field liner']='field-liner',Harbor='harbor-warmup',Clay='clay-workshirt',Olive='olive-overshirt',['Track jacket']='fleet-track',Varsity='pier-varsity',Overshirt='foundry-work'}
-Style.HairColors={'Black','Chestnut','Auburn','Honey','Silver'}
-local dyes={Black=Color3.fromRGB(31,25,23),Chestnut=Color3.fromRGB(84,53,35),Auburn=Color3.fromRGB(126,60,39),Honey=Color3.fromRGB(173,126,68),Silver=Color3.fromRGB(160,158,151)}
+Style.HairColors={'Black','Espresso','Chestnut','Auburn','Copper','Honey','Blond','Silver','Burgundy','Midnight blue','Violet','Rose'}
+local dyes={Black=Color3.fromRGB(44,37,34),Espresso=Color3.fromRGB(63,44,38),Copper=Color3.fromRGB(167,88,53),Blond=Color3.fromRGB(212,183,135),Burgundy=Color3.fromRGB(105,42,59),['Midnight blue']=Color3.fromRGB(49,66,98),Violet=Color3.fromRGB(97,69,125),Rose=Color3.fromRGB(180,104,118),Chestnut=Color3.fromRGB(84,53,35),Auburn=Color3.fromRGB(126,60,39),Honey=Color3.fromRGB(173,126,68),Silver=Color3.fromRGB(160,158,151)}
+Style.Dyes=dyes
 Style.Expressions={'Calm','Smile','Focused'}
 Style.Eyes={'Brown','Hazel','Blue','Gray'}
 local iris={Brown=Color3.fromRGB(69,43,30),Hazel=Color3.fromRGB(108,102,60),Blue=Color3.fromRGB(83,114,128),Gray=Color3.fromRGB(105,112,112)}
