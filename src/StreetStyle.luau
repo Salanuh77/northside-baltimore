@@ -74,7 +74,8 @@ local function hair(head,style,dye,detail,scale)
    end
    offset=style=='Ponytail' and Vector3.new(0,.18,.23) or style=='Braids' and Vector3.new(0,.16,.11) or Vector3.new(0,.34,.04)
   end
-  handle.CFrame=head.CFrame*CFrame.new(offset*scale);handle.Parent=folder
+  local rotation=groom and CFrame.Angles(0,math.pi,0) or CFrame.identity
+  handle.CFrame=head.CFrame*CFrame.new(offset*scale)*rotation;handle.Parent=folder
   local weld=Instance.new('WeldConstraint');weld.Part0=head;weld.Part1=handle;weld.Parent=handle
  end
  if detail=='Sideburns' then

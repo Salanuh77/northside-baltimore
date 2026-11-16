@@ -9,9 +9,9 @@ function Portrait.scale(head,look)
  return head.Size*Vector3.new(.84*width,1.19,1.04)
 end
 
-local function fit(part,head,folder,position,tilt)
+local function fit(part,head,folder,position,rotation)
  part.Anchored=false;part.CanCollide=false;part.CanQuery=false;part.CanTouch=false;part.Massless=true
- part.CFrame=head.CFrame*CFrame.new(position)*CFrame.Angles(tilt or 0,0,0);part.Parent=folder
+ part.CFrame=head.CFrame*CFrame.new(position)*(rotation or CFrame.identity);part.Parent=folder
  local weld=Instance.new('WeldConstraint');weld.Part0=head;weld.Part1=part;weld.Parent=part
  return part
 end
@@ -24,7 +24,8 @@ function Portrait.draw(head,look,art,tone,dye,iris)
  local profile=game.ReplicatedStorage.ResidentProfiles:FindFirstChild(look.FaceShape or 'Oval',true)
  local skin=profile:Clone();skin.Name='Head sculpt';skin.Color=tone;skin.Material=Enum.Material.SmoothPlastic
  skin.Size=profile.Size*scale
- fit(skin,head,folder,Vector3.new(0,0,-.07424)*scale)
+ -- The imported sculpt faces local +Z. Roblox residents look along local -Z.
+ fit(skin,head,folder,Vector3.new(0,0,-profile.CFrame.Position.Z)*scale,CFrame.Angles(0,math.pi,0))
  head.Transparency=1
  local function feature(name,x,y,z,w,h,d,color)
   local part=Instance.new('Part');part.Name=name;part.Shape=Enum.PartType.Ball;part.Color=color
@@ -35,7 +36,7 @@ function Portrait.draw(head,look,art,tone,dye,iris)
   surface.Size=Vector3.new(w*scale.X,h*scale.Y,.01)
   -- Tilt the mouth plate along the receding chin before attaching it.
   local tilt=name=='Resident mouth' and -math.atan(.60*scale.Z/scale.Y) or 0
-  fit(surface,head,folder,Vector3.new(x,y,z)*scale,tilt)
+  fit(surface,head,folder,Vector3.new(x,y,z)*scale,CFrame.Angles(tilt,0,0))
   local ink=Instance.new('Decal');ink.Name=name;ink.Face=Enum.NormalId.Front
   ink.Texture='rbxassetid://'..art:GetAttribute(key);ink.Color3=color;ink.Parent=surface
  end
