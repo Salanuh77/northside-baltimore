@@ -125,7 +125,7 @@ Run.RenderStepped:Connect(function()
  if not routeCard.Visible then return end
  local angle,distance=bearing(camera.CFrame.LookVector,target-root.Position)
  arrow.Rotation=angle
- local objective=jobMarker and jobMarker:GetAttribute('Objective') or shopRoute and 'Eastern Outfitters · sales counter' or 'Community Center · pick up a $90 delivery'
+ local objective=jobMarker and jobMarker:GetAttribute('Objective') or shopRoute and 'River Pro Outfitters · sales counter' or 'Community Center · pick up a $90 delivery'
  routeText.Text=objective..'\n'..(distance<=9 and 'Use the nearby prompt' or math.ceil(distance)..' studs')
 end)
 event.OnClientEvent:Connect(function(kind,data)
@@ -310,7 +310,7 @@ local function jobBoard()
   local prefix=job.Illegal and 'Off-book' or 'Payroll'
   row(job.Title..'  ·  $'..job.Pay..'  ·  '..prefix,function()
    clear(job.Title:upper())
-   if job.Id=='barber' then paragraph('08:00?22:00. Sign in at Juniper Barber. Each requested haircut pays $30, and your shift stays open for the next customer.') else paragraph((job.Start and string.format('%02d:00?%02d:00. ',job.Start,job.Close) or 'All hours. ')..job.Employer..' pays $'..job.Pay..' for each completed shift. '..job.Stops[1][2]..', then '..job.Stops[2][2]..'.'..(job.Illegal and ' Completing this contract raises your wanted level.' or '')) end
+   if job.Id=='barber' then paragraph('08:00?22:00. Sign in at Short Notice Cuts on Juniper. Each requested haircut pays $30, and your shift stays open for the next customer.') else paragraph((job.Start and string.format('%02d:00?%02d:00. ',job.Start,job.Close) or 'All hours. ')..job.Employer..' pays $'..job.Pay..' for each completed shift. '..job.Stops[1][2]..', then '..job.Stops[2][2]..'.'..(job.Illegal and ' Completing this contract raises your wanted level.' or '')) end
    row('Apply for this role',function() event:FireServer('ApplyJob',{Role=job.Id}); openPhone() end)
    row('Back to listings',jobBoard)
   end)
@@ -348,14 +348,14 @@ showGuide=function()
   row(showPickup() and 'Hide courier directions' or 'Find the $90 courier desk',function()
    shopRoute=false; firstJobOverride=not showPickup(); modal.Visible=false
   end)
-  row(shopRoute and 'Hide shop directions' or 'Directions to Eastern Outfitters',function()
+  row(shopRoute and 'Hide shop directions' or 'Directions to River Pro Outfitters',function()
    shopRoute=not shopRoute; firstJobOverride=false; modal.Visible=false
   end)
  end
  paragraph('A Baltimore-inspired neighborhood RP. Start with $500. Community center and credit union are safe zones. This is fictional, non-graphic gameplay.')
  paragraph('On the waterfront, visit Seven Foot Knoll Lighthouse. Board USS Constellation from the eastern timber pier. Find the Douglass and Marshall mural inside Pier 8 Maritime Gallery.')
  paragraph('E / tap prompt: interact. H: surrender. T: nearby players and transactions. Equip pistol and click/tap to fire; R reloads. Hold E on marked registers or lockboxes to start a timed robbery.')
- paragraph('Harbor Freight, south of Harbor Way: black market and stolen-goods buyer. Knife $55, crowbar $90, medkit $70. Eastern Outfitters sells sidearms for Robux. Union Athletics sells bats for $80. A crowbar is required for house lockboxes.')
+ paragraph('Freight Expectations, south of Harbor Way: black market and stolen-goods buyer. Knife $55, crowbar $90, medkit $70. River Pro Outfitters sells sidearms for Robux. Bench Authority sells bats for $80. A crowbar is required for house lockboxes.')
  paragraph('Community center: courier jobs ($90 each). Credit union: deposit and withdraw. Clinic: treatment $50. Death costs up to $75 and loses stolen goods.')
  paragraph('Wanted level fades over time. Player robbery takes 8 seconds and at most 25% of cash, capped at $200. The same player is protected from another robbery for 5 minutes.')
  paragraph('Use Drive to enter. Steer with movement controls. Brake with Space, LT or the Brake button. Press F or X, controller B, or tap Exit vehicle to get out.')

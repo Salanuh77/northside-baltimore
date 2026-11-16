@@ -268,7 +268,7 @@ local function interact(p,marker)
   timed(p,marker,duration,function() return near(p,marker.Position,10) and sight(p,marker.Position,marker) and equipped(p,needed) and not safe(p) end,function()
    if os.time()<(marker:GetAttribute('ReadyAt') or 0) then return end
    marker:SetAttribute('ReadyAt',os.time()+180)
-   if kind=='Store' then d.Cash+=225; tell(p,'Register emptied: +$225. Wanted level increased.') else d.Loot=math.min(d.Loot+1,20); tell(p,'Stolen goods collected. Sell them at Harbor Freight.') end
+   if kind=='Store' then d.Cash+=225; tell(p,'Register emptied: +$225. Wanted level increased.') else d.Loot=math.min(d.Loot+1,20); tell(p,'Stolen goods collected. Sell them at Freight Expectations.') end
    heat(p,kind=='Store' and 2 or 1); sync(p)
   end)
  elseif table.find({'Market','Bank','Clothing','GunStore','Barber','Sporting'},kind) then event:FireClient(p,kind,{})
@@ -303,7 +303,7 @@ local function interact(p,marker)
 end
 for _,marker in city:GetDescendants() do
  if marker:IsA('BasePart') and marker:GetAttribute('Action') then
-  local prompt=Instance.new('ProximityPrompt'); prompt.ActionText=marker:GetAttribute('Label') or 'Interact'; prompt.ObjectText=marker.Parent.Name
+  local prompt=Instance.new('ProximityPrompt'); prompt.ActionText=marker:GetAttribute('Label') or 'Interact'; prompt.ObjectText=marker.Parent:GetAttribute('RetailBrand') or marker.Parent.Name
   prompt.HoldDuration=marker:GetAttribute('Hold') or 0.5; prompt.MaxActivationDistance=marker:GetAttribute('Reach') or 10; prompt.RequiresLineOfSight=marker:GetAttribute('Action')~='Fuel' and not sharedCounters[marker:GetAttribute('Action')]; prompt.Parent=marker
   if marker:GetAttribute('SecondaryPrompt') then
    prompt.KeyboardKeyCode=Enum.KeyCode.F;prompt.GamepadKeyCode=Enum.KeyCode.ButtonY
@@ -511,7 +511,7 @@ event.OnServerEvent:Connect(function(p,kind,data)
   if d.Cash<30 then return tell(p,'Ammo costs $30 per box.') end
   d.Cash-=30; d.Reserve+=12; sync(p); tell(p,'Added 12 reserve rounds.')
  elseif kind=='Buy' then
-  if data.Item=='Pistol' then return tell(p,'Sidearms are sold at Eastern Outfitters for Robux or traded by players for city cash.') end
+  if data.Item=='Pistol' then return tell(p,'Sidearms are sold at River Pro Outfitters for Robux or traded by players for city cash.') end
   local retailType=data.Item=='Bat' and 'Sporting' or 'Market'
   if not items[data.Item] or not closest(p,retailType) then return end
   local item=items[data.Item]
@@ -569,7 +569,7 @@ event.OnServerEvent:Connect(function(p,kind,data)
  elseif kind=='Reload' then
   if not equipped(p,'Pistol') then return end
   local t=p.Character.Pistol; if t:GetAttribute('Reloading') or t:GetAttribute('Ammo')>=12 then return end
-  if d.Reserve<=0 then return tell(p,'Out of reserve ammo. Harbor Freight sells 12 rounds for $30.') end
+  if d.Reserve<=0 then return tell(p,'Out of reserve ammo. Freight Expectations sells 12 rounds for $30.') end
   t:SetAttribute('Reloading',true)
   task.delay(2,function()
    if not t.Parent then return end

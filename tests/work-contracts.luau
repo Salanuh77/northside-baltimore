@@ -8,7 +8,7 @@ for _,part in place:GetService('Workspace').Baltimore:GetDescendants() do
  local key=part:GetAttribute('Station')
  if key then
   assert(not stations[key],key..' is ambiguous')
-  local marker={Parent={Name=part.Parent.Name},Position=part.CFrame.Position,GetAttribute=function(_,arg) return arg=='Station' and key or nil end}
+  local marker={Parent=part.Parent,Position=part.CFrame.Position,GetAttribute=function(_,arg) return arg=='Station' and key or nil end}
   stations[key]=marker; table.insert(stationList,marker)
  end
 end

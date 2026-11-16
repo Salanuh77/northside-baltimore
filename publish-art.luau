@@ -15,9 +15,9 @@ local function request(method,url,body,contentType)
  end
  return r
 end
-local assets={}
+local assets=fs.isFile('art/assets.json') and serde.decode('json',fs.readFile('art/assets.json')) or {}
 local catalog={{'Image','alley-paint.png','image/png','Northside alley paint'},{'Audio','meridian-afterhours.wav','audio/wav','Meridian Afterhours'}}
-for _,name in {'athlete-paint','block-marks','alley-walls','baltimore-history','fleet-track','pier-varsity','foundry-work','indigo-denim'} do table.insert(catalog,{'Image',name..'.png','image/png',name}) end
+for _,name in {'athlete-paint','block-marks','alley-walls','baltimore-history','fleet-track','pier-varsity','foundry-work','indigo-denim','retail-aisles'} do table.insert(catalog,{'Image',name..'.png','image/png',name}) end
 for _,spec in catalog do
  local file=spec[2]
  local receipt='art/'..file..'.receipt.json'

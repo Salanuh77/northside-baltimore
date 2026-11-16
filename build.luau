@@ -186,6 +186,7 @@ city:SetAttribute('ReleaseChannel','Alpha')
 require('./districts')(part,group,label,action,city)
 require('./fleet')(part,group,city)
 require('./prison')(part,group,label,action,city)
+require('./retail-interiors')(city)
 local radar={}
 for _,part in city:GetDescendants() do
  if part:IsA('BasePart') and table.find({'Carriageway','Worn asphalt','Side street connection','Service alley'},part.Name) then

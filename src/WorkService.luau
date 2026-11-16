@@ -12,7 +12,7 @@ return function(city,event,profiles,jobs,sync,tell,heat)
   if not marker then return false end
   local from=player.Character and player.Character:FindFirstChild('HumanoidRootPart')
   if not from then return false end
-  local instruction=taskInfo[2]..' • '..marker.Parent.Name
+  local instruction=taskInfo[2]..' • '..(marker.Parent:GetAttribute('RetailBrand') or marker.Parent.Name)
   jobs[player]={role=job.Id,step=index,dest=marker,earliest=os.clock()+(from.Position-marker.Position).Magnitude/65}
   player:SetAttribute('ShiftTask',instruction)
   event:FireClient(player,'Job',{Position=marker.Position,Text=instruction})
