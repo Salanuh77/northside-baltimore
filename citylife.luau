@@ -1,3 +1,4 @@
+local furnish=require('./home-furniture')
 local rb=require('@lune/roblox')
 local E,cf,rgb=rb.Enum,rb.CFrame,rb.Color3.fromRGB
 return function(city,group,builder,lettering,glass,action,lounge,glow)
@@ -60,7 +61,8 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   else
    local door=p('Rowhouse door',6.4,9.6,.45,-4.4,6.5,14.3,blue,'Wood')
    action(door,'Door','Open / close')
-   lounge(p,2,1.8,-3,blue); lease(p,m.Name,1,5,13.5,0); glow(p,0,12,0) end
+   furnish(m,cf.new(-700,1.7,z)*cf.Angles(0,-math.pi/2,0),'Hollins',i)
+   lease(p,m.Name,1,5,13.5,0); glow(p,0,12,0) end
   if i%3==0 then
    p('Utility pole',.85,32,.85,8,16,22,rgb(101,84,69),'Wood')
    p('Crossarm',5,.55,.55,8,30,22,'dark','Wood')
@@ -97,7 +99,8 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   local door=p('Townhouse door',11.3,10,.45,0,6.5,-12.5,blue,'Wood')
   action(door,'Door','Open / close')
   p('Townhouse transom',11.4,2.4,.4,0,12.7,-12.5,cream,'Limestone')
-  lounge(p,3,1.55,1,blue); p('Entry bell post',1.1,4.8,1.1,7,2.5,-14,cream,'Limestone'); lease(p,m.Name,7,4.2,-14.85,200); glow(p,0,13,0)
+  furnish(m,cf.new(x,1.5,-493)*cf.Angles(0,math.pi,0),'Waterfront',i)
+  p('Entry bell post',1.1,4.8,1.1,7,2.5,-14,cream,'Limestone'); lease(p,m.Name,7,4.2,-14.85,200); glow(p,0,13,0)
  end
  local fixtures={}
  for _,id in {'dispenser','ice-locker','coffee-brewer'} do

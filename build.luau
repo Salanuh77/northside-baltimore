@@ -1,3 +1,4 @@
+local furnish=require('./home-furniture')
 local fs = require('@lune/fs')
 local rb = require('@lune/roblox')
 local Instance, Vector3, CFrame, Color3, Enum = rb.Instance, rb.Vector3, rb.CFrame, rb.Color3, rb.Enum
@@ -72,8 +73,6 @@ local function home(x,z,index,flip)
  p('Upper floor',{18,.65,37},{x+4,15,z},'cream')
  p('Upper landing',{8,.65,9},{x-9,15,z+14},'cream')
  for step=1,20 do p('Stair tread',{7,step*.66,1.2},{x-9,1.8+step*.33,z-14+step*1.15},'stone') end
- p('Bedframe',{7,1.4,10},{x+5,16.2,z+5},'dark','Wood')
- p('Bed quilt',{7.2,.8,10},{x+5,17.25,z+5},'green','Fabric')
  for _,dx in {-7,6} do for _,y in {8,23} do
   p('Rear window surround',{6.7,7.5,.45},{x+dx,y,z+19.15},'cream')
   p('Rear sash',{5.8,6.6,.3},{x+dx,y,z+19.5},'glass','Glass')
@@ -83,10 +82,7 @@ local function home(x,z,index,flip)
  local door=p('Door',{6.5,9.5,0.6},{x-6.5,6.5,front},Color3.fromRGB(42+index%3*18,58,59),'Wood')
  action(door,'Door','Open / close')
  sign(tostring(1800+index),x-6.5,12,front-0.6,5,m)
- p('Living rug',{14,0.08,14},{x+3,1.86,z-7},Color3.fromRGB(102,78,61),'Fabric')
- p('Sofa seat',{9,2,3},{x+7,3,z+1},'green','Fabric'); p('Sofa back',{9,4,0.8},{x+7,4,z+2.5},'green','Fabric')
- p('Table',{6,0.5,4},{x+4,3.3,z-6},'dark','Wood'); p('Table base',{1,2,1},{x+4,2.2,z-6},'dark','Wood')
- p('Kitchen counter',{8,3.5,3},{x+8,3.5,z+15},'cream'); p('Kitchen top',{8.4,0.3,3.4},{x+8,5.4,z+15},'dark')
+ furnish(m,CFrame.new(x,1.8,z),'Rowhome',index)
  local safe=p('House lockbox',{3,2,2},{x+1,3,z+14},'dark','Metal'); action(safe,'Home','Search lockbox',110,9)
  if index%4==0 then
   local box=p('Delivery mailbox',{2,2,1.8},{x+11,4,front-3},'dark','Metal')

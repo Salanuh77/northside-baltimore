@@ -16,6 +16,32 @@ remote.OnClientInvoke=function(kind,data)
   camera.CameraType=Enum.CameraType.Custom
   return true
  end
+ if kind=='WalkTo' then
+  local human=p.Character.Humanoid
+  local root=p.Character.HumanoidRootPart
+  local run=game:GetService('RunService')
+  local distance=math.huge
+  run:BindToRenderStep('Walk furnished room',Enum.RenderPriority.Last.Value,function()
+   local delta=(data-root.Position)*Vector3.new(1,0,1)
+   distance=delta.Magnitude
+   human:Move(distance>.8 and delta.Unit or Vector3.zero,false)
+  end)
+  local deadline=os.clock()+5
+  repeat task.wait(.05) until distance<=.8 or os.clock()>=deadline
+  run:UnbindFromRenderStep('Walk furnished room')
+  human:Move(Vector3.zero)
+  return distance<=1.15,tostring(root.Position)
+ end
+ if kind=='PreloadFurniture' then
+  local parts={}
+  for _,v in data:GetDescendants() do if v:IsA('MeshPart') then table.insert(parts,v) end end
+  if #parts~=4 then return false,'Expected four meshes, received '..#parts end
+  local failed={}
+  game:GetService('ContentProvider'):PreloadAsync(parts,function(id,status)
+   if status~=Enum.AssetFetchStatus.Success then table.insert(failed,id..' '..status.Name) end
+  end)
+  return #failed==0,table.concat(failed,', ')
+ end
  if kind=='ActivatePistol' then
   p.Character.Pistol:Activate(); task.wait(.45); return true
  end

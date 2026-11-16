@@ -6,7 +6,7 @@ $lune = (Resolve-Path 'tools/lune.exe').Path
 $studio = Get-ChildItem "$env:LOCALAPPDATA/Roblox/Versions/*/RobloxStudioBeta.exe" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
 if (!$studio) { throw 'Roblox Studio installation required' }
 New-Item -ItemType Directory -Path $LogDirectory -Force | Out-Null
-foreach ($suite in 'server','ui','returning','retail','custody','life') {
+foreach ($suite in 'homes','server','ui','returning','retail','custody','life') {
     $attempt = Join-Path $LogDirectory ($suite + '-' + [guid]::NewGuid())
     New-Item -ItemType Directory -Path $attempt | Out-Null
     $copy = Join-Path $attempt 'candidate.rbxl'

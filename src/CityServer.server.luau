@@ -222,7 +222,7 @@ end
 local deliveries={}
 for _,p in city:GetDescendants() do if p:IsA('BasePart') and p:GetAttribute('Action')=='Delivery' then table.insert(deliveries,p) end end
 local function interact(p,marker)
- local d=profiles[p]; if not d or not near(p,marker.Position,11) or not sight(p,marker.Position,marker) then return end
+ local d=profiles[p]; if not d or not near(p,marker.Position,marker:GetAttribute('Reach') or 11) or not sight(p,marker.Position,marker) then return end
  local kind=marker:GetAttribute('Action')
  if kind=='BailDesk' or kind=='EscapeGame' then return custody.prompt(p,kind) end
  if (d.CustodyUntil or 0)>0 then return end
@@ -235,6 +235,30 @@ local function interact(p,marker)
   marker.CanCollide=false
   game:GetService('TweenService'):Create(marker,TweenInfo.new(.28),{CFrame=open and opened or closed}):Play()
   task.delay(.3,function() if marker.Parent and not marker:GetAttribute('Open') then marker.CanCollide=true end end)
+ elseif kind=='SitHome' or kind=='RestHome' then
+  local _,human=alive(p)
+  if not human or not marker:IsA('Seat') or marker.Occupant or human.SeatPart then return end
+  marker:Sit(human)
+  if kind=='RestHome' then
+   timed(p,marker,4,function() return marker.Occupant==human end,function()
+    human.Health=math.min(human.MaxHealth,human.Health+15)
+    tell(p,'You feel rested. Jump to stand up.')
+   end)
+  end
+ elseif kind=='UseTap' then
+  local water=marker.Parent:FindFirstChild('Running water')
+  if not water or water.Transparency<1 then return end
+  water.Transparency=.28
+  task.delay(5,function() if water.Parent then water.Transparency=1 end end)
+ elseif kind=='Cook' then
+  if marker:GetAttribute('InUse') then return tell(p,'Someone is using the stove.') end
+  local _,human=alive(p)
+  if human then
+   timed(p,marker,4,function() return near(p,marker.Position,6) and sight(p,marker.Position,marker) end,function()
+    human.Health=math.min(human.MaxHealth,human.Health+20)
+    tell(p,'You cooked and ate a hot meal.')
+   end)
+  end
  elseif kind=='Store' or kind=='Home' then
   if busy[p] or marker:GetAttribute('InUse') then return tell(p,'This location is busy.') end
   if os.time()<(marker:GetAttribute('ReadyAt') or 0) then return tell(p,'Already searched. Come back later.') end
@@ -280,7 +304,7 @@ end
 for _,marker in city:GetDescendants() do
  if marker:IsA('BasePart') and marker:GetAttribute('Action') then
   local prompt=Instance.new('ProximityPrompt'); prompt.ActionText=marker:GetAttribute('Label') or 'Interact'; prompt.ObjectText=marker.Parent.Name
-  prompt.HoldDuration=marker:GetAttribute('Hold') or 0.5; prompt.MaxActivationDistance=10; prompt.RequiresLineOfSight=marker:GetAttribute('Action')~='Fuel' and not sharedCounters[marker:GetAttribute('Action')]; prompt.Parent=marker
+  prompt.HoldDuration=marker:GetAttribute('Hold') or 0.5; prompt.MaxActivationDistance=marker:GetAttribute('Reach') or 10; prompt.RequiresLineOfSight=marker:GetAttribute('Action')~='Fuel' and not sharedCounters[marker:GetAttribute('Action')]; prompt.Parent=marker
   prompt.Triggered:Connect(function(p) if allowed(p) then interact(p,marker) end end)
  end
 end
