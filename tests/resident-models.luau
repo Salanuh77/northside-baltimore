@@ -14,6 +14,7 @@ local bounds=serde.decode('json',fs.readFile('art/groom-bounds.json'))
 for name,box in bounds do
  local hair=assert(grooms:FindFirstChild(name,true),name)
  assert(not geometry[hair.MeshContent.Uri] and hair.MeshContent.Uri~='',name..' missing independent geometry')
+ assert(hair.TextureContent.Uri and hair.TextureContent.Uri:match('^rbxassetid://%d+$'),name..' missing fiber texture')
  assert((hair.Size-rb.Vector3.new(table.unpack(box.size))).Magnitude<.002,name..' import changed bounds')
  geometry[hair.MeshContent.Uri]=true
 end
