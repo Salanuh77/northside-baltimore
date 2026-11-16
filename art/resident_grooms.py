@@ -21,17 +21,30 @@ class Groom:
                 b=start+r*count+(i+1)%count
                 self.faces.extend([(a,a+count,b),(b,a+count,b+count)])
 
+    @staticmethod
+    def hairline(a):
+        return .045+.17*cos(a)+.022*cos(2*a)-.012*cos(5*a)
+
+    @staticmethod
+    def skull(a, y, clearance=.012):
+        # Follow the superellipse used by the face; a spherical cap cuts into the forehead.
+        levels=[-.50,-.44,-.27,-.07,.18,.35,.46,.50,.522]
+        width=np.interp(y,levels,[.05,.18,.39,.48,.50,.47,.34,.13,.04])
+        depth=np.interp(y,levels,[.09,.30,.41,.46,.46,.45,.33,.14,.04])
+        across=sin(a);front=cos(a)
+        forward=sqrt(max(0,1-abs(across)**3.4)) if front>0 else front
+        return np.array([(width+clearance)*across,y,-(depth+clearance)*forward])
+
     def scalp(self, tight=.0):
         rows=[]
-        for j in range(11):
-            t=j/10
+        for t in np.linspace(0,1,20):
             row=[]
-            for i in range(48):
-                a=i*2*pi/48
-                edge=.08+.15*cos(a)+.035*cos(2*a)
-                phi=(1-t)*(.5*pi-edge)+.025*t
-                radius=(.50+tight+.008*cos(13*a+2*t))*sin(phi)
-                row.append((radius*sin(a),edge+(.53-edge)*(cos(phi)-sin(edge))/(1-sin(edge)),-radius*cos(a)))
+            for i in range(72):
+                a=i*2*pi/72
+                edge=self.hairline(a)
+                y=edge+(.522-edge)*t
+                clearance=.017+.007*cos(16*a+1.3*t)*(1-t)+.2*tight
+                row.append(self.skull(a,y,clearance))
             rows.append(row)
         self.surface(rows)
 
@@ -86,20 +99,22 @@ class Groom:
             self.tube(centers,widths)
 
     def twists(self,loose=False,locs=False):
-        # Stagger the parts in three rows; front strands stop above the eyes.
-        for row,count in enumerate([14,10,5]):
+        # Stagger three rows of parts. Keep the center of the forehead open.
+        for row,count in enumerate([16,13,8]):
             for k in range(count):
-                a=(k+.46*row+self.random.uniform(-.12,.12))*2*pi/count
-                phi=[1.04,.69,.28][row]
-                length=.14+self.random.uniform(.03,.16)+(1-cos(a))*.12
-                radius=[.050,.056,.055][row]*(1.2 if locs else 1)
+                a=(k+.5+.35*row+self.random.uniform(-.11,.11))*2*pi/count
+                startY=[.35,.438,.49][row]+self.random.uniform(-.013,.013)
+                front=max(0,cos(a))
+                tipY=self.hairline(a)+[.015,.09,.17][row]-.10*(1-front)
+                tipY+=self.random.uniform(-.027,.027)
+                radius=[.043,.048,.050][row]*(1.2 if locs else 1)
                 path=[]
-                for t in np.linspace(0,1,27):
-                    bend=phi+t*(.34 if loose else .48)
-                    roll=a+.11*t*sin(a*3)
-                    r=.49*sin(bend)+(.12 if loose else .055)*sin(t*pi*.8)
-                    path.append([r*sin(roll),.03+.52*cos(bend)-length*t*t,-r*cos(roll)])
-                self.rope(path,radius,3.5 if loose else 4.5,not locs)
+                for t in np.linspace(0,1,47):
+                    y=startY+(tipY-startY)*t
+                    swept=a+.08*sin(2.2*a+.7)*t
+                    clearance=.027+.024*row+.042*sin(t*pi*.8)+(.038 if loose else .012)*t
+                    path.append(self.skull(swept,y,clearance))
+                self.rope(path,radius,3.0 if loose else 3.7,not locs)
 
     def rows(self,thick=False):
         for i,x in enumerate(np.linspace(-.39,.39,5 if thick else 9)):
