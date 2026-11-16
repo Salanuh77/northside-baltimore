@@ -24,6 +24,18 @@ local ok,err=pcall(function()
   check(waitFor(function() return p:GetAttribute('NeedsCharacter')==false and p.Character and p.Character:FindFirstChild('Head') and p.Character.Head:FindFirstChild('Northside hair') end,22),'Saved resident and visible hairstyle')
  end
  local cut=city:FindFirstChild('Juniper Barber',true);local sign=cut:FindFirstChild('Shift book')
+ for _,shopName in {'Juniper Barber','Waverly Barber'} do
+  local shop=city:FindFirstChild(shopName,true)
+  local seats,models=0,0
+  for _,v in shop:GetChildren() do
+   if v:IsA('Seat') and v.Name=='Swivel seat' then seats+=1 end
+   if v:IsA('MeshPart') and v.Name=='Barber chair' then
+    assert(v.MeshId~='' and v.TextureID~='' and math.abs(v.Size.Y-7.2)<.05,'Chair needs its imported mesh and upholstery')
+    models+=1
+   end
+  end
+  check(seats==3 and models==3,shopName..' has three textured styling chairs and seats')
+ end
  local chair; for _,v in cut:GetChildren() do if v:GetAttribute('Station')=='BarberChair' then chair=v end end
  workspace:SetAttribute('TestMinute',60);task.wait(1.4)
  call(b,'ApplyJob',{Role='barber'});call(b,'StartShift')

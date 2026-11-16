@@ -346,6 +346,8 @@ return function(part,group,label,action,city)
   end
   glow(p,-16,13,0); glow(p,16,13,0)
  end
+ local chairAsset=rb.deserializeModel(require('@lune/fs').readFile('art/baltimore-barber-chair.rbxm'))[1]
+ local chairMesh=assert(chairAsset:FindFirstChildWhichIsA('MeshPart',true),'Barber chair import missing')
  local function communityRoom(district,name,x,z,kind)
   local room=group(name,district); local p=builder(room,x,z)
   p('Tile floor',42,.8,30,0,.7,0,bone,'Marble')
@@ -375,17 +377,19 @@ return function(part,group,label,action,city)
     p('Porcelain worktop',8.7,.36,2.3,u,4.65,12.45,bone,'Marble')
     for _,side in {-1,1} do
      p('Mirror tube',.28,5.7,.3,u+side*4.18,7.5,13.9,bone,'Neon')
-     p('Chair arm',.54,.6,3.4,u+side*2.28,4.58,6,garden,'Fabric')
     end
     for j=1,3 do p('Pomade tin',.72,.43,.7,u-3+j*.84,5.05,12.2,j%2==0 and bronze or garden,'Metal') end
-    p('Chrome footrest',3.4,.36,1.2,u,2.2,9.3,'stone','Metal')
-    p('Chair pedestal',2,2,2,u,2.1,6,'stone','Metal')
-    local cushion=p('Barber chair',5,1.2,4,u,3.6,6,garden,'Fabric')
-    local seat=rb.Instance.new('Seat'); seat.Name='Swivel seat';seat.Size=rb.Vector3.new(3.5,.25,2.8);seat.Anchored=true;seat.Transparency=1;seat.CFrame=cushion.CFrame*cf.new(0,.72,0)*cf.Angles(0,math.pi,0);seat.Parent=room
+    local chair=chairMesh:Clone()
+    chair.Name='Barber chair'; chair.Size=chairMesh.Size*(7.2/chairMesh.Size.Y)
+    chair.Anchored=true; chair.CanCollide=false; chair.CanTouch=false
+    chair.CFrame=cf.new(x+u,1.1+chair.Size.Y/2,z+6)*cf.Angles(0,math.pi,0)
+    chair.Parent=room
+    local seat=rb.Instance.new('Seat')
+    seat.Name='Swivel seat';seat.Size=rb.Vector3.new(2.75,.25,2.2);seat.Anchored=true;seat.Transparency=1
+    seat.CFrame=cf.new(x+u,4.7,z+5.8)*cf.Angles(0,math.pi,0);seat.Parent=room
     local tray=p('Clipper tray',1.35,.35,1.8,u+2.05,5.5,5.7,bronze,'Metal')
     action(tray,'Barber','Choose a haircut')
     if name=='Juniper Barber' and u==0 then tray:SetAttribute('Station','BarberChair') end
-    p('Chair back',4.8,3,.55,u,5,4.2,garden,'Fabric')
    end
    for _,u in {11,16} do
     p('Waiting chair base',2.6,1.5,2.7,u,1.85,-8,bronze,'Wood')
