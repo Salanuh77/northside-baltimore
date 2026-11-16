@@ -26,7 +26,7 @@ return function(profiles,jobs,event,closest,sync,tell,save,tool)
    if not bd or not shift or shift.role~='barber' or shift.step~=2 or not root or (root.Position-request.Chair.Position).Magnitude>14 then return end
    bd.Wages+=30; bd.Cash+=30; sync(barber); tell(barber,'Haircut complete. You earned $30.')
   end
-  d.Cash-=30; d.Look.Hair=request.Style; dress(customer,d); sync(customer); tell(customer,'Your haircut is saved.')
+  d.Cash-=30; d.Look.Hair=request.Style; d.Look.HairColor=request.Color; dress(customer,d); sync(customer); tell(customer,'Your haircut is saved.')
  end
  local actions={CreateResident=true,Outfit=true,Cut=true,ServeCut=true,Premium=true,PartyItem=true,ArmoryFinish=true}
  local function resolveName(p,data)
@@ -61,14 +61,16 @@ return function(profiles,jobs,event,closest,sync,tell,save,tool)
   elseif kind=='Cut' then
    local chair=closest(p,'Barber')
    if not chair or not d.Look or not table.find(Style.Hair,data.Style) then return true end
-   if data.Style==d.Look.Hair then tell(p,'You already wear that cut.');return true end
+   local color=data.Color or d.Look.HairColor or 'Black'
+   if not table.find(Style.HairColors,color) then tell(p,'Choose an available dye.');return true end
+   if data.Style==d.Look.Hair and color==(d.Look.HairColor or 'Black') then tell(p,'You already wear that cut and color.');return true end
    if d.Cash<30 then tell(p,'Haircuts cost $30.'); return true end
-   local req={Style=data.Style,Chair=chair,Expires=os.clock()+25}
+   local req={Style=data.Style,Color=color,Chair=chair,Expires=os.clock()+25}
    requests[p]=nil
    for worker,shift in jobs do
     local root=worker.Character and worker.Character:FindFirstChild('HumanoidRootPart')
     if worker~=p and shift.role=='barber' and shift.step==2 and root and (root.Position-chair.Position).Magnitude<=14 then
-     requests[p]=req; event:FireClient(worker,'CutRequest',{Customer=p.UserId,Name=p.DisplayName,Style=data.Style})
+     requests[p]=req; event:FireClient(worker,'CutRequest',{Customer=p.UserId,Name=p.DisplayName,Style=data.Style,Color=color})
     end
    end
    if requests[p] then tell(p,'Waiting for a barber. Stay beside your chair.')

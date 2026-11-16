@@ -43,10 +43,19 @@ return function(event,modal,content,clear,row,paragraph,input,state)
     row(v.Name..(owned and ' · Wear' or ' · $'..v.Price),function() event:FireServer('Outfit',{Item=v.Id});modal.Visible=false end)
    end
   elseif kind=='Barber' then
-   clear('BARBER CHAIR');paragraph('Choose a cut for $30. A barber on shift can take your appointment here.')
-   for _,cut in Style.Hair do row(cut,function() event:FireServer('Cut',{Style=cut});modal.Visible=false end) end
+   local function chooseDye(cut)
+    clear('CUT & COLOR');paragraph(cut..' · Choose a finish. The appointment costs $30.')
+    local function book(color)
+     event:FireServer('Cut',{Style=cut,Color=color});modal.Visible=false
+    end
+    row('Keep current color',function() book(state().HairColor or 'Black') end)
+    for _,color in Style.HairColors do row(color,function() book(color) end) end
+   end
+   clear('BARBER CHAIR');paragraph('Choose a haircut and dye for $30.')
+   if state().Hair then row('Dye current haircut',function() chooseDye(state().Hair) end) end
+   for _,cut in Style.Hair do row(cut,function() chooseDye(cut) end) end
   elseif kind=='CutRequest' then
-   clear('BARBER APPOINTMENT');paragraph(data.Name..' requested '..data.Style..'. Complete the cut to receive $30.')
+   clear('BARBER APPOINTMENT');paragraph(data.Name..' requested '..data.Style..' in '..data.Color..'. Complete the cut to receive $30.')
    row('Serve customer',function() event:FireServer('ServeCut',{Customer=data.Customer});modal.Visible=false end)
   else return false end
   return true

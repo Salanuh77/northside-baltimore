@@ -49,7 +49,7 @@ local function sync(p)
  for _,item in {'Water','Coffee','Sandwich','Bandage','Flashlight'} do p:SetAttribute('Bag'..item,d.Supplies[item] or 0) end
  p:SetAttribute('ReserveAmmo',d.Reserve); p:SetAttribute('Employment',d.Employment); p:SetAttribute('Wages',d.Wages)
  local stats=p:FindFirstChild('leaderstats'); if stats then stats.Cash.Value=d.Cash end
- event:FireClient(p,'State',{Cash=d.Cash,Bank=d.Bank,Loot=d.Loot,Heat=d.Heat,Items=d.Items,Stock=d.Stock,Wardrobe=d.Wardrobe})
+ event:FireClient(p,'State',{Cash=d.Cash,Bank=d.Bank,Loot=d.Loot,Heat=d.Heat,Items=d.Items,Stock=d.Stock,Wardrobe=d.Wardrobe,Hair=d.Look and d.Look.Hair,HairColor=d.Look and d.Look.HairColor})
 end
 
 local function givePhone(p)
