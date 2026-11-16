@@ -85,7 +85,13 @@ local ok,err=pcall(function()
  call(a,'Prompt',entry);task.wait(.4)
  check(entry:GetAttribute('Open') and not entry.CanCollide,'Resident opens a hinged top-floor apartment door')
  local door=apt['Entrance walk']
- path:ComputeAsync(door.Position+Vector3.new(0,3,0),highest.Position+Vector3.new(0,2,3))
+ -- Roblox rebuilds the navigation mesh asynchronously when a closed door swings clear.
+ local navDeadline=os.clock()+8
+ repeat
+  path:ComputeAsync(door.Position+Vector3.new(0,3,0),highest.Position+Vector3.new(0,2,3))
+  if path.Status==Enum.PathStatus.Success then break end
+  task.wait(.4)
+ until os.clock()>=navDeadline
  if path.Status~=Enum.PathStatus.Success then
   local origin=door.CFrame*CFrame.new(0,.44,28.5)
   local last=door.Position+Vector3.new(0,3,0)
