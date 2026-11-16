@@ -225,6 +225,16 @@ local ok, message = pcall(function()
  waitUntil(function() return not studio.Parent or not studio.Enabled end, "resident studio remained open after entry")
  check("selected fictional name applies to the live resident", character.Humanoid.DisplayName=="Andre Brooks",character.Humanoid.DisplayName)
  check("enter city spawns game-owned resident", character:GetAttribute("GameOwnedRig")==true, character.Name)
+ local wardrobe=game.ReplicatedStorage.StreetStyle
+ local assets={character.Head:FindFirstChild('Head sculpt',true),character.Head:FindFirstChild('Hair mesh',true)}
+ for _,key in {'portrait-calm','portrait-smile','portrait-focused','lips-level','lips-smile','lips-set','ash-pullover','dock-denim','field-liner'} do
+  table.insert(assets,'rbxassetid://'..wardrobe:GetAttribute(key))
+ end
+ local missed={}
+ game.ContentProvider:PreloadAsync(assets,function(id,status)
+  if status~=Enum.AssetFetchStatus.Success then table.insert(missed,id..' '..status.Name) end
+ end)
+ check('client loads sculpt, groom, face plates and all starter shirts',#missed==0,table.concat(missed,', '))
  local liveHair=waitUntil(function() return character.Head:FindFirstChild('Hair mesh',true) end,'Live haircut did not load')
  check('preview haircut and dye survive entry',liveHair.MeshId==twists.MeshId and liveHair.Color==twists.Color)
  check('selected face sculpt survives entry',character.Head:FindFirstChild('Head sculpt',true).MeshId==square.MeshId)
