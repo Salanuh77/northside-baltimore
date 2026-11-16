@@ -223,12 +223,21 @@ rig.Humanoid.AutomaticScalingEnabled=false
 rig.Humanoid.DisplayDistanceType=Enum.HumanoidDisplayDistanceType.None
 rig.Parent=rs
 local hairLibrary=rb.deserializeModel(fs.readFile('art/resident-hair.rbxm'))[1];hairLibrary.Name='ResidentHair';hairLibrary.Parent=rs
+local profiles=rb.deserializeModel(fs.readFile('art/resident-profiles.rbxm'))[1]
+profiles.Name='ResidentProfiles';profiles.Parent=rs
+local grooms=rb.deserializeModel(fs.readFile('art/resident-grooms.rbxm'))[1]
+grooms.Name='ResidentGrooms';grooms.Parent=rs
+local bounds=require('@lune/serde').decode('json',fs.readFile('art/groom-bounds.json'))
+for name,box in bounds do
+ local mesh=assert(grooms:FindFirstChild(name,true),name)
+ mesh:SetAttribute('GroomCenter',Vector3.new(table.unpack(box.center)))
+end
 local starterRig=rig:Clone();starterRig.Name='StarterCharacter';starterRig.Parent=starter
 local menu=Instance.new('LocalScript');menu.Name='ResidentMenu';menu.Source=fs.readFile('src/ResidentMenu.client.luau');menu.Parent=starter:FindFirstChildOfClass('StarterPlayerScripts')
 local names=Instance.new('ModuleScript'); names.Name='ResidentNames'; names.Source=fs.readFile('src/ResidentNames.luau'); names.Parent=rs
 local style=Instance.new('ModuleScript'); style.Name='StreetStyle'; style.Source=fs.readFile('src/StreetStyle.luau'); style.Parent=rs
 local art=require('@lune/serde').decode('json',fs.readFile('art/assets.json'))
-for _,key in {'fleet-track','foundry-work','pier-varsity','indigo-denim','harbor-warmup','clay-workshirt','olive-overshirt','street-denim','washed-denim','canvas-trousers','street-denim-black','washed-denim-black','canvas-trousers-black','resident-calm','resident-smile','resident-focused','mouth-level','mouth-smile','mouth-set'} do style:SetAttribute(key,assert(art[key],key)) end
+for _,key in {'fleet-track','foundry-work','pier-varsity','indigo-denim','harbor-warmup','clay-workshirt','olive-overshirt','street-denim','washed-denim','canvas-trousers','street-denim-black','washed-denim-black','canvas-trousers-black','resident-calm','resident-smile','resident-focused','mouth-level','mouth-smile','mouth-set','ash-pullover','dock-denim','field-liner','portrait-calm','portrait-smile','portrait-focused','lips-level','lips-smile','lips-set'} do style:SetAttribute(key,assert(art[key],key)) end
 local catalog=Instance.new('ModuleScript');catalog.Name='ShopProducts';catalog.Source=fs.readFile('src/ShopProducts.luau');catalog.Parent=rs
 local clock=Instance.new('Script'); clock.Name='CityClock'; clock.Source=fs.readFile('src/CityClock.server.luau'); clock.Parent=game:GetService('ServerScriptService')
 local styleUI=Instance.new('ModuleScript');styleUI.Name='RetailUI';styleUI.Source=fs.readFile('src/RetailUI.luau');styleUI.Parent=rs
