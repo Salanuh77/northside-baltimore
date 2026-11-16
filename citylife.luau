@@ -149,6 +149,16 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   end
   p('Wing entablature',50,4.7,1.4,side*39,21.3,-15.3,cream,'Limestone')
   p('Covered wing roof',49,2.4,29,side*39,25.4,0,copper,'Metal')
+  for level=1,6 do
+   p('Mansard course',49-level*.55,1.15,29-level*1.15,side*39,26.1+level*.9,0,copper,'Metal')
+  end
+  for i=0,3 do
+   local x=side*(20+12*i)
+   p('Dormer cheek',5,4.4,3.1,x,28.5,-12.8,cream,'Limestone')
+   glass(p,'Dormer sash',3.25,3,.26,x,28.5,-14.45)
+   p('Dormer crown',5.65,.65,3.7,x,30.9,-12.9,bronze,'Metal')
+  end
+  p('Wing ridge',47,1.15,22,side*39,32.3,0,bronze,'Metal')
   for k=0,6 do p('Cornice bracket',1,1.2,2,side*(16+7*k),22.4,-16.2,cream,'Marble') end
  end
  for i=1,4 do p('Portico step',31,.4*i,1.4,0,.6+.2*i,-26.3+i*1.35,cream,'Marble') end
@@ -170,9 +180,35 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   p('Fluted civic column',2.2,45,2.2,u,45,-15.6,cream,'Marble')
   p('Column capital',3.5,2.5,3.2,u,68,-15.5,cream,'Marble')
  end
- for _,y in {33,52,102} do
-  glass(p,'Belfry recess',8,12,.45,0,y,y==102 and -10.4 or -15.45)
-  p('Window mullion',.65,12,.65,0,y,y==102 and -10.8 or -15.85,cream,'Limestone')
+ local origin=cf.new(0,0,1079)
+ for face=0,3 do
+  local side=origin*cf.Angles(0,face*math.pi/2,0)
+  local function relief(name,w,h,d,u,y,r,color,material,roll)
+   local part=p(name,w,h,d,0,0,0,color,material)
+   part.CFrame=side*cf.new(u,y,-r)*cf.Angles(0,0,roll or 0)
+   return part
+  end
+  for _,band in {{34,15.4},{49,15.4},{66,15.4},{71,12.5},{92.5,12.5},{110.5,10.6}} do
+   relief('Carved belt course',band[2]*2+1,.9,1.25,0,band[1],band[2],cream,'Marble')
+  end
+  for _,story in {{39,15,8.1},{54,15,8.1},{98,10,6.1}} do
+   local y,r,spacing=story[1],story[2],story[3]
+   for _,direction in {-1,1} do
+    local x=direction*spacing*.57
+    relief('Arched bay shadow',5.4,7,.5,x,y,r+.51,bronze,'Metal')
+    relief('Upper sash',4.6,6.1,.42,x,y,r+.83,blue,'Glass')
+    relief('Sash bar',.32,6.1,.5,x,y,r+1.05,cream,'Limestone')
+    for _,edge in {-1,1} do relief('Arch jamb',.75,7,.92,x+edge*2.95,y,r+.82,cream,'Marble') end
+    for voussoir=0,8 do
+     local a=(voussoir+.5)*math.pi/9
+     relief('Arch voussoir',1.18,1,.98,x+3*math.cos(a),y+3.45+3*math.sin(a),r+.82,cream,'Marble',a-math.pi/2)
+    end
+    relief('Window apron',7.1,.85,1.35,x,y-3.7,r+.8,cream,'Marble')
+   end
+  end
+  for _,x in {-8.4,8.4} do relief('Clock corner pier',1.6,18,1.4,x,82,12.35,cream,'Marble') end
+  for i=-3,3 do relief('Gallery baluster',.85,2.8,1.2,i*3.2,114.4,11.9,cream,'Marble') end
+  relief('Gallery handrail',24,1,1.5,0,116,11.9,cream,'Marble')
  end
  for i=0,3 do
   local pivot=cf.new(0,0,1079)*cf.Angles(0,i*math.pi/2,0)
@@ -182,16 +218,28 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   local hour=p('Clock hour hand', .5,3.8,.45,0,80,0,'dark','Metal'); hour.CFrame=pivot*cf.new(0,83.8,-13.5); hour:SetAttribute('ClockPivot',pivot*cf.new(0,82,-13.5))
   for n=0,11 do local a=n*math.pi/6; local tick=p('Clock index',.36,.8,.26,0,0,0,'dark','Metal'); tick.CFrame=pivot*cf.new(5*math.sin(a),82+5*math.cos(a),-12.9)*cf.Angles(0,0,-a) end
  end
- for _,ring in {{114.8,2,22},{116.8,2.2,20.4},{118.5,1.3,19.3}} do
-  local belt=p('Dome drum',ring[2],ring[3],ring[3],0,ring[1],0,copper,'Metal')
+ for _,ring in {{111.5,3.1,22.3},{115,4.0,24.3},{117.8,2.2,26.2}} do
+  local belt=p('Dome drum',ring[2],ring[3],ring[3],0,ring[1],0,cream,'Limestone')
   belt.Shape=E.PartType.Cylinder;belt.CFrame*=cf.Angles(0,0,math.pi/2)
  end
- local dome=p('Copper dome',19,19,19,0,118.8,0,copper,'Metal'); dome.Shape=E.PartType.Ball
- p('Lantern sill',5.1,.9,5.1,0,127.9,0,bronze,'Metal')
- for _,x in {-1.7,1.7} do for _,z in {-1.7,1.7} do p('Lantern post',.5,4.7,.5,x,130.5,z,cream,'Marble') end end
- local crown=p('Lantern roof',5.6,4.8,5.6,0,133.4,0,copper,'Metal');crown.Shape=E.PartType.Ball
- p('Spire',.48,5.5,.48,0,137.7,0,'gold','Metal')
- local tip=p('Lantern finial',1.3,1.6,1.3,0,140.5,0,'gold','Metal');tip.Shape=E.PartType.Ball
+ local skirt=p('Copper dome skirt',3,27,27,0,118.2,0,copper,'Metal');skirt.Shape=E.PartType.Cylinder;skirt.CFrame*=cf.Angles(0,0,math.pi/2)
+ local dome=p('Copper dome',26,35,26,0,119,0,copper,'Metal'); dome.Shape=E.PartType.Ball
+ for rib=0,11 do
+  local azimuth=rib*math.pi/6
+  local function profile(a)
+   return rb.Vector3.new(13.15*math.cos(a)*math.sin(azimuth),119+17.65*math.sin(a),13.15*math.cos(a)*math.cos(azimuth))
+  end
+  for step=1,6 do
+   local a,b=profile((step-1)*math.pi/12),profile(step*math.pi/12)
+   local ridge=p('Raised copper seam',.33,.33,(b-a).Magnitude+.1,0,0,0,rgb(111,142,123),'Metal')
+   ridge.CFrame=origin*cf.lookAt((a+b)/2,b)
+  end
+ end
+ p('Lantern sill',5.1,.9,5.1,0,136,0,bronze,'Metal')
+ for _,x in {-1.7,1.7} do for _,z in {-1.7,1.7} do p('Lantern post',.5,4.7,.5,x,138.7,z,cream,'Marble') end end
+ local crown=p('Lantern roof',5.6,4.8,5.6,0,141.6,0,copper,'Metal');crown.Shape=E.PartType.Ball
+ p('Spire',.48,5.5,.48,0,146,0,'gold','Metal')
+ local tip=p('Lantern finial',1.3,1.6,1.3,0,148.8,0,'gold','Metal');tip.Shape=E.PartType.Ball
  -- Assign the alley faces after both rows exist, so opposite homes have individual marks.
  local function rowPaint(address,collection,cell,offset,height,width,fade)
   mural(housing['Hollins Row '..address].Rear,E.NormalId.Front,cell,offset,height,width,fade,collection)
