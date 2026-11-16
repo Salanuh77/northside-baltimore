@@ -39,3 +39,18 @@ for _,name in {'District police desk','Medic dispatch','North Avenue Fuel','Fran
     corridor(name,frame,street,site:FindFirstChild('Duty desk') and 3 or 4)
     print('ENTRANCE_PASS',name)
 end
+
+for _,shop in city['Gas stations']:GetChildren() do
+    local counts={['Fuel dispenser']=0,['Bagged ice locker']=0,['Twin coffee brewer']=0}
+    for _,part in shop:GetChildren() do
+        if counts[part.Name]~=nil then
+            assert(part:IsA('MeshPart'),shop.Name..' has a placeholder '..part.Name)
+            counts[part.Name]+=1
+        end
+    end
+    assert(counts['Fuel dispenser']==2 and counts['Bagged ice locker']==1 and counts['Twin coffee brewer']==1,shop.Name..' needs two dispensers, one ice locker and one brewer')
+    local coffee=shop['Coffee counter']
+    assert(coffee:GetAttribute('Action')=='Coffee','Missing coffee purchase prompt')
+    local approach=coffee.CFrame.Rotation+v.new(coffee.CFrame.X,0,coffee.CFrame.Z)
+    corridor(shop.Name..' coffee counter',approach,-5,-2)
+end

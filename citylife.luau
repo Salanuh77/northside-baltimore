@@ -99,8 +99,23 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   p('Townhouse transom',11.4,2.4,.4,0,12.7,-12.5,cream,'Limestone')
   lounge(p,3,1.55,1,blue); p('Entry bell post',1.1,4.8,1.1,7,2.5,-14,cream,'Limestone'); lease(p,m.Name,7,4.2,-14.85,200); glow(p,0,13,0)
  end
+ local fixtures={}
+ for _,id in {'dispenser','ice-locker','coffee-brewer'} do
+  local imported=rb.deserializeModel(require('@lune/fs').readFile('art/mart-'..id..'.rbxm'))[1]
+  fixtures[id]=assert(imported:FindFirstChildWhichIsA('MeshPart',true),'Missing mart mesh: '..id)
+ end
  for _,v in {{'North Avenue Fuel',60,148,90,60},{'Franklin Fuel',-510,994,-90,60},{'Eastside Fuel',719,111,90,59}} do
   local m=group(v[1],service); local p=builder(m,v[2],v[3],v[4])
+  local frame=cf.new(v[2],0,v[3])*cf.Angles(0,math.rad(v[4]),0)
+  local function fixture(id,name,x,bottom,z,width,height,depth,yaw)
+   local mesh=fixtures[id]:Clone()
+   local size=mesh.Size
+   mesh.Size=size*math.min(width/size.X,height/size.Y,depth/size.Z)
+   mesh.Name=name; mesh.Anchored=true; mesh.CanCollide=false; mesh.CanTouch=false; mesh.CanQuery=false
+   mesh.CFrame=frame*cf.new(x,bottom+mesh.Size.Y/2,z)*cf.Angles(0,math.rad(yaw or 0),0)
+   mesh.Parent=m
+   return mesh
+  end
   p('Driveway throat',37,.35,v[5]-17,0,.43,-(v[5]-17)/2,'stone','Concrete')
   p('Station apron',45,.6,60,0,.38,-11.5,'stone','Concrete')
   m:SetAttribute('SidewalkOffset',-(v[5]-21+3))
@@ -129,19 +144,62 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
    end
    glow(p,side*11,12,7)
   end
-  for _,s in {-1,1} do p('Shelf',7,3,3,s*11,2.85,4,cream,'Metal'); for k=-2,2 do p('Grocery stock',.8,1.2,1.6,s*11+k,5,4,k%2==0 and 'gold' or 'green','SmoothPlastic') end end
+  -- Stock both faces of the two gondolas. Their narrow ends face the entrance.
+  for _,side in {-1,1} do
+   local x=side*11
+   p('Gondola plinth',3.3,.52,7.6,x,1.51,0,blue,'Metal')
+   p('Retail pegboard',.24,5.4,7.3,x,4.05,0,cream,'Metal')
+   for tier=1,3 do
+    local y=1.96+(tier-1)*1.65
+    p('Gondola shelf',3.4,.15,7.5,x,y,0,cream,'Metal')
+    for _,face in {-1,1} do
+     for slot=1,4 do
+      local z=(slot-2.5)*1.65
+      local tint=({enamel,cream,blue,rgb(192,138,62)})[(slot+tier)%4+1]
+      p('Boxed groceries',.83,1.08,1.13,x+face*.95,y+.62,z,tint,'SmoothPlastic')
+      p('Package band',.035,.22,.91,x+face*1.38,y+.8,z,cream,'SmoothPlastic')
+     end
+    end
+   end
+  end
+  local ice=fixture('ice-locker','Bagged ice locker',-15,.68,-15.1,8,5.7,3.7)
+  p('Ice locker footing',ice.Size.X,.16,ice.Size.Z,-15,.69,-15.1,cream,'Concrete')
+  local iceSolid=p('Ice locker collision',ice.Size.X,ice.Size.Y,ice.Size.Z,-15,.68+ice.Size.Y/2,-15.1,cream)
+  iceSolid.Transparency=1
+  lettering(p('Ice locker blade',4.7,1.35,.22,-15,7.9,-12.5,blue,'Metal'),'BAGGED ICE')
+  p('Coffee bar base',8.6,2.8,3.4,-11,2.65,12.4,enamel,'Wood')
+  p('Coffee bar top',9,.26,3.7,-11,4.18,12.4,cream,'Marble')
+  fixture('coffee-brewer','Twin coffee brewer',-12.2,4.31,12.6,4.9,4.5,3.55)
+  for i=1,3 do
+   local cup=p('Takeaway cup stack',.65,1.25-i*.05,1.25-i*.05,-8.6,4.65+(i-1)*.18,12.35,cream,'SmoothPlastic')
+   cup.Shape=E.PartType.Cylinder;cup.CFrame*=cf.Angles(0,0,math.pi/2)
+  end
+  local menu=p('Coffee counter',6,1.15,.18,-11,3.05,10.62,enamel,'Metal')
+  lettering(menu,'FRESH COFFEE   $6')
+  action(menu,'Coffee','Buy coffee · $6')
   p('Checkout desk',9,3.2,3,0,3,13,'dark','Wood')
   action(p('Mart till',2,1.5,1.7,0,5.4,12.8,'dark','Metal'),'Mart','Buy supplies')
   for _,s in {-1,1} do
    p('Pump island',4.6,.45,9,s*8,.83,-30,'cream','Concrete')
    p('Canopy column',.9,14,.9,s*8,7.4,-27.2,'stone','Metal')
-   p('Fuel dispenser',3.6,5,2.4,s*8,3.1,-31,blue,'Metal')
-   local pump=p('Pump face',3.4,1.4,.25,s*8,4.2,-32.4,'dark','Metal'); lettering(pump,'REGULAR'); action(pump,'Fuel','Fill tank · $1 per 5%')
-   p('Nozzle cradle',.42,1.2,.38,s*9.65,3.1,-32.25,'dark','Metal')
-   p('Rubber hose',.22,2.4,.24,s*9.93,2.45,-32.13,'dark','Rubber')
-   p('Hose return',.56,.22,.24,s*9.77,1.35,-32.13,'dark','Rubber')
+   local machine=fixture('dispenser','Fuel dispenser',s*8,1.055,-31,4.1,7.4,3)
+   local guard=p('Dispenser collision',machine.Size.X,machine.Size.Y,machine.Size.Z,s*8,1.055+machine.Size.Y/2,-31,'dark','Metal')
+   guard.Transparency=1
+   local pump=p('Pump face',3.4,1.4,.2,s*8,4.2,-31-machine.Size.Z/2-.15,'dark','Metal')
+   pump.Transparency=1; pump.CanCollide=false
+   action(pump,'Fuel','Fill tank · $1 per 5%')
+   local number=p('Island number',2.6,1.8,.36,s*8,9.3,-27.85,enamel,'Metal')
+   lettering(number,s==-1 and '01' or '02')
+   for _,edge in {-1,1} do
+    p('Island guard post',.54,2.9,.54,s*8+edge*1.7,2.35,-33.95,'gold','Metal')
+   end
   end
-  p('Fuel canopy',36,1,18,0,15,-32,blue,'Metal'); p('Canopy trim',36,1,1,0,14.4,-41,'gold','Metal')
+  p('Fuel canopy',36,1,18,0,15,-32,blue,'Metal'); p('Canopy trim',36,1,1,0,14.4,-41,enamel,'Metal')
+  for _,side in {-1,1} do
+   local light=p('Forecourt downlight',6.5,.2,1.4,side*10,14.36,-34,cream,'Neon')
+   local lamp=rb.Instance.new('SurfaceLight');lamp.Face=E.NormalId.Bottom;lamp.Range=23;lamp.Brightness=1.25
+   lamp.Angle=105;lamp.Color=rgb(255,239,207);lamp.Parent=light
+  end
   glow(p,2,12,0)
  end
  local gallery=group('Pier 8 Maritime Gallery',city); local g=builder(gallery,-316,-575)
