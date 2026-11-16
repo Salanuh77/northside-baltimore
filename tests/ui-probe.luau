@@ -171,7 +171,7 @@ local ok, message = pcall(function()
  check('style tab changes rendered hair',true,haircutId())
  local head=rig().Head;local cap=head:FindFirstChild('Hair mesh',true)
  local center=head.CFrame:PointToObjectSpace(cap.Position)
- check('hair covers crown above forehead',cap.Size.X>head.Size.X and center.Y>0 and center.Y<head.Size.Y*.7,center)
+ check('hair covers crown above forehead',cap.Size.X>head:FindFirstChild('Head sculpt',true).Size.X and center.Y>0 and center.Y<head.Size.Y*.7,center)
  local function viewPose()
   local r = rig()
   local viewport = r and r:FindFirstAncestorOfClass("ViewportFrame")
@@ -183,9 +183,23 @@ local ok, message = pcall(function()
  check("turn control changes preview angle", true, viewPose().LookVector)
  click(findButton(studio,"Face view"))
  click(findButton(studio,"Expression next"));click(findButton(studio,"Eye next"))
- local baseEyes=rig().Head["Resident face"].Texture
+ local oval=rig().Head:FindFirstChild('Head sculpt',true)
+ local firstMesh=oval.MeshId
+ click(findButton(studio,'FaceShape next'))
+ local square=rig().Head:FindFirstChild('Head sculpt',true)
+ check('head shape changes the rendered geometry',square.MeshId~=firstMesh,square.MeshId)
+ local priorWidth=square.Size.X
+ click(findButton(studio,'FaceWidth next'))
+ check('face width changes the sculpt',rig().Head:FindFirstChild('Head sculpt',true).Size.X>priorWidth)
+ local eyeWidth=rig().Head:FindFirstChild('Resident face plate',true).Size.X
+ click(findButton(studio,'EyeSpacing next'))
+ check('eye spacing changes the artwork',rig().Head:FindFirstChild('Resident face plate',true).Size.X>eyeWidth)
+ local lipHeight=rig().Head:FindFirstChild('Resident mouth plate',true).Size.Y
+ click(findButton(studio,'LipFullness next'))
+ check('lip fullness changes the mouth',rig().Head:FindFirstChild('Resident mouth plate',true).Size.Y>lipHeight)
+ local baseEyes=rig().Head:FindFirstChild("Resident face",true).Texture
  click(findButton(studio,"Mouth next"))
- check("eye and mouth selectors render separately",rig().Head["Resident face"].Texture==baseEyes and rig().Head["Resident mouth"].Texture:find(game.ReplicatedStorage.StreetStyle:GetAttribute("mouth-smile"),1,true)~=nil)
+ check("eye and mouth selectors render separately",rig().Head:FindFirstChild("Resident face",true).Texture==baseEyes and rig().Head:FindFirstChild("Resident mouth",true).Texture:find(game.ReplicatedStorage.StreetStyle:GetAttribute("lips-smile"),1,true)~=nil)
  click(findButton(studio, "Enter city"))
  local character = waitUntil(function()
   local c = player.Character
