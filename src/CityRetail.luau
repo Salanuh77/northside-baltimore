@@ -47,7 +47,7 @@ return function(profiles,jobs,event,closest,sync,tell,save,tool)
    if profiles[p]~=d or d.Leaving then return true end
    if not name then tell(p,reason);return true end
    d.Look={Name=name,Height=data.Height,Build=data.Build,Hair=data.Hair,Tone=data.Tone,Starter=data.Starter or 'Harbor',Detail=data.Detail or 'Clean',Eye=data.Eye or 'Brown',Expression=data.Expression or 'Calm',HairColor=data.HairColor or 'Black'}
-   for _,field in {'Depth','Pants','Shoes','Mouth','HairDetail'} do d.Look[field]=data[field] end
+   for _,field in {'Depth','Pants','Shoes','Mouth','HairDetail','FaceShape','FaceWidth','EyeSpacing','LipFullness'} do d.Look[field]=data[field] end
    p:SetAttribute('NeedsCharacter',false); dress(p,d); sync(p); event:FireClient(p,'StyleSaved')
   elseif kind=='Outfit' then
    if not closest(p,'Clothing') or not d.Look then return true end

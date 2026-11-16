@@ -1,4 +1,9 @@
+local Portrait=require(game.ReplicatedStorage:WaitForChild('ResidentPortrait'))
 local Style={}
+Style.FaceShapes=Portrait.Shapes
+Style.FaceWidths=Portrait.Widths
+Style.EyeSpacings=Portrait.Spacings
+Style.LipFullness=Portrait.Lips
 Style.Heights={'Short','Medium','Tall'}
 Style.Builds={'Slender','Average','Broad'}
 Style.Depths={'Narrow','Standard','Full'}
@@ -28,7 +33,7 @@ local iris={Brown=Color3.fromRGB(69,43,30),Hazel=Color3.fromRGB(108,102,60),Blue
 Style.Details={'Clean','Freckles','Goatee','Mustache','Stubble'}
 function Style.valid(data)
  if type(data)~='table' or (data.Starter~=nil and not table.find(Style.Starters,data.Starter)) or (data.Detail~=nil and not table.find(Style.Details,data.Detail)) then return false end
- for key,list in {HairColor=Style.HairColors,Eye=Style.Eyes,Expression=Style.Expressions,Mouth=Style.Mouths,Pants=Style.Pants,Shoes=Style.Shoes,Depth=Style.Depths,HairDetail=Style.HairDetails} do if data[key]~=nil and not table.find(list,data[key]) then return false end end
+ for key,list in {FaceShape=Style.FaceShapes,FaceWidth=Style.FaceWidths,EyeSpacing=Style.EyeSpacings,LipFullness=Style.LipFullness,HairColor=Style.HairColors,Eye=Style.Eyes,Expression=Style.Expressions,Mouth=Style.Mouths,Pants=Style.Pants,Shoes=Style.Shoes,Depth=Style.Depths,HairDetail=Style.HairDetails} do if data[key]~=nil and not table.find(list,data[key]) then return false end end
  for key,list in {Height=Style.Heights,Build=Style.Builds,Hair=Style.Hair,Tone=Style.Tones} do
   if not table.find(list,data[key]) then return false end
  end
@@ -126,33 +131,8 @@ function Style.apply(c,look,outfit)
    v.Color=covered and cloth or tone
   end
  end
- local old=head:FindFirstChild('Face detail');if old then old:Destroy() end
- local holder=Instance.new('Folder');holder.Name='Face detail';holder.Parent=head
  local dye=dyes[look.HairColor or 'Black']
- local function mark(name,x,y,z,w,h,d,color)
-  local part=Instance.new('Part');part.Name=name;part.Shape=Enum.PartType.Ball
-  part.Size=Vector3.new(w,h,d)*head.Size;part.Color=color
-  part.CanCollide=false;part.CanQuery=false;part.CanTouch=false;part.Massless=true
-  part.CFrame=head.CFrame*CFrame.new(Vector3.new(x,y,z)*head.Size);part.Parent=holder
-  local weld=Instance.new('WeldConstraint');weld.Part0=head;weld.Part1=part;weld.Parent=part
- end
- local face=head:FindFirstChild('Resident face') or Instance.new('Decal')
- face.Name='Resident face';face.Face=Enum.NormalId.Front;face.Texture='rbxassetid://'..script:GetAttribute('resident-'..string.lower(look.Expression or 'Calm'))
- face.Color3=iris[look.Eye or 'Brown']:Lerp(Color3.new(1,1,1),.55);face.Parent=head
- local mouth=head:FindFirstChild('Resident mouth') or Instance.new('Decal')
- mouth.Name='Resident mouth';mouth.Face=Enum.NormalId.Front
- mouth.Texture='rbxassetid://'..script:GetAttribute('mouth-'..string.lower(look.Mouth or (look.Expression=='Smile' and 'Smile' or 'Level')))
- mouth.ZIndex=2;mouth.Parent=head
- for _,side in {-1,1} do
-  if look.Detail=='Freckles' then
-   for i=1,3 do mark('Freckle',side*(.16+i*.045),-.044+(i%2)*.027,-.438,.025,.022,.03,tone:Lerp(dye,.5)) end
-  end
- end
- if look.Detail=='Goatee' then mark('Beard',0,-.29,-.405,.34,.16,.10,dye)
- elseif look.Detail=='Mustache' then mark('Mustache',0,-.155,-.475,.38,.052,.08,dye)
- elseif look.Detail=='Stubble' then
-  for i=-3,3 do mark('Stubble',i*.095,-.29+.012*i*i,-.411+.004*i*i,.09,.07,.055,tone:Lerp(dye,.62)) end
- end
+ Portrait.draw(head,look,script,tone,dye,iris[look.Eye or 'Brown'])
  for _,v in c:GetChildren() do
   if v:IsA('Accessory') and (v.AccessoryType==Enum.AccessoryType.Hair or outfit and table.find({'Shirt','Jacket','Sweater','Pants','Shorts','TShirt'},v.AccessoryType.Name)) then v:Destroy() end
  end
