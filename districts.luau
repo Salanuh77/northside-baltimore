@@ -235,6 +235,17 @@ return function(part,group,label,action,city)
    p('Floor band',a+1.4,style=='glass' and .8 or 1.55,b+1.4,0,y+9.6,0,tint,'Metal')
    for _,s in {-1,1} do
     for j=-3,3 do p('Facade mullion',.65,9.8,.9,j*(a-6)/6,y+4.8,s*b/2,tint,'Metal') end
+    -- Occasional occupied bays give the dark waterfront glass a scale at dusk.
+    if (k+s)%3==0 and style=='glass' then
+     local j=(k+#name)%6-3
+     local spacing=(a-6)/6
+     local color=skin.Color:Lerp(rgb(162,171,170),.32)
+     local glassBay=p('Occupied tower bay',spacing-.9,7.65,.18,(j+.5)*spacing,y+5.07,s*(b/2+.16),color,'SmoothPlastic')
+     glassBay.CanCollide=false;glassBay.CanQuery=false;glassBay.CastShadow=false
+     glassBay:SetAttribute('DayGlass',color)
+     glassBay:SetAttribute('EveningGlass',(k%2==0 and rgb(179,154,108) or rgb(183,175,147)))
+     p('Window transom',spacing-.65,.26,.35,(j+.5)*spacing,y+7.15,s*(b/2+.28),tint,'Metal')
+    end
     for j=-1,1 do p('Return mullion',.9,10,1,s*a/2,y+4.8,j*(b-4)/2,tint,'Metal') end
    end
   end
@@ -301,16 +312,18 @@ return function(part,group,label,action,city)
    lettering(blade,kind=='gallery' and 'GALLERY' or 'MARKET')
    local reverse=blade:FindFirstChildOfClass('SurfaceGui'):Clone(); reverse.Face=Enum.NormalId.Back; reverse.Parent=blade
   end
-  p('Upper commercial volume',69,levels*9,42,0,15+levels*4.5,0,face,'Brick')
+  p('Upper rear masonry',69,levels*9,.8,0,15+levels*4.5,20.6,face,'Brick')
   for level=1,levels do
-   local y=19.4+(level-1)*9
+   local base=15+(level-1)*9
    for bay=-2,2 do
     local u=bay*13.3
-    p('Factory sash',10.8,6.5,.38,u,y,-21.2,metal,'Metal')
-    p('Office glazing',9.9,5.6,.24,u,y,-21.5,rgb(95,132,136),'Glass')
-    p('Sash center',.4,5.7,.26,u,y,-21.7,metal,'Metal')
-    p('Limestone sill',11.8,.55,1.1,u,y-3.4,-21.3,bone,'Limestone')
+    local l=bay==-2 and -34.5 or u-6.65
+    local r=bay==2 and 34.5 or u+6.65
+    facade.bay(p,l,r,base,base+9,-20.7,face,'Brick',u,base+4.4,10.8,6.1)
+    facade.sash(p,'Office glazing',u,base+4.4,-20.7,10.8,6.1,-1,metal,true)
+    if (bay+level)%3==0 then p('Office roller shade',10.1,1.1,.15,u,base+6.55,-19.7,bone,'Fabric') end
    end
+   p('Office slab',68.2,.32,40.4,0,base+.02,0,bone,'Concrete')
   end
   local top=15+levels*9
   p('Flat roof',69.5,.65,42.5,0,top+.33,0,'dark','Slate')
@@ -338,7 +351,7 @@ return function(part,group,label,action,city)
   if kind=='market' then
    p('Cash desk',9,3.5,4,0,2.8,15,bronze,'Wood')
    local till=p('Market till',2,1.3,1.8,0,5.2,14.7,'dark','Metal')
-   fixtures.staff(till,'Grocer',0,3.65,1.05)
+   fixtures.register(till);fixtures.staff(till,'Grocer',0,3.65,1.05)
    action(till,'Store','Rob register',225,12)
   end
   if name=='Eastern Outfitters' or name=='Exchange Streetwear' or name=='Union Athletics' then

@@ -39,7 +39,6 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   local z=-159+((i-1)%6)*22+stretch*216
   local m=group('Hollins Row '..(1500+i),housing); local p=builder(m,-700,z,-90)
   -- Fronts look east across the west-side street.
-  local function face(name,w,h,d,x,y,v,c,mat) return p(name,w,h,d,-x,y,-v,c,mat) end
   local tint=({rgb(130,72,60),rgb(136,133,118),rgb(155,109,76),rgb(125,115,94)})[(i-1)%4+1]
   local vacant=i%5==1 or i%7==0
   p('Party wall',.7,25,29,-10.7,13.5,0,tint,'Brick'); p('Party wall',.7,25,29,10.7,13.5,0,tint,'Brick')
@@ -61,6 +60,22 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   for k=1,3 do p('Marble stoop',7,k*.45,1.2,-4.4,k*.225,19.5-k*1.18,cream,'Concrete') end
   p('Stoop rail',.32,3.6,.32,-8,2.3,18,'dark','Metal'); p('Stoop rail',.32,3.6,.32,-8,2.8,15.6,'dark','Metal')
   local rail=p('Handrail',.32,.3,3.4,-8,4.4,17,'dark','Metal'); rail.CFrame*=cf.Angles(.17,0,0)
+  -- Edge pieces stay outside the stoop's usable width.
+  p('Cast iron newel',.44,3.8,.44,-.87,2.23,18.45,'dark','Metal')
+  p('Stoop rail return',.36,3.6,.36,-.87,2.71,15.65,'dark','Metal')
+  local secondRail=p('Stoop top rail',.34,.31,3.25,-.87,4.29,17.02,'dark','Metal')
+  secondRail.CFrame*=cf.Angles(.17,0,0)
+  if not vacant then
+   p('Lantern backplate',.94,1.8,.20,-8.8,8.32,14.77,'dark','Metal')
+   local lamp=p('Porch lantern',.91,1.17,.70,-8.8,8.27,15.18,rgb(250,199,128),'Glass')
+   lamp:SetAttribute('DuskLamp',true)
+   local light=rb.Instance.new('PointLight');light.Range=13;light.Brightness=.85;light.Color=rgb(255,195,126);light.Parent=lamp
+   for _,h in {7.61,8.94} do p('Lantern housing',1.07,.19,.91,-8.8,h,15.15,'dark','Metal') end
+   for _,dx in {-.40,.40} do p('Lantern frame',.09,1.17,.09,-8.8+dx,8.27,15.50,'dark','Metal') end
+   if i%3~=1 then
+    p('Rolled window shade',4.96,.96,.16,5,22.65,13.25,rgb(189,175,146),'Fabric')
+   end
+  end
   if vacant then
    p('Boarded door',6.2,9,.6,-4.4,6,14.3,rgb(110,91,70),'WoodPlanks')
    p('Chipped stoop fragment',2,.6,1.5,3,.4,18,cream,'Concrete')
@@ -146,11 +161,27 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   local front=blade:FindFirstChildOfClass('SurfaceGui'); local back=front:Clone();back.Face=E.NormalId.Back;back.Parent=blade
   p('Entry mat',11,.1,4,0,1.3,-9,blue,'Fabric')
   for _,side in {-1,1} do
-   p('Chiller cabinet',3,7.4,9,side*17.8,5.05,9,'dark','Metal')
+   p('Cooler back',.30,7.45,9.55,side*19.35,5.05,9,'dark','Metal')
+   for _,h in {1.49,8.51} do p('Chiller casing',3.16,.36,9.55,side*17.9,h,9,'dark','Metal') end
+   for _,edge in {-1,1} do p('Cooler end panel',3.16,7.4,.24,side*17.9,5.05,9+edge*4.66,'dark','Metal') end
    for j=-1,1 do
-    p('Cooler glass',.18,5.5,2.65,side*16.2,5.2,9+j*2.9,blue,'Glass')
-    p('Cooler pull',.28,1.6,.19,side*16,5.1,10+j*2.9,cream,'Metal')
+    local z=9+j*3.03
+    local pane=p('Cooler glass',.12,6.57,2.85,side*16.36,5.05,z,rgb(174,207,204),'Glass')
+    pane.Transparency=.65;pane.Reflectance=.05
+    p('Door seal',.20,6.67,.12,side*16.3,5.05,z-1.43,'dark','Metal')
+    p('Cooler pull',.25,1.25,.18,side*16.12,5.15,z+1.1,cream,'Metal')
+    for t=1,3 do
+     local y=1.87+(t-1)*2.05
+     p('Cooler wire shelf',2.55,.10,2.85,side*17.87,y,z,cream,'Metal')
+     for k=-1,1 do
+      local color=({rgb(178,84,54),rgb(191,172,76),rgb(96,152,132)})[(t+j+k+2)%3+1]
+      p('Chilled drink',.69,1.0,.69,side*17.2,y+.56,z+k*.82,color,'SmoothPlastic')
+      p('Bottle cap',.40,.27,.40,side*17.2,y+1.20,z+k*.82,cream,'SmoothPlastic')
+     end
+    end
    end
+   local strip=p('Cooler strip',.28,.16,8.8,side*16.62,8.22,9,rgb(172,227,222),'Neon')
+   fixtures.spot(strip,rgb(163,226,220),12,.8)
    glow(p,side*11,12,7)
   end
   -- Stock both faces of the two gondolas. Their narrow ends face the entrance.
@@ -188,7 +219,10 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   action(menu,'Coffee','Buy coffee · $6')
   p('Checkout desk',9,3.2,3,0,3,13,'dark','Wood')
   local till=p('Mart till',2,1.5,1.7,0,5.4,12.8,'dark','Metal')
-  fixtures.staff(till,'Mart cashier',0,3.1,1.4);action(till,'Mart','Buy supplies')
+  fixtures.register(till);fixtures.staff(till,'Mart cashier',0,3.1,1.4);action(till,'Mart','Buy supplies')
+  local drawer=p('Cash drawer',2.3,.45,.30,2.35,3.65,11.36,'dark','Metal')
+  local pull=p('Drawer handle',.82,.12,.18,2.35,3.67,11.13,cream,'Metal');pull.CanCollide=false;pull.CanQuery=false
+  action(drawer,'Store','Rob register',225,12);drawer:SetAttribute('SecondaryPrompt',true)
   for _,s in {-1,1} do
    p('Pump island',4.6,.45,9,s*8,.83,-30,'cream','Concrete')
    p('Canopy column',.9,14,.9,s*8,7.4,-27.2,'stone','Metal')

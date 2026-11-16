@@ -62,11 +62,20 @@ local function exitAtDoor(seat,human)
  end
  if not root.Parent or human.SeatPart or root.AssemblyRootPart==seat.AssemblyRootPart or (root.Position-seat.Position).Magnitude>14 then return end
  local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances={char,seat.Parent};params.RespectCanCollide=true
+ local clearance=OverlapParams.new()
+ clearance.FilterType=Enum.RaycastFilterType.Exclude;clearance.FilterDescendantsInstances=params.FilterDescendantsInstances
+ clearance.RespectCanCollide=true
  for _,offset in {Vector3.new(-seat:GetAttribute('DoorDistance'),0,0),Vector3.new(seat:GetAttribute('DoorDistance')+2.8,0,0),Vector3.new(0,0,10),Vector3.new(0,0,-10)} do
   local door=seat.CFrame:PointToWorldSpace(offset)
   local wall=workspace:Raycast(seat.Position+Vector3.yAxis*2,door-seat.Position,params)
   local floor=workspace:Raycast(door+Vector3.yAxis*3,-Vector3.yAxis*10,params)
   if not wall and floor and floor.Normal.Y>.65 then
+   local height=math.max(4.6,2*human.HipHeight+root.Size.Y)
+   local box=CFrame.new(floor.Position+Vector3.yAxis*(height/2+.24))
+   local blocked=workspace:GetPartBoundsInBox(box,Vector3.new(2.25,height,1.65),clearance)
+   local obstructed=false
+   for _,piece in blocked do if piece~=floor.Instance then obstructed=true;break end end
+   if obstructed then continue end
    local canOwn=root:CanSetNetworkOwnership()
    if canOwn then root:SetNetworkOwner(nil) end
    root.AssemblyLinearVelocity=Vector3.zero;root.AssemblyAngularVelocity=Vector3.zero

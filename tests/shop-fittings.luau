@@ -30,7 +30,19 @@ for _,p in city:GetDescendants() do
   assert(stations[p.Parent],p.Parent.Name..' needs a staffed counter')
  end
 end
-for _,r in {'Grocer','Club host','Stylist','Barista','Barber','Mart cashier','Bank teller','Clinic registrar'} do assert(roles[r],r) end
+for _,r in {'Grocer','Club host','Stylist','Barista','Barber','Mart cashier','Bank teller','Clinic registrar','Booking clerk'} do assert(roles[r],r) end
+local detention=assert(city:FindFirstChild('Patapsco Detention Center',true))
+assert(detention:FindFirstChild('Booking safety glass') and detention:FindFirstChild('Bail receipt'))
+for _,model in city['Gas stations']:GetChildren() do
+ local till=model:FindFirstChild('Mart till')
+ if till then
+  assert(model['Cash drawer']:GetAttribute('Action')=='Store' and model['Cash drawer']:GetAttribute('SecondaryPrompt'))
+  assert(till:FindFirstChild('LCD panel') and model:FindFirstChild('Cooler strip'):FindFirstChildOfClass('SpotLight'))
+  assert(model:FindFirstChild('Chilled drink') and model:FindFirstChild('Cooler glass').Transparency>.5)
+ end
+end
+assert(city:FindFirstChild('Hollins Row 1503',true):FindFirstChild('Porch lantern'):GetAttribute('DuskLamp'))
 assert(shops==2 and cases>=1 and staffed>=20)
 assert(storage.ServiceCap:IsA('MeshPart'))
+assert(city:FindFirstChild('Occupied tower bay',true):GetAttribute('EveningGlass'))
 print('PASS shop staff stations',staffed,'clothing counters',shops,'bakery cases',cases)

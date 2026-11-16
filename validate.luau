@@ -17,7 +17,7 @@ end
 print('Home and store counts',counts.Home,counts.Store)
 assert(#city['Motor pool']:GetChildren()==20 and #city['Streets & alleys']['Traffic signals']:GetChildren()==120)
 assert(counts.Home==214 and counts.Door>=214,'Missing homes or doors')
-assert(counts.Delivery==11 and counts.Store==10 and counts.Market==1 and counts.Fence==1)
+assert(counts.Delivery==11 and counts.Store==13 and counts.Market==1 and counts.Fence==1)
 assert(counts.WorkStop==13); assert(counts.Mart==3 and counts.Fuel==6 and counts.Club==1 and counts.Residence>=210); assert(counts.Bank==1 and counts.Heal==1 and counts.Job==1)
 assert(game:GetService('ServerStorage'):FindFirstChild('OriginalMap_Archive'),'Original map not preserved')
 for _,v in game:GetService('ServerStorage').OriginalMap_Archive:GetDescendants() do
@@ -71,7 +71,7 @@ for _,hall in city:GetDescendants() do
  local floor=hall:IsA('Model') and hall:FindFirstChild('Hall floor')
  if floor then
   local ceiling=assert(hall:FindFirstChild('Continuous ceiling'))
-  local volume=assert(hall:FindFirstChild('Upper commercial volume'))
+  local volume=assert(hall:FindFirstChild('Upper rear masonry'))
   local top=ceiling.CFrame.Y+ceiling.Size.Y/2
   assert(top>=volume.CFrame.Y-volume.Size.Y/2,'Open ceiling joint in '..hall.Name)
   local transom=assert(hall:FindFirstChild('Upper transom glazing'))

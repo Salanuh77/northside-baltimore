@@ -5,15 +5,19 @@ local decision=enum.ProductPurchaseDecision
 local source=fs.readFile('src/CityRetail.luau')
 local function fixture()
  local p={UserId=8}
- local profile={Look={},Receipts={},Stock={},Items={},Reserve=110}
+ local profile={Look={},Receipts={},Stock={},Items={},Reserve=110,Cash=100,Wardrobe={}}
  local profiles={[p]=profile}
  local state={tools=0,canSave=true}
  local services={Players={GetPlayerByUserId=function(_,id) return id==8 and p or nil end},MarketplaceService={}}
  local game={ReplicatedStorage={WaitForChild=function(_,name) return name end},GetService=function(_,key) return services[key] or {} end}
  local catalog=require('../src/ShopProducts')
- local factory=luau.load(source,{environment={game=game,Enum=enum,require=function(name) return name=='ShopProducts' and catalog or {} end},injectGlobals=true})()
+ local style=luau.load(fs.readFile('src/StreetStyle.luau'),{environment={game=game,Color3=require('@lune/roblox').Color3,require=function() return {} end},injectGlobals=true})()
+ style.apply=function(_,_,outfit) state.equipped=outfit end
+ local factory=luau.load(source,{environment={game=game,Enum=enum,require=function(name) return name=='ShopProducts' and catalog or name=='StreetStyle' and style or {} end},injectGlobals=true})()
  local noop=function() end
- factory(profiles,{}, {},noop,noop,noop,function() return state.canSave end,function() state.tools+=1 end)
+ local function atCounter(_,kind) return kind=='Clothing' and state.atStore end
+ local retail=factory(profiles,{}, {},atCounter,noop,noop,function() return state.canSave end,function() state.tools+=1 end)
+ state.wear=function(id) return retail.handle(p,'Outfit',{Item=id}) end
  local function buy(product,id,player)
   return services.MarketplaceService.ProcessReceipt({PlayerId=player or 8,ProductId=product,PurchaseId=id or 'first'})
  end
@@ -21,6 +25,15 @@ local function fixture()
 end
 local gun,glow,confetti=3732000729,3732000733,3732000737
 local cases={
+ {'parody collection uses cash and remembers ownership',function(_,d,s)
+  for id,price in {['haste-markdown']=42,['forever-tuesday']=58,['last-season']=36} do
+   d.Cash=price;s.atStore=false;s.wear(id)
+   assert(d.Cash==price and not d.Wardrobe[id])
+   s.atStore=true;d.Cash=price-1;s.wear(id);assert(not d.Wardrobe[id])
+   d.Cash=price;s.wear(id);assert(d.Cash==0 and d.Wardrobe[id] and s.equipped==id)
+   s.equipped=nil;s.wear(id);assert(d.Cash==0 and s.equipped==id)
+  end
+ end},
  {'offline player',function(buy) assert(buy(gun,nil,9)==decision.NotProcessedYet) end},
  {'unknown product',function(buy,d) assert(buy(123)==decision.NotProcessedYet and next(d.Receipts)==nil) end},
  {'leaving',function(buy,d) d.Leaving=true;assert(buy(glow)==decision.NotProcessedYet and next(d.Stock)==nil) end},

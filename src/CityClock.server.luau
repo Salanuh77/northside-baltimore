@@ -1,10 +1,11 @@
 local lighting=game:GetService('Lighting')
 local city=workspace:WaitForChild('Baltimore')
 local streetLight=require(script.Parent.StreetLighting)
-local hands,lamps={},{}
+local hands,lamps,windows={},{},{}
 local wasNight
 for _,p in city:GetDescendants() do
- if p.Name=='Warm lamp' and p:FindFirstChildOfClass('PointLight') then table.insert(lamps,p) end
+ if (p.Name=='Warm lamp' or p:GetAttribute('DuskLamp')) and p:FindFirstChildOfClass('PointLight') then table.insert(lamps,p) end
+ if p:GetAttribute('EveningGlass') then table.insert(windows,p) end
  if p:GetAttribute('ClockPivot') then table.insert(hands,p) end
 end
 -- One city minute per real second, synchronized across servers.
@@ -16,6 +17,10 @@ while true do
  local night=minutes<360 or minutes>=1140
  if night~=wasNight then
   for _,lamp in lamps do lamp.PointLight.Enabled=night;lamp.Material=night and Enum.Material.Neon or Enum.Material.Glass end
+  for _,window in windows do
+   window.Color=window:GetAttribute(night and 'EveningGlass' or 'DayGlass')
+   window.Material=night and Enum.Material.Neon or Enum.Material.SmoothPlastic
+  end
   wasNight=night
  end
  city:SetAttribute('CityMinute',minutes)

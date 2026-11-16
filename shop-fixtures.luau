@@ -49,6 +49,12 @@ function Fixtures.clothing(p,lettering,x,z)
   end
  end
  display(p,'dress-form','Window dress form',x-11,1.4,z-7,3.3,6.4,3,-15,rgb(210,184,147))
+ p('Sales floor lighting track',24,.20,.34,x,12.8,z,steel,'Metal')
+ for _,u in {-10,0,10} do
+  p('Track light head',.85,.64,.9,x+u,12.4,z,steel,'Metal')
+  local lens=p('Track light diffuser',.65,.12,.65,x+u,12.05,z,rgb(246,213,158),'Neon')
+  Fixtures.spot(lens,rgb(255,220,172),15,.75)
+ end
  local tableX=x+10
  p('Display plinth',8,2.2,4,tableX,2.45,z+6,oak,'Wood')
  for j=-1,1 do for layer=0,2 do
@@ -67,5 +73,32 @@ function Fixtures.coffee(p)
   cup.Shape=rb.Enum.PartType.Cylinder;cup.CFrame*=rb.CFrame.Angles(0,0,math.pi/2)
  end
  display(p,'pastry-case','Bakery display case',5.3,4.66,14,7,3.7,4.4,0,rgb(194,185,164))
+end
+-- These details share the original register's frame. Queries continue to hit the till.
+function Fixtures.register(till)
+ local function detail(name,size,offset,color,angle)
+  local part=rb.Instance.new('Part');part.Name=name;part.Size=size
+  part.CFrame=till.CFrame*offset*rb.CFrame.Angles(angle or 0,0,0)
+  part.Color=color;part.Material=rb.Enum.Material.SmoothPlastic;part.Anchored=true
+  part.CanCollide=false;part.CanTouch=false;part.CanQuery=false;part.Parent=till
+  return part
+ end
+ local v,cf=rb.Vector3.new,rb.CFrame.new
+ till.Color=rgb(79,84,78)
+ local y=till.Size.Y/2
+ detail('Drawer edge',v(2.45,.23,1.97),cf(0,-y+.19,-.04),steel)
+ detail('Receipt display',v(1.73,.72,.25),cf(0,y+.32,.32),rgb(52,60,58),-.13)
+ detail('LCD panel',v(1.43,.47,.035),cf(0,y+.34,.16),rgb(128,164,142),-.13)
+ for row=0,1 do for col=0,3 do
+  detail('Till key',v(.22,.10,.21),cf(-.52+col*.32,y+.065,-.53+row*.29),col==3 and stock[row+1] or rgb(190,188,171))
+ end end
+ detail('Receipt tape',v(.35,.05,.47),cf(.98,y+.035,-.34),rgb(224,217,197))
+end
+
+function Fixtures.spot(body,color,range,brightness)
+ local light=rb.Instance.new('SpotLight')
+ light.Face=rb.Enum.NormalId.Bottom; light.Angle=92; light.Color=color
+ light.Range=range;light.Brightness=brightness;light.Parent=body
+ return light
 end
 return Fixtures

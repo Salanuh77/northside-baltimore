@@ -1,4 +1,5 @@
 local rb=require('@lune/roblox')
+local fixtures=require('./shop-fixtures')
 return function(part,group,label,action,city)
  local m=group('Patapsco Detention Center',city)
  local brick=rb.Color3.fromRGB(143,86,69)
@@ -39,8 +40,32 @@ return function(part,group,label,action,city)
   local screen=p(name,4.3,2.4,.4,x,5,z+(back and 1.5 or -1.5),blue,'Metal')
   if back then screen.CFrame*=rb.CFrame.Angles(0,math.pi,0) end
   label(screen,caption,cream); action(screen,kind,caption)
+  return screen
  end
  panel('Visitor bail window','BailDesk','BAIL',-13,-17,false)
+ -- The transaction stays on the visitor side. The back wall still separates custody.
+ local trim=rb.Color3.fromRGB(54,70,75)
+ p('Booking counter apron',18,3.0,1.2,-13,2.7,-17.2,trim,'Metal')
+ p('Visitor writing ledge',18.5,.31,2.55,-13,4.36,-17.7,cream,'Marble')
+ for _,u in {-22,-13,-4} do p('Booking mullion',.24,6.2,.36,u,7.7,-16.7,trim,'Metal') end
+ for _,u in {-17.5,-8.5} do
+  local pane=p('Booking safety glass',8.68,5.72,.25,u,7.95,-16.7,rb.Color3.fromRGB(194,209,203),'Glass')
+  pane.Transparency=.68
+ end
+ p('Booking transom',18.4,.30,.43,-13,10.97,-16.7,trim,'Metal')
+ p('Document tray',2.65,.12,1.2,-16.3,4.58,-17.86,trim,'Metal')
+ p('Bail receipt',.9,.03,.66,-16.2,4.66,-18.0,cream,'SmoothPlastic')
+ local desk=p('Booking desk',9,.32,1.85,-13,4.36,-15.65,trim,'Wood')
+ fixtures.staff(desk,'Booking clerk',0,1.84,1.14)
+ for _,u in {-18,-8} do
+  local diffuser=p('Booking pendant',3.6,.28,1.3,u,12.2,-18.2,rb.Color3.fromRGB(253,219,172),'Neon')
+  fixtures.spot(diffuser,rb.Color3.fromRGB(255,215,159),14,1.15)
+ end
+ for _,u in {12,19,26} do
+  p('Lobby chair base',.65,1.65,.85,u,1.93,-17,trim,'Metal')
+  p('Visitor seat',3.5,.50,2.8,u,2.96,-17,blue,'Fabric')
+  p('Visitor seatback',3.5,2.2,.48,u,4.12,-15.88,blue,'Fabric')
+ end
  panel('Resident bail terminal','BailDesk','BAIL',-20,-8,true)
  panel('Recreation game terminal','EscapeGame','LIGHT RUN',20,-8,true)
  local function marker(name,x,z)

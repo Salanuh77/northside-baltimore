@@ -118,7 +118,7 @@ for _,x in {-187,-165,-143} do for _,z in {63,76} do
  for i=-4,4,2 do part('Goods',{1.3,1.4,1.5},{x+i,7,z},i%3==0 and 'gold' or 'green','SmoothPlastic',store) end
 end end
 part('Checkout',{15,3,4},{-143,3,49},'dark',nil,store)
-local register=part('Register',{2,1.5,2},{-143,5.1,49},'dark','Metal',store); action(register,'Store','Rob register',225,12);fixtures.staff(register,'Grocer',0,3.8,1.5)
+local register=part('Register',{2,1.5,2},{-143,5.1,49},'dark','Metal',store); action(register,'Store','Rob register',225,12);fixtures.register(register);fixtures.staff(register,'Grocer',0,3.8,1.5)
 local bank=shop('CHARM CITY CREDIT',-66,64,65,46,colors.cream)
 local teller=part('Teller counter',{39,3,4},{-66,3,73},'dark',nil,bank); fixtures.staff(teller,'Bank teller',0,4.4,1.5)
 local atm=part('ATM',{5,7,3},{-88,4.5,48},'dark','Metal',bank); sign('ATM',-88,7.5,46.3,4,bank); action(atm,'Bank','Bank / withdraw')

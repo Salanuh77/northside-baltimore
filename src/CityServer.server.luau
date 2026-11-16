@@ -305,6 +305,10 @@ for _,marker in city:GetDescendants() do
  if marker:IsA('BasePart') and marker:GetAttribute('Action') then
   local prompt=Instance.new('ProximityPrompt'); prompt.ActionText=marker:GetAttribute('Label') or 'Interact'; prompt.ObjectText=marker.Parent.Name
   prompt.HoldDuration=marker:GetAttribute('Hold') or 0.5; prompt.MaxActivationDistance=marker:GetAttribute('Reach') or 10; prompt.RequiresLineOfSight=marker:GetAttribute('Action')~='Fuel' and not sharedCounters[marker:GetAttribute('Action')]; prompt.Parent=marker
+  if marker:GetAttribute('SecondaryPrompt') then
+   prompt.KeyboardKeyCode=Enum.KeyCode.F;prompt.GamepadKeyCode=Enum.KeyCode.ButtonY
+   prompt.UIOffset=Vector2.new(0,70)
+  end
   prompt.Triggered:Connect(function(p) if allowed(p) then interact(p,marker) end end)
  end
 end

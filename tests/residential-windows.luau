@@ -1,7 +1,7 @@
 local fs = require('@lune/fs')
 local rb = require('@lune/roblox')
 local city = rb.deserializePlace(fs.readFile('Northside Baltimore - Heritage Harbor.rbxl')):GetService('Workspace').Baltimore
-local candidates = {['Gallery window']=true,['Bedroom sash']=true,['Double hung sash']=true,['Upper window']=true,['Ground window']=true,['Rear sash']=true}
+local candidates = {['Gallery window']=true,['Bedroom sash']=true,['Double hung sash']=true,['Upper window']=true,['Ground window']=true,['Rear sash']=true,['Office glazing']=true}
 local totals = {}
 local function inspect(building)
  local walls = {}
@@ -33,7 +33,7 @@ local function inspect(building)
 end
 inspect(assert(city:FindFirstChild('Ashland Courts Walkups',true)))
 for _,building in city:GetDescendants() do
- if building:IsA('Model') and building.Name~='Ashland Courts Walkups' and (building:FindFirstChild('Gallery window') or building.Name:match('^Rowhome %d+$') or building.Name:match('^Hollins Row %d+$')) then inspect(building) end
+ if building:IsA('Model') and building.Name~='Ashland Courts Walkups' and (building:FindFirstChild('Gallery window') or building:FindFirstChild('Hall floor') or building.Name:match('^Rowhome %d+$') or building.Name:match('^Hollins Row %d+$')) then inspect(building) end
 end
 for name in candidates do assert(totals[name] and totals[name]>0,'No windows inspected for '..name); print(name,totals[name]) end
 print('PASS clear openings through occupied residential facades')

@@ -54,3 +54,24 @@ for _,shop in city['Gas stations']:GetChildren() do
     local approach=coffee.CFrame.Rotation+v.new(coffee.CFrame.X,0,coffee.CFrame.Z)
     corridor(shop.Name..' coffee counter',approach,-5,-2)
 end
+
+-- Each segment uses the same citywide collision set as the street-to-door path.
+-- Check both the entrance and the turn toward the transaction, including adjacent lots.
+for _,shop in city['Gas stations']:GetChildren() do
+ local till=shop:FindFirstChild('Mart till')
+ if till then
+  local frame=till.CFrame.Rotation+v.new(till.CFrame.X,0,till.CFrame.Z)
+  corridor(shop.Name..' central checkout aisle',frame,-20,-3.5)
+ end
+end
+local bail=city:FindFirstChild('Visitor bail window',true)
+local lobby=bail.CFrame.Rotation+v.new(bail.CFrame.X,0,bail.CFrame.Z)
+corridor('Bail window visitor approach',lobby,-9,-3)
+for _,shop in city:GetDescendants() do
+ if shop:IsA('Model') and shop:FindFirstChild('Window dress form') then
+  local desk=assert(shop:FindFirstChild('Sales counter'))
+  local frame=desk.CFrame.Rotation+v.new(desk.CFrame.X,0,desk.CFrame.Z)
+  corridor(shop.Name..' checkout',frame,-7,-3)
+ end
+end
+print('PASS counter approaches in three fuel marts, both clothing shops and the bail lobby')
