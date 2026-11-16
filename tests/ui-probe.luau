@@ -123,7 +123,7 @@ local ok, message = pcall(function()
  local firstBox=studio:FindFirstChild('FirstName input',true)
  local lastBox=studio:FindFirstChild('LastName input',true)
  firstBox.Text='Zora';lastBox.Text="O'Neal"
- check('typing a name updates the resident preview',labelPresent("Zora O'Neal"))
+ check('typing a name updates the resident preview',waitUntil(function() return labelPresent("Zora O'Neal") end,"typed name was not reflected"))
  lastBox.Text=''
  click(findButton(studio,'Continue'))
  check('empty name stays on the identity screen',studio:FindFirstChild('LastName input',true)~=nil)
