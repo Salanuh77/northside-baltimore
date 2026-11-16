@@ -1,4 +1,6 @@
 local furnish=require('./home-furniture')
+local facade=require('./residential-facades')
+local fixtures=require('./shop-fixtures')
 local fs = require('@lune/fs')
 local rb = require('@lune/roblox')
 local Instance, Vector3, CFrame, Color3, Enum = rb.Instance, rb.Vector3, rb.CFrame, rb.Color3, rb.Enum
@@ -49,38 +51,32 @@ local function home(x,z,index,flip)
  local function p(n,s,pos,c,mat) return part(n,s,pos,c,mat,m) end
  p('Foundation',{27,1.2,38},{x,1.2,z},'stone')
  p('Left party wall',{0.8,29,38},{x-13.2,16,z},col,'Brick'); p('Right party wall',{0.8,29,38},{x+13.2,16,z},col,'Brick')
- p('Rear wall',{26,29,0.8},{x,16,z+18.6},col,'Brick')
- -- Front door and window are physical openings, not painted rectangles.
- p('Front left',{3,29,0.8},{x-12,16,front},col,'Brick')
- p('Front center',{4,29,0.8},{x+0.5,16,front},col,'Brick')
- p('Front right',{3,29,0.8},{x+12,16,front},col,'Brick')
- p('Over door',{7.5,19,0.8},{x-6.5,21,front},col,'Brick')
- p('Below window',{8,4,0.8},{x+6.4,3.7,front},col,'Brick')
- p('Above window',{8,18,0.8},{x+6.4,22,front},col,'Brick')
- local glass=p('Ground window',{7.8,7,0.25},{x+6.4,9,front},'glass','Glass'); glass.Transparency=0.3
- p('Window sill',{9,0.4,1.3},{x+6.4,5.4,front-0.5},'cream')
- p('Window mullion',{0.22,7,0.35},{x+6.4,9,front-0.2},'cream')
- p('Window crossbar',{8,0.2,0.35},{x+6.4,9,front-0.2},'cream')
- -- Upper facade windows, stone lintels, cornices, flat roofs and chimneys.
- for _,dx in {-7,6.5} do
-  p('Upper window trim',{7,9,0.5},{x+dx,23,front-0.5},'cream')
-  p('Upper window',{5.9,7.7,0.3},{x+dx,23,front-0.8},'glass','Glass')
-  p('Upper mullion',{0.25,7.7,0.4},{x+dx,23,front-1},'cream')
-  p('Upper crossbar',{6,0.25,0.4},{x+dx,23,front-1},'cream')
+ local function facing(n,w,h,d,dx,y,dz,c,mat)
+  return p(n,{w,h,d},{x+dx,y,z+dz},c,mat)
+ end
+ local ground,landing,roof=1.8,15.2,30.5
+ facade.bay(facing,-13.5,0,ground,landing,-19,col,'Brick',-6.5,6.65,6.8,9.7)
+ facade.bay(facing,0,13.5,ground,landing,-19,col,'Brick',6.4,9,8,7)
+ facade.sash(facing,'Ground window',6.4,9,-19,8,7,-1,colors.cream,false)
+ for _,side in {-1,1} do
+  local left,right=math.min(side*13.5,0),math.max(side*13.5,0)
+  local center=side*6.5
+  facade.bay(facing,left,right,landing,roof,-19,col,'Brick',center,23,6.6,8.2)
+  facade.sash(facing,'Upper window',center,23,-19,6.6,8.2,-1,colors.cream,false)
+  for _,level in {{ground,landing,8},{landing,roof,23}} do
+   facade.bay(facing,left,right,level[1],level[2],18.6,col,'Brick',center,level[3],6.5,7.2)
+   facade.sash(facing,'Rear sash',center,level[3],18.6,6.5,7.2,1,colors.cream,false)
+  end
  end
  p('Cornice',{28,1.2,1.9},{x,30.4,front-0.5},'cream')
  p('Roof',{27,1,38},{x,31,z},'dark','Slate')
  p('Upper floor',{18,.65,37},{x+4,15,z},'cream')
  p('Upper landing',{8,.65,9},{x-9,15,z+14},'cream')
  for step=1,20 do p('Stair tread',{7,step*.66,1.2},{x-9,1.8+step*.33,z-14+step*1.15},'stone') end
- for _,dx in {-7,6} do for _,y in {8,23} do
-  p('Rear window surround',{6.7,7.5,.45},{x+dx,y,z+19.15},'cream')
-  p('Rear sash',{5.8,6.6,.3},{x+dx,y,z+19.5},'glass','Glass')
- end end
  p('Chimney',{3,5,3},{x+9,33,z+12},col,'Brick')
  for i=1,3 do p('Marble stoop',{8,i*0.5,1.7},{x-6.5,0.85+i*0.25,front-6+i*1.7},'cream') end
  local door=p('Door',{6.5,9.5,0.6},{x-6.5,6.5,front},Color3.fromRGB(42+index%3*18,58,59),'Wood')
- action(door,'Door','Open / close')
+ action(door,'Door','Open / close');facade.entry(door,Enum.NormalId.Front)
  sign(tostring(1800+index),x-6.5,12,front-0.6,5,m)
  furnish(m,CFrame.new(x,1.8,z),'Rowhome',index)
  local safe=p('House lockbox',{3,2,2},{x+1,3,z+14},'dark','Metal'); action(safe,'Home','Search lockbox',110,9)
@@ -122,16 +118,17 @@ for _,x in {-187,-165,-143} do for _,z in {63,76} do
  for i=-4,4,2 do part('Goods',{1.3,1.4,1.5},{x+i,7,z},i%3==0 and 'gold' or 'green','SmoothPlastic',store) end
 end end
 part('Checkout',{15,3,4},{-143,3,49},'dark',nil,store)
-local register=part('Register',{2,1.5,2},{-143,5.1,49},'dark','Metal',store); action(register,'Store','Rob register',225,12)
+local register=part('Register',{2,1.5,2},{-143,5.1,49},'dark','Metal',store); action(register,'Store','Rob register',225,12);fixtures.staff(register,'Grocer',0,3.8,1.5)
 local bank=shop('CHARM CITY CREDIT',-66,64,65,46,colors.cream)
-part('Teller counter',{39,3,4},{-66,3,73},'dark',nil,bank)
+local teller=part('Teller counter',{39,3,4},{-66,3,73},'dark',nil,bank); fixtures.staff(teller,'Bank teller',0,4.4,1.5)
 local atm=part('ATM',{5,7,3},{-88,4.5,48},'dark','Metal',bank); sign('ATM',-88,7.5,46.3,4,bank); action(atm,'Bank','Bank / withdraw')
 local clinic=shop('NORTHSIDE CLINIC',63,64,65,46,Color3.fromRGB(99,128,128))
-local medic=part('First aid station',{5,4,3},{63,3,65},'cream',nil,clinic); action(medic,'Heal','Treatment $50')
+local medic=part('First aid station',{5,4,3},{63,3,65},'cream',nil,clinic); action(medic,'Heal','Treatment $50'); fixtures.staff(medic,'Clinic registrar',0,3.7,1.5)
 sign('+',63,9,63,4,clinic)
 local precinct=shop('COMMUNITY CENTER',164,64,70,46,Color3.fromRGB(84,101,112))
 local work=part('Courier desk',{12,3,4},{164,3,67},'dark',nil,precinct); action(work,'Job','Pick up parcel ($90 on delivery)')
 city:SetAttribute('CourierDesk',work.CFrame.Position)
+fixtures.staff(work,'Parcel dispatcher',0,5.1,1.5)
 sign('LEGAL WORK  /  COURIER',164,9,66,30,precinct)
 local spawn=Instance.new('SpawnLocation'); spawn.Name='CommunitySpawn'; spawn.Size=Vector3.new(8,0.3,8); spawn.CFrame=CFrame.new(162,1,37); spawn.Anchored=true; spawn.Neutral=true; spawn.Duration=12; spawn.Transparency=1; spawn.Parent=city
 local zones=group('SafeZones'); local safe=part('Community safe zone',{88,30,82},{164,10,57},'green',nil,zones); safe.Transparency=1; safe.CanCollide=false; safe.CanQuery=false; safe.CanTouch=false
@@ -170,7 +167,7 @@ for _,x in {60,80,150,170} do for _,z in {263,286} do
  part('Freight crate',{9,8,8},{x,5,z},'cream','WoodPlanks',warehouse)
  part('Crate strap',{9.1,0.5,8.1},{x,6,z},'dark','Metal',warehouse)
 end end
-local market=part('Black market counter',{18,3,5},{112,3,292},'dark','Metal',warehouse); action(market,'Market','Browse black market')
+local market=part('Black market counter',{18,3,5},{112,3,292},'dark','Metal',warehouse); fixtures.staff(market,'Warehouse trader',0,4.6,1.5);action(market,'Market','Browse black market')
 sign('BACKROOM EXCHANGE',112,8,290,32,warehouse)
 local fence=part('Fence buyer',{10,3,4},{112,3,268},'green',nil,warehouse); action(fence,'Fence','Sell stolen goods')
 sign('SALVAGE / CASH',112,8,266,20,warehouse)
@@ -202,9 +199,9 @@ for _,x in {143,155} do part('Directory upright',{.6,10,.6},{x,5,31},'dark','Met
 local panel=part('Street directory',{15,8,.7},{149,6,31},'green','Metal',mapBoard)
 label(panel,'NORTHSIDE\nQUAY DISTRICT  ↑ N\nLANVALE  ← W     E →  EASTGATE\nMADISON GARDENS  ↓ S')
 local reverse=panel:FindFirstChildOfClass('SurfaceGui'):Clone(); reverse.Face=Enum.NormalId.Back; reverse.Parent=panel
-local lighting=game:GetService('Lighting'); lighting.TimeOfDay='14:24:00'; lighting.Brightness=2.5; lighting.Ambient=Color3.fromRGB(88,90,103); lighting.OutdoorAmbient=Color3.fromRGB(128,125,119); lighting.GlobalShadows=true
-local at=Instance.new('Atmosphere'); at.Density=0.17; at.Offset=0.2; at.Color=Color3.fromRGB(222,213,194); at.Decay=Color3.fromRGB(124,133,145); at.Haze=1.3; at.Parent=lighting
-local grade=Instance.new('ColorCorrectionEffect'); grade.Contrast=0.1; grade.Saturation=0.03; grade.TintColor=Color3.fromRGB(255,251,242); grade.Parent=lighting
+local lighting=game:GetService('Lighting'); lighting.TimeOfDay='14:24:00'; lighting.Brightness=2.5; lighting.Ambient=Color3.fromRGB(88,90,103); lighting.OutdoorAmbient=Color3.fromRGB(128,125,119); lighting.GlobalShadows=true; lighting.GeographicLatitude=39.29; lighting.ShadowSoftness=.30
+local at=Instance.new('Atmosphere'); at.Density=0.19; at.Offset=0.2; at.Color=Color3.fromRGB(222,213,194); at.Decay=Color3.fromRGB(124,133,145); at.Haze=1.3; at.Parent=lighting
+local grade=Instance.new('ColorCorrectionEffect'); grade.Contrast=0.065; grade.Saturation=0.03; grade.TintColor=Color3.fromRGB(255,251,242); grade.Parent=lighting
 local cam=world:FindFirstChildOfClass('Camera'); if cam then cam.CFrame=CFrame.lookAt(Vector3.new(-601,9,302),Vector3.new(-607,7.8,279.5)); cam.Focus=CFrame.new(-607,7.8,279.5) end
 local rs=game:GetService('ReplicatedStorage'); local rem=Instance.new('RemoteEvent'); rem.Name='CityAction'; rem.Parent=rs
 local servers=Instance.new('RemoteEvent');servers.Name='CityServers';servers.Parent=rs
@@ -232,13 +229,22 @@ for name,box in bounds do
  local mesh=assert(grooms:FindFirstChild(name,true),name)
  mesh:SetAttribute('GroomCenter',Vector3.new(table.unpack(box.center)))
 end
+local function singleMesh(file,name,parent)
+ local imported=rb.deserializeModel(fs.readFile('art/'..file..'.rbxm'))[1]
+ local mesh=assert(imported:FindFirstChildWhichIsA('MeshPart',true))
+ mesh.Name=name;mesh.Parent=parent
+ return mesh
+end
+local fringe=singleMesh('short-fringe','Cropped fringe',grooms)
+fringe.Size=Vector3.new(1.07,.56,1.04);fringe:SetAttribute('GroomCenter',Vector3.new(0,.325,.016))
+singleMesh('service-cap','ServiceCap',rs)
 local starterRig=rig:Clone();starterRig.Name='StarterCharacter';starterRig.Parent=starter
 local menu=Instance.new('LocalScript');menu.Name='ResidentMenu';menu.Source=fs.readFile('src/ResidentMenu.client.luau');menu.Parent=starter:FindFirstChildOfClass('StarterPlayerScripts')
 local portrait=Instance.new('ModuleScript'); portrait.Name='ResidentPortrait'; portrait.Source=fs.readFile('src/ResidentPortrait.luau'); portrait.Parent=rs
 local names=Instance.new('ModuleScript'); names.Name='ResidentNames'; names.Source=fs.readFile('src/ResidentNames.luau'); names.Parent=rs
 local style=Instance.new('ModuleScript'); style.Name='StreetStyle'; style.Source=fs.readFile('src/StreetStyle.luau'); style.Parent=rs
 local art=require('@lune/serde').decode('json',fs.readFile('art/assets.json'))
-for _,key in {'fleet-track','foundry-work','pier-varsity','indigo-denim','harbor-warmup','clay-workshirt','olive-overshirt','street-denim','washed-denim','canvas-trousers','street-denim-black','washed-denim-black','canvas-trousers-black','resident-calm','resident-smile','resident-focused','mouth-level','mouth-smile','mouth-set','ash-pullover','dock-denim','field-liner','portrait-calm','portrait-smile','portrait-focused','lips-level','lips-smile','lips-set'} do style:SetAttribute(key,assert(art[key],key)) end
+for _,key in {'fleet-track','foundry-work','pier-varsity','indigo-denim','harbor-warmup','clay-workshirt','olive-overshirt','street-denim','washed-denim','canvas-trousers','street-denim-black','washed-denim-black','canvas-trousers-black','resident-calm','resident-smile','resident-focused','mouth-level','mouth-smile','mouth-set','ash-pullover','dock-denim','field-liner','haste-markdown','forever-tuesday','last-season','portrait-calm','portrait-smile','portrait-focused','lips-level','lips-smile','lips-set'} do style:SetAttribute(key,assert(art[key],key)) end
 local catalog=Instance.new('ModuleScript');catalog.Name='ShopProducts';catalog.Source=fs.readFile('src/ShopProducts.luau');catalog.Parent=rs
 local clock=Instance.new('Script'); clock.Name='CityClock'; clock.Source=fs.readFile('src/CityClock.server.luau'); clock.Parent=game:GetService('ServerScriptService')
 local styleUI=Instance.new('ModuleScript');styleUI.Name='RetailUI';styleUI.Source=fs.readFile('src/RetailUI.luau');styleUI.Parent=rs
@@ -249,15 +255,16 @@ local traffic=Instance.new('Script'); traffic.Name='TrafficServer'; traffic.Sour
 local input=Instance.new('LocalScript'); input.Name='TrafficClient'; input.Source=fs.readFile('src/Traffic.client.luau'); input.Parent=client.Parent
 local route=Instance.new('RemoteFunction'); route.Name='WalkingRoute'; route.Parent=rs
 local trail=Instance.new('ModuleScript'); trail.Name='StreetTrail'; trail.Source=fs.readFile('src/StreetTrail.luau'); trail.Parent=rs
+local staff=Instance.new('ModuleScript');staff.Name='ShopStaff';staff.Source=fs.readFile('src/ShopStaff.luau');staff.Parent=server.Parent
 local routes=Instance.new('ModuleScript'); routes.Name='WalkingRoutes'; routes.Source=fs.readFile('src/WalkingRoutes.luau'); routes.Parent=server.Parent
 local bearing=Instance.new('ModuleScript'); bearing.Name='JobBearing'; bearing.Source=fs.readFile('src/JobBearing.luau'); bearing.Parent=rs
 local catalog=Instance.new('ModuleScript'); catalog.Name='WorkCatalog'; catalog.Source=fs.readFile('src/WorkCatalog.luau'); catalog.Parent=rs
 local jobs=Instance.new('ModuleScript'); jobs.Name='WorkService'; jobs.Source=fs.readFile('src/WorkService.luau'); jobs.Parent=server.Parent
-for _,name in {'Handset','StreetHUD'} do
+for _,name in {'Handset','StreetHUD','MapCompass'} do
  local module=Instance.new('ModuleScript'); module.Name=name; module.Source=fs.readFile('src/'..name..'.luau'); module.Parent=rs
 end
 local lifeUi=Instance.new('ModuleScript'); lifeUi.Name='LifeUI'; lifeUi.Source=fs.readFile('src/LifeUI.luau'); lifeUi.Parent=rs
-for _,entry in {{'VehicleHandling','src/VehicleHandling.luau'},{'ResidentFiles','src/ResidentFiles.luau'},{'CityRetail','src/CityRetail.luau'},{'NeighborhoodLife','src/NeighborhoodLife.luau'},{'Responders','src/Responders.luau'},{'Custody','src/Custody.luau'}} do
+for _,entry in {{'StreetLighting','src/StreetLighting.luau'},{'TrafficPhases','src/TrafficPhases.luau'},{'VehicleHandling','src/VehicleHandling.luau'},{'ResidentFiles','src/ResidentFiles.luau'},{'CityRetail','src/CityRetail.luau'},{'NeighborhoodLife','src/NeighborhoodLife.luau'},{'Responders','src/Responders.luau'},{'Custody','src/Custody.luau'}} do
  local mod=Instance.new('ModuleScript'); mod.Name=entry[1]; mod.Source=fs.readFile(entry[2]); mod.Parent=server.Parent
 end
 fs.writeFile('Northside Baltimore - Heritage Harbor.rbxl',rb.serializePlace(game))

@@ -14,10 +14,10 @@ Style.Pants={'Dark denim','Washed denim','Canvas'}
 Style.Shoes={'Bone low-tops','Black low-tops'}
 Style.Mouths={'Level','Smile','Set'}
 local pantsKeys={'street-denim','washed-denim','canvas-trousers'}
-Style.Hair={'Close crop','Curls','High puff','Twists','Shaved','Cornrows','Twin buns','Short locs','Afro','Braids','Ponytail','Side part','Low puff','Twist out','Barrel twists','Bantu knots'}
+Style.Hair={'Close crop','Curls','High puff','Twists','Shaved','Cornrows','Twin buns','Short locs','Afro','Braids','Ponytail','Side part','Low puff','Twist out','Barrel twists','Bantu knots','Cropped fringe'}
 Style.Tones={'Espresso','Umber','Copper','Amber','Olive','Sand','Porcelain'}
 Style.Skin={Color3.fromRGB(78,48,39),Color3.fromRGB(106,66,49),Color3.fromRGB(148,90,62),Color3.fromRGB(185,125,86),Color3.fromRGB(189,146,108),Color3.fromRGB(218,178,141),Color3.fromRGB(239,207,181)}
-Style.Outfits={{Id='fleet-track',Name='Fleet track jacket',Price=65},{Id='pier-varsity',Name='Burgundy varsity jacket',Price=95},{Id='foundry-work',Name='Foundry overshirt',Price=55}}
+Style.Outfits={{Id='fleet-track',Name='Fleet track jacket',Price=65},{Id='pier-varsity',Name='Burgundy varsity jacket',Price=95},{Id='foundry-work',Name='Foundry overshirt',Price=55},{Id='haste-markdown',Name='Haste & Markdown racing shell',Price=42},{Id='forever-tuesday',Name='Forever Tuesday varsity',Price=58},{Id='last-season',Name='Last Season plaid chore jacket',Price=36}}
 Style.Starters={'Ash pullover','Dock denim','Field liner','Harbor','Clay','Olive','Track jacket','Varsity','Overshirt'}
 Style.Sets={
  {Name='Ash hoodie & maroon tie',Starter='Ash pullover',Pants='Dark denim',Shoes='Bone low-tops'},

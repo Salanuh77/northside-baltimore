@@ -2,7 +2,7 @@ local rb = require('@lune/roblox')
 local fs = require('@lune/fs')
 local cf, v3, rgb = rb.CFrame, rb.Vector3.new, rb.Color3.fromRGB
 local templates = {}
-for _,key in {'sofa','bed','sink','stove'} do
+for _,key in {'sofa','bed','sink','stove','sideboard'} do
  local imported=rb.deserializeModel(fs.readFile('art/home-'..key..'.rbxm'))[1]
  templates[key]=assert(imported:FindFirstChildWhichIsA('MeshPart',true),key)
 end
@@ -144,6 +144,12 @@ return function(building,origin,layout,index)
  couch(room,anchor(plan.sofa),plan.sofa[4],index)
  bed(room,anchor(plan.bed),plan.bed[4])
  for _,key in {'sink','stove'} do appliance(room,anchor(plan[key]),key,plan[key][4]) end
+ if layout=='Flat' then
+  local frame=origin*cf.new(13.9,0,8)*cf.Angles(0,math.pi/2,0)
+  local cabinet,size=furniture(room,'Hall sideboard','sideboard','Walnut sideboard',frame,5.3)
+  cabinet['Walnut sideboard'].Color=rgb(159,122,89)
+  base(cabinet,frame,size.X*.94,size.Y*.88,size.Z*.9)
+ end
  local tableFrame=origin*cf.new(plan.table[1],0,plan.table[2])
  local tableModel=model(room,'Reading table')
  base(tableModel,tableFrame,2.4,1.9,2.1)

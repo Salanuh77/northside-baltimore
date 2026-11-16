@@ -1,4 +1,6 @@
 local furnish=require('./home-furniture')
+local facade=require('./residential-facades')
+local fixtures=require('./shop-fixtures')
 local rb = require('@lune/roblox')
 local cf, rgb, Enum = rb.CFrame, rb.Color3.fromRGB, rb.Enum
 return function(part,group,label,action,city)
@@ -86,20 +88,30 @@ return function(part,group,label,action,city)
    for _,edge in {-9,24} do p('Party wall',.7,12.6,40,edge,y+6.6,3.5,tint,'Brick') end
    for n=1,2 do
     local u=-25.5+(n-1)*33
-    p('Entrance pier',4,12.5,.7,u-14.3,y+6.6,-17,tint,'Brick')
-    p('Gallery facade',21,12.5,.7,u+5.7,y+6.6,-17,tint,'Brick')
-    local door=p('Apartment door',6.75,10.3,.42,u-8.7,y+5.55,-17,level%2==0 and garden or blue,'Wood')
+    local base,ceiling=y+.35,y+12.65
+    facade.bay(p,u-16.5,u-5.15,base,ceiling,-17,tint,'Brick',u-8.7,y+5.55,7.1,10.4)
+    facade.bay(p,u-5.15,u+16.5,base,ceiling,-17,tint,'Brick',u+6,y+7,11.5,6.8)
+    local trim=rgb(69,76,73)
+    facade.sash(p,'Gallery window',u+6,y+7,-17,11.5,6.8,-1,trim,true)
+    local coats={rgb(64,83,75),rgb(65,76,85),rgb(104,70,55)}
+    local paint=coats[(n+level)%#coats+1]
+    local door=p('Apartment door',6.75,10.3,.42,u-8.7,y+5.55,-17,paint,'SmoothPlastic')
     action(door,'Door','Open / close')
-    p('Door head',7,2.1,.8,u-8.7,y+11.78,-17,tint,'Brick')
+    facade.entry(door,Enum.NormalId.Front)
+    for _,side in {-1,1} do
+     p('Entry casing',.24,10.4,.8,u-8.7+side*3.50,y+5.55,-17.1,bone,'Metal')
+    end
+    p('Entry casing head',7.25,.32,.82,u-8.7,y+10.82,-17.1,bone,'Metal')
     lettering(p('Flat number',2.4,1.1,.15,u-14.2,y+6,-17.55,bronze,'Metal'),tostring((level+1)*100+n))
     for _,side in {-1,1} do
-     local pos=u+side*8
-     p('Rear spandrel',16.4,3.4,.85,pos,y+2,23.5,tint,'Brick')
-     glass(p,'Bedroom sash',15.9,7.4,.5,pos,y+7.4,23.5)
-     p('Window transom',16.4,2,.85,pos,y+12,23.5,tint,'Brick')
-     p('Sash mullion',.45,7.4,.8,pos,y+7.4,23.5,bone,'Metal')
+     local pos=u+side*8.25
+     facade.bay(p,pos-8.25,pos+8.25,base,ceiling,23.5,tint,'Brick',pos,y+7.4,13.5,7.4)
+     facade.sash(p,'Bedroom sash',pos,y+7.4,23.5,13.5,7.4,1,trim,true)
     end
-    glass(p,'Gallery window',10,5,.3,u+6,y+7,-17.58)
+    if (level+n)%3==0 then
+     -- Short interior shades leave a view across the living room at eye height.
+     p('Linen shade',5.35,1.25,.12,u+8.82,y+9.45,-16.36,rgb(199,184,155),'Fabric')
+    end
     local flatFrame=cf.new(x,0,z)*cf.Angles(0,math.rad(angle),0)*cf.new(u,y+.35,0)
     furnish(m,flatFrame,'Flat',(level+1)*100+n)
     p('Refrigerator',3.5,7,3.5,u-13,y+3.9,-10,'cream','Metal')
@@ -307,13 +319,17 @@ return function(part,group,label,action,city)
   p('Ventilation plant',8,2.6,5,15,top+1.9,10,metal,'Metal')
   if kind=='cafe' then
    for _,u in {-20,16} do for _,v in {-10,4} do tableSet(p,u,v,1.05) end end
-   p('Serving bar',23,3.5,5,0,2.9,14,bronze,'Wood')
-  elseif kind=='gallery' then
+   local bar=p('Serving bar',23,3.5,5,0,2.9,14,bronze,'Wood')
+   fixtures.staff(bar,'Barista',0,4.4,1.05);fixtures.coffee(p)
+   action(bar,'Coffee','Buy coffee · $6')
+  elseif kind=='gallery' and name~='Exchange Streetwear' and name~='Eastern Outfitters' and name~='Union Athletics' then
+   local desk=p('Gallery desk',7.2,3.2,3,0,2.65,15,bronze,'Wood')
+   fixtures.staff(desk,'Gallery attendant',0,3.6,1.05)
    for i=-1,1 do
     p('Gallery plinth',6,3.2,6,i*20,2.7,4,bone,'Marble')
     local art=p('Sculpture',3+i,5,3,i*20,7,4,tint,'Metal'); art.CFrame*=cf.Angles(.3,.35,.5)
    end
-  else
+  elseif kind=='market' then
    for _,u in {-19,18} do for _,v in {-5,9} do
     p('Vendor counter',14,3.5,5,u,2.8,v,bronze,'WoodPlanks')
     for n=-1,1 do p('Produce crate',3,1.3,3,u+n*4,5.25,v,n==0 and garden or 'gold','Wood') end
@@ -322,6 +338,7 @@ return function(part,group,label,action,city)
   if kind=='market' then
    p('Cash desk',9,3.5,4,0,2.8,15,bronze,'Wood')
    local till=p('Market till',2,1.3,1.8,0,5.2,14.7,'dark','Metal')
+   fixtures.staff(till,'Grocer',0,3.65,1.05)
    action(till,'Store','Rob register',225,12)
   end
   if name=='Eastern Outfitters' or name=='Exchange Streetwear' or name=='Union Athletics' then
@@ -332,10 +349,12 @@ return function(part,group,label,action,city)
    if name=='Eastern Outfitters' then city:SetAttribute('OutfittersDesk',counter.CFrame.Position) end
    local plaque=p('Shop window lettering',24,2.7,.22,-19,8,-21.3,bone,'Metal')
    plaque.Transparency=1; plaque.CanCollide=false; lettering(plaque,name:upper())
-   if clothing then
-    for _,u in {-25,18} do
-     p('Garment rail',10,.25,.25,u,6.2,0,bronze,'Metal')
-     for j=-2,2 do p('Folded jacket',.65,3.8,2.5,u+j*1.5,4.3,0,j%2==0 and garden or blue,'Fabric') end
+   fixtures.staff(counter,clothing and 'Stylist' or sporting and 'Sports clerk' or 'Outfitters clerk',0,3.65,1.05)
+   if clothing then fixtures.clothing(p,lettering,0,3) end
+   if sporting or name=='Eastern Outfitters' then
+    for j=-1,1 do
+     p('Stockroom shelf',8,.32,3,j*10,5.6,18,metal,'Metal')
+     for k=-1,1 do p('Boxed stock',2.3,1.6,2.4,j*10+k*2.5,6.55,18,k==0 and bronze or bone,'Wood') end
     end
    end
   end
@@ -362,7 +381,7 @@ return function(part,group,label,action,city)
     drum.Shape=Enum.PartType.Cylinder; drum.CFrame*=cf.Angles(0,math.pi/2,0)
     p('Controls',4,.6,.25,i*7,6,7.4,'dark','Metal')
    end
-   p('Folding island',12,3.5,4,7,2.85,-3,'stone','Concrete')
+   fixtures.staff(p('Folding island',12,3.5,4,7,2.85,-3,'stone','Concrete'),'Laundry attendant',0,3.8,1.1)
    bench(p,-10,-3)
   elseif kind=='Barber' then
    for _,u in {-12,0,12} do
@@ -392,7 +411,7 @@ return function(part,group,label,action,city)
     p('Waiting chair back',3.8,2.8,.55,u,3.95,-9.6,blue,'Fabric')
    end
    p('Reception cabinet',7,3.3,3.6,-12,2.75,-8,bronze,'Wood')
-   p('Reception counter',7.4,.32,3.9,-12,4.55,-8,bone,'Marble')
+   fixtures.staff(p('Reception counter',7.4,.32,3.9,-12,4.55,-8,bone,'Marble'),'Barber',0,3.6,1.1)
    for j=0,6 do p('Enamel barber pole',1.25,.49,1.25,-7,6+j*.49,-16.15,({bone,blue,bone,rgb(168,62,54)})[j%4+1],'Metal') end
    if name=='Juniper Barber' then local clock=p('Shift book',2,.3,1.6,-11,4.88,-8,bone,'Wood'); action(clock,'WorkStop','Sign in'); clock:SetAttribute('Station','BarberDesk') end
   else
@@ -593,7 +612,13 @@ return function(part,group,label,action,city)
  workStop(westside,'Franklin parcel room','Parcel',-548,732)
  workStop(eastside,'Harbor View parcel room','ParcelEast',558,730)
  workStop(mill,'Backroom dispatch','NightDesk',149,324)
- workStop(eastside,'Eastside night exchange','NightDrop',583,949)
+ local exchange=builder(group('Eastside night exchange',eastside),585.5,955)
+ local locker=exchange('Parcel cabinet',3.5,4.4,.88,0,4.6,0,rgb(67,78,75),'Metal')
+ for _,y in {3.5,5.4} do
+  local slot=exchange('Parcel hatch',2.85,.34,.14,0,y,-.49,'dark','Metal');slot.CanQuery=false;slot.CanCollide=false
+ end
+ lettering(locker,'PARCELS')
+ action(locker,'WorkStop','Complete exchange');locker:SetAttribute('Station','NightDrop')
  require('./citylife')(city,group,builder,lettering,glass,action,lounge,glow)
  for i,c in {{-555,-105,'Lanvale Courts'},{-555,718,'Franklin Homes'},{555,718,'Harbor View Homes'},{-345,934,'Edmondson Courts'},{-120,520,'Madison Gardens'},{555,-105,'Eastgate Terrace'},{345,520,'Waverly Court'}} do
   local q=builder(group(c[3]..' entrance',city),c[1],c[2])

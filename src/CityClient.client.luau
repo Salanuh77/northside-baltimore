@@ -258,34 +258,49 @@ local function setClock()
  handset.clock(string.format('%d:%02d %s',(hour+11)%12+1,minutes%60,hour<12 and 'AM' or 'PM'),day)
 end
 setClock();city:GetAttributeChangedSignal('CityMinute'):Connect(setClock);city:GetAttributeChangedSignal('CityDay'):Connect(setClock)
-local mapDot
-local function showMap()
- clear('NORTHSIDE STREET MAP')
- local map=make('Frame',{Size=UDim2.new(1,-6,0,274),BackgroundColor3=Color3.fromRGB(55,80,71),BorderSizePixel=0,ClipsDescendants=true},content)
- local function location(x,z) return UDim2.fromScale((x+790)/1520,(z+605)/1705) end
- local function bar(size,position,color)
-  return make('Frame',{Size=size,Position=position,BackgroundColor3=color,BorderSizePixel=0},map)
- end
- bar(UDim2.fromScale(1,50/1705),UDim2.new(),Color3.fromRGB(54,121,141))
- for _,x in {-660,-450,-240,0,240,450,660} do bar(UDim2.fromScale(.009,1500/1705),location(x,-460),Color3.fromRGB(142,151,138)) end
- bar(UDim2.fromScale(.008,640/1705),location(-734,-210),Color3.fromRGB(142,151,138))
- for _,z in {-460,-210,0,210,430,610,830,1040} do bar(UDim2.fromScale(1320/1520,.009),location(-660,z),Color3.fromRGB(142,151,138)) end
- for _,v in {{'INNER HARBOR',0,-341},{'LANVALE',-480,-96},{'ROWHOMES',0,-98},{'EASTGATE',510,-100},{'COMMUNITY',145,67},{'BROADWAY',515,104},{'FREIGHT',110,281},{'MADISON',-96,519},{'FRANKLIN',-510,780},{'DOWNTOWN',0,845},{'HARBOR EAST',413,-492},{'HARBOR VIEW',525,790}} do
-  local l=text(map,v[1],UDim2.fromOffset(84,18),location(v[2],v[3]),10)
-  l.AnchorPoint=Vector2.new(.5,.5); l.TextXAlignment=Enum.TextXAlignment.Center; l.TextStrokeTransparency=.35
- end
- mapDot=bar(UDim2.fromOffset(10,10),UDim2.new(),gold); mapDot.AnchorPoint=Vector2.new(.5,.5)
- make('UICorner',{CornerRadius=UDim.new(1,0)},mapDot)
- local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
- if root then mapDot.Position=location(root.Position.X,root.Position.Z) end
- paragraph('Gold dot · your location. North is up. The apartment courts have open galleries and stairs at one end of each building.')
+local compass=require(game.ReplicatedStorage:WaitForChild('MapCompass'))
+local mapPin,mapGoal
+local function location(x,z)
+ return UDim2.fromScale(compass.project(x,z))
 end
-Run.Heartbeat:Connect(function()
- if modal.Visible and mapDot and mapDot.Parent then
-  local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
-  if root then mapDot.Position=UDim2.fromScale(math.clamp((root.Position.X+790)/1520,0,1),math.clamp((root.Position.Z+605)/1705,0,1)) end
+local function locateResident()
+ if not modal.Visible or not mapPin or not mapPin.Parent then return end
+ local char=p.Character
+ local root=char and char:FindFirstChild('HumanoidRootPart')
+ if not root then return end
+ local human=char:FindFirstChildOfClass('Humanoid')
+ local look=((human and human.SeatPart) or root).CFrame.LookVector
+ mapPin.Position=location(root.Position.X,root.Position.Z)
+ mapPin.Rotation=compass.heading(look.X,look.Z)
+ mapGoal.Visible=typeof(radarTarget)=='Vector3'
+ if mapGoal.Visible then mapGoal.Position=location(radarTarget.X,radarTarget.Z) end
+end
+local function showMap()
+ clear('CITY MAP')
+ local map=make('Frame',{Size=UDim2.new(1,-6,0,276),BackgroundColor3=Color3.fromRGB(52,71,68),BorderSizePixel=0,ClipsDescendants=true},content)
+ local bounds=compass.bounds
+ make('Frame',{Size=UDim2.fromScale(1,50/bounds.depth),BackgroundColor3=Color3.fromRGB(50,108,135),BorderSizePixel=0},map)
+ local roads=game:GetService('HttpService'):JSONDecode(city:GetAttribute('RadarRoads') or '[]')
+ for _,r in roads do
+  make('Frame',{AnchorPoint=Vector2.new(.5,.5),Size=UDim2.fromScale(r[3]/bounds.width,r[4]/bounds.depth),Position=location(r[1],r[2]),BackgroundColor3=Color3.fromRGB(143,153,146),BorderSizePixel=0},map)
  end
+ for _,v in {{'INNER HARBOR',-160,-345},{'LANVALE',-480,-96},{'EASTGATE',510,-100},{'FREIGHT',110,281},{'MADISON',-96,519},{'FRANKLIN',-510,780},{'DOWNTOWN',20,870}} do
+  local label=text(map,v[1],UDim2.fromOffset(77,17),location(v[2],v[3]),10)
+  label.AnchorPoint=Vector2.new(.5,.5);label.TextXAlignment=Enum.TextXAlignment.Center;label.TextStrokeTransparency=.24
+ end
+ local north=text(map,'N ↑',UDim2.fromOffset(31,18),UDim2.fromOffset(5,2),12);north.TextStrokeTransparency=.2
+ mapGoal=make('Frame',{Name='Destination',Size=UDim2.fromOffset(10,10),Rotation=45,AnchorPoint=Vector2.new(.5,.5),BackgroundColor3=gold,BorderSizePixel=0,ZIndex=4,Visible=false},map)
+ make('UIStroke',{Thickness=2,Color=Color3.fromRGB(57,42,21)},mapGoal)
+ mapPin=compass.pin(make,map)
+ locateResident()
+ paragraph('▲  You, facing your direction of travel.   ◆  Active destination.')
+end
+hud.tap.Activated:Connect(showMap)
+UIS.InputBegan:Connect(function(key,handled)
+ if handled or key.KeyCode~=Enum.KeyCode.M or UIS:GetFocusedTextBox() then return end
+ if modal.Visible and mapPin and mapPin.Parent then modal.Visible=false else showMap() end
 end)
+Run.Heartbeat:Connect(locateResident)
 local function jobOffer()
  for _,job in catalog do if job.Id==p:GetAttribute('Employment') then return job end end
 end
@@ -343,7 +358,7 @@ showGuide=function()
  paragraph('Harbor Freight, south of Harbor Way: black market and stolen-goods buyer. Knife $55, crowbar $90, medkit $70. Eastern Outfitters sells sidearms for Robux. Union Athletics sells bats for $80. A crowbar is required for house lockboxes.')
  paragraph('Community center: courier jobs ($90 each). Credit union: deposit and withdraw. Clinic: treatment $50. Death costs up to $75 and loses stolen goods.')
  paragraph('Wanted level fades over time. Player robbery takes 8 seconds and at most 25% of cash, capped at $200. The same player is protected from another robbery for 5 minutes.')
- paragraph('Use Drive to enter. Steer with movement controls. Brake with Space, LT or the Brake button. Exit with X, B or Exit car.')
+ paragraph('Use Drive to enter. Steer with movement controls. Brake with Space, LT or the Brake button. Press F or X, controller B, or tap Exit vehicle to get out.')
  paragraph('Fuel drops with distance. Park at a dispenser to refill for $1 per 5%. The quay is north of Monument Street, Lanvale Courts is west, and Eastgate Terrace is east.')
 end
 event:FireServer('Ready')

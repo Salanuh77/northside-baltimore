@@ -37,7 +37,7 @@ return function(event,modal,content,clear,row,paragraph,input,state)
   elseif kind=='Sporting' then
    clear('UNION ATHLETICS');row('Wood baseball bat · $80',function() event:FireServer('Buy',{Item='Bat'}) end)
   elseif kind=='Clothing' then
-   clear('EXCHANGE STREETWEAR')
+   clear('SHOP CLOTHING')
    for _,v in Style.Outfits do
     local owned=(state().Wardrobe or {})[v.Id]
     row(v.Name..(owned and ' · Wear' or ' · $'..v.Price),function() event:FireServer('Outfit',{Item=v.Id});modal.Visible=false end)

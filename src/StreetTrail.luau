@@ -8,7 +8,7 @@ return function()
     local outline=Instance.new('Highlight')
     outline.Name='Nearby contact'
     outline.Enabled=false
-    outline.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+    outline.DepthMode=Enum.HighlightDepthMode.Occluded
     outline.OutlineColor=Color3.new(1,1,1)
     outline.OutlineTransparency=0
     outline.FillTransparency=.88
@@ -44,7 +44,7 @@ return function()
         if root and showContacts then
             for _,npc in Tags:GetTagged('RouteClerk') do
                 local pos=npc:GetAttribute('RouteDesk')
-                if pos and (not target or target==pos) then
+                if pos then
                     local d=(root.Position-pos).Magnitude
                     if d<best then best=d;contact=npc end
                 end

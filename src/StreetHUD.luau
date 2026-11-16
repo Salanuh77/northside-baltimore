@@ -1,3 +1,4 @@
+local compass=require(game.ReplicatedStorage:WaitForChild('MapCompass'))
 local rgb=Color3.fromRGB
 return function(gui,make,text,city)
  local touch=game:GetService('UserInputService').TouchEnabled
@@ -10,10 +11,11 @@ return function(gui,make,text,city)
  for _,r in roads do
   make('Frame',{Size=UDim2.fromOffset(math.max(2,r[3]*zoom),math.max(2,r[4]*zoom)),Position=UDim2.fromOffset(r[1]*zoom,r[2]*zoom),AnchorPoint=Vector2.new(.5,.5),BackgroundColor3=rgb(137,150,141),BorderSizePixel=0},layer)
  end
- local arrow=text(map,'▲',UDim2.fromOffset(18,18),UDim2.fromScale(.5,.5),15,Color3.new(1,1,1))
- arrow.Name='Resident heading';arrow.AnchorPoint=Vector2.new(.5,.5);arrow.TextXAlignment=Enum.TextXAlignment.Center;arrow.TextStrokeTransparency=.2
- local blip=make('Frame',{Name='Active destination',AnchorPoint=Vector2.new(.5,.5),Size=UDim2.fromOffset(6,6),Visible=false,BackgroundColor3=rgb(255,198,91),BorderSizePixel=0},map)
- make('UICorner',{CornerRadius=UDim.new(1,0)},blip)
+ local arrow=compass.pin(make,map)
+ arrow.Position=UDim2.fromScale(.5,.5)
+ local tap=make('TextButton',{Name='Open map',Text='',BackgroundTransparency=1,Size=UDim2.fromScale(1,1),ZIndex=9},map)
+ local blip=make('Frame',{Name='Active destination',AnchorPoint=Vector2.new(.5,.5),Size=UDim2.fromOffset(8,8),Rotation=45,ZIndex=4,Visible=false,BackgroundColor3=rgb(255,198,91),BorderSizePixel=0},map)
+ make('UIStroke',{Thickness=1.5,Color=rgb(49,37,23)},blip)
  local north=text(map,'N',UDim2.fromOffset(13,15),UDim2.fromOffset(3,1),10,Color3.new(1,1,1));north.TextStrokeTransparency=.3
  local fill=make('Frame',{Name='Health',Position=UDim2.new(0,2,1,-5),Size=UDim2.new(1,-4,0,3),BackgroundColor3=rgb(109,203,149),BorderSizePixel=0},root)
  local wallet=text(gui,'',UDim2.fromOffset(155,25),UDim2.new(1,-167,0,4),19,rgb(179,232,184))
@@ -25,8 +27,8 @@ return function(gui,make,text,city)
  local function update(characterRoot,humanoid,destination)
   local point=characterRoot.Position
   layer.Position=UDim2.new(.5,-point.X*zoom,.5,-point.Z*zoom)
-  local look=characterRoot.CFrame.LookVector
-  arrow.Rotation=math.deg(math.atan2(look.X,-look.Z))
+  local look=(humanoid.SeatPart or characterRoot).CFrame.LookVector
+  arrow.Rotation=compass.heading(look.X,look.Z)
   blip.Visible=typeof(destination)=='Vector3'
   if blip.Visible then
    local half=map.AbsoluteSize/2
@@ -40,5 +42,5 @@ return function(gui,make,text,city)
   local gas=seat and seat.Parent:GetAttribute('Fuel')
   fuel.Text=gas and ('Fuel '..gas..'%') or ''
  end
- return {update=update,wallet=wallet,status=status}
+ return {update=update,wallet=wallet,status=status,tap=tap}
 end

@@ -4,26 +4,26 @@ local city=workspace:WaitForChild('Baltimore')
 local drive=game:GetService('ReplicatedStorage'):WaitForChild('DriveCar')
 local signals=city:WaitForChild('Streets & alleys'):WaitForChild('Traffic signals'):GetChildren()
 local colors={Red=Color3.fromRGB(251,65,52),Amber=Color3.fromRGB(255,181,53),Green=Color3.fromRGB(66,224,138)}
-local function lights(axis,phase)
- for _,head in signals do
-  local active=head:GetAttribute('Axis')==axis and phase or 'Red'
-  head:SetAttribute('Phase',active)
-  local crossing=head['Crossing signal'].SurfaceGui
-  crossing.Walk.Visible=active=='Green'; crossing.Stop.Visible=active~='Green'
-  for name,color in colors do
-   local lens=head[name]
-   lens.Material=name==active and Enum.Material.Neon or Enum.Material.SmoothPlastic
-   lens.Color=name==active and color or color:Lerp(Color3.fromRGB(18,25,26),.87)
-  end
- end
-end
+local phases=require(script.Parent.TrafficPhases)
 task.spawn(function()
- while true do
-  for axis=0,1 do
-   lights(axis,'Green'); task.wait(12)
-   lights(axis,'Amber'); task.wait(3)
-   lights(axis,'Red'); task.wait(1)
+ local last={}
+ while city.Parent do
+  local now=workspace:GetServerTimeNow()
+  for _,head in signals do
+   local active,ped=phases.at(now,head:GetAttribute('Axis'),head:GetAttribute('SignalOffset') or 0)
+   if last[head]~=active..ped then
+    last[head]=active..ped
+    head:SetAttribute('Phase',active)
+    local crossing=head['Crossing signal'].SurfaceGui
+    crossing.Walk.Visible=ped=='Walk'; crossing.Stop.Visible=ped=='Stop'
+    for name,color in colors do
+     local lens=head[name]
+     lens.Material=name==active and Enum.Material.Neon or Enum.Material.SmoothPlastic
+     lens.Color=name==active and color or color:Lerp(Color3.fromRGB(18,25,26),.87)
+    end
+   end
   end
+  task.wait(1-now%1)
  end
 end)
 local physics=game:GetService('PhysicsService')
@@ -62,7 +62,7 @@ local function exitAtDoor(seat,human)
  end
  if not root.Parent or human.SeatPart or root.AssemblyRootPart==seat.AssemblyRootPart or (root.Position-seat.Position).Magnitude>14 then return end
  local params=RaycastParams.new();params.FilterType=Enum.RaycastFilterType.Exclude;params.FilterDescendantsInstances={char,seat.Parent};params.RespectCanCollide=true
- for _,offset in {Vector3.new(-seat:GetAttribute('DoorDistance'),0,0),Vector3.new(seat:GetAttribute('DoorDistance')+2.8,0,0),Vector3.new(0,0,10)} do
+ for _,offset in {Vector3.new(-seat:GetAttribute('DoorDistance'),0,0),Vector3.new(seat:GetAttribute('DoorDistance')+2.8,0,0),Vector3.new(0,0,10),Vector3.new(0,0,-10)} do
   local door=seat.CFrame:PointToWorldSpace(offset)
   local wall=workspace:Raycast(seat.Position+Vector3.yAxis*2,door-seat.Position,params)
   local floor=workspace:Raycast(door+Vector3.yAxis*3,-Vector3.yAxis*10,params)
@@ -146,7 +146,16 @@ end
 drive.OnServerEvent:Connect(function(player,gas,steer,brake)
  local human=player.Character and player.Character:FindFirstChildOfClass('Humanoid')
  local car=human and cars[human.SeatPart]
- if not car or car.seat.Occupant~=human or typeof(gas)~='number' or typeof(steer)~='number' then return end
+ if not car or car.seat.Occupant~=human then return end
+ if gas=='Exit' then
+  car.speed=0;car.gas=0;car.steer=0;car.brake=true;car.motion.PlaneVelocity=Vector2.zero
+  local weld=car.seat:FindFirstChild('SeatWeld')
+  if weld and weld:IsA('Weld') and weld.Part0==car.seat and weld.Part1 and weld.Part1:IsDescendantOf(human.Parent) then weld:Destroy() end
+  human.Sit=false
+  human:ChangeState(Enum.HumanoidStateType.GettingUp)
+  return
+ end
+ if typeof(gas)~='number' or typeof(steer)~='number' then return end
  if not (math.abs(gas)<=1 and math.abs(steer)<=1) then return end
  local now=os.clock()
  if now-car.updated<.035 then return end

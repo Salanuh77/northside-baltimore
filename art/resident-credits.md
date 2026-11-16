@@ -16,3 +16,5 @@ The six face profiles and nine textured-hair silhouettes were modeled specifical
 The ash pullover, dock denim and field liner are original starter garments. Older Harbor, Clay and Olive items retain their texture IDs for saved residents. The separate eye and lip illustrations were drawn for the sculpted heads.
 
 The independent head and facial-feature controls draw on the approach shown in [MDickie’s Wrestling Empire manual](https://mdickie.com/guides/wempire.pdf).
+
+Baltimore Hood RP commissioned the service cap and cropped fringe from Meshy. The fringe uses only crown and hairline geometry from source task `01a1e347-ff9d-721a-9b54-af77a77e285e`. The cap uses task `01a1e347-f425-7773-8725-7eaaccefd9d5`. Both are fitted to the resident head.

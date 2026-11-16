@@ -90,7 +90,7 @@ return function(part,group,label,parent)
   end
   if ix>1 and ix<#xs and iz>1 and iz<#zs then
    for i=0,3 do
-    local m=group('Signal head',signals); m:SetAttribute('Axis',i%2); m:SetAttribute('Junction',ix..'-'..iz)
+    local m=group('Signal head',signals); m:SetAttribute('Axis',i%2); m:SetAttribute('Junction',ix..'-'..iz); m:SetAttribute('SignalOffset',(ix*4+iz*7)%34)
     local pivot=CFrame.new(x,0,z)*CFrame.Angles(0,i*math.pi/2,0)
     local function pole(name,size,dx,y,dz,color)
      local p=part(name,size,{0,0,0},color,'Metal',m); p.CFrame=pivot*CFrame.new(dx,y,dz); return p

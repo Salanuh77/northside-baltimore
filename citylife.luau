@@ -1,4 +1,6 @@
 local furnish=require('./home-furniture')
+local facade=require('./residential-facades')
+local fixtures=require('./shop-fixtures')
 local rb=require('@lune/roblox')
 local E,cf,rgb=rb.Enum,rb.CFrame,rb.Color3.fromRGB
 return function(city,group,builder,lettering,glass,action,lounge,glow)
@@ -42,15 +44,19 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   local vacant=i%5==1 or i%7==0
   p('Party wall',.7,25,29,-10.7,13.5,0,tint,'Brick'); p('Party wall',.7,25,29,10.7,13.5,0,tint,'Brick')
   p('Ground floor',21.6,.8,29,0,1.3,0,cream,'WoodPlanks'); p('Rear',21.7,25,.8,0,13.5,-14.3,tint,'Brick')
-  p('Front pier',3,25,.8,-9.2,13.5,14.3,tint,'Brick'); p('Front bay',12,25,.8,4.8,13.5,14.3,tint,i%3==0 and 'Concrete' or 'Brick')
-  p('Door lintel',6.5,15,.8,-4.3,18.5,14.3,tint,'Brick')
+  local faceMaterial=i%3==0 and 'Concrete' or 'Brick'
+  facade.bay(p,-10.85,0,1.0,14.0,14.3,tint,faceMaterial,-4.4,6.3,6.6,10.6)
+  facade.bay(p,0,10.85,1.0,14.0,14.3,tint,faceMaterial,5,8,6.4,7.2)
+  facade.bay(p,-10.85,0,14.0,26,14.3,tint,faceMaterial,-5,20,6.4,7.2)
+  facade.bay(p,0,10.85,14.0,26,14.3,tint,faceMaterial,5,20,6.4,7.2)
   p('Roof',22.1,.8,30,0,26.3,0,'dark','Slate'); p('Cornice',22.4,1.2,1.4,0,25.6,14.6,cream,'Concrete')
   for _,v in {{-5,20},{5,20},{5,8}} do
-   p('Window casing',6.6,7.8,.5,v[1],v[2],15,cream,'Concrete')
    if vacant then
-    p('Plywood infill',5.8,7,.42,v[1],v[2],15.4,rgb(125,103,76),'WoodPlanks')
-    local board=p('Cross batten',6.8,.6,.4,v[1],v[2],15.75,'dark','Wood'); board.CFrame*=cf.Angles(0,0,.27)
-   else glass(p,'Double hung sash',5.6,6.6,.4,v[1],v[2],15.4); p('Meeting rail',5.6,.3,.55,v[1],v[2],15.65,cream,'Wood') end
+    p('Plywood infill',6.45,7.25,.42,v[1],v[2],14.45,rgb(125,103,76),'WoodPlanks')
+    local board=p('Cross batten',6.8,.6,.4,v[1],v[2],14.81,'dark','Wood'); board.CFrame*=cf.Angles(0,0,.27)
+   else
+    facade.sash(p,'Double hung sash',v[1],v[2],14.3,6.4,7.2,1,cream,false)
+   end
   end
   for k=1,3 do p('Marble stoop',7,k*.45,1.2,-4.4,k*.225,19.5-k*1.18,cream,'Concrete') end
   p('Stoop rail',.32,3.6,.32,-8,2.3,18,'dark','Metal'); p('Stoop rail',.32,3.6,.32,-8,2.8,15.6,'dark','Metal')
@@ -60,7 +66,7 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
    p('Chipped stoop fragment',2,.6,1.5,3,.4,18,cream,'Concrete')
   else
    local door=p('Rowhouse door',6.4,9.6,.45,-4.4,6.5,14.3,blue,'Wood')
-   action(door,'Door','Open / close')
+   action(door,'Door','Open / close'); facade.entry(door,rb.Enum.NormalId.Back)
    furnish(m,cf.new(-700,1.7,z)*cf.Angles(0,-math.pi/2,0),'Hollins',i)
    lease(p,m.Name,1,5,13.5,0); glow(p,0,12,0) end
   if i%3==0 then
@@ -102,16 +108,16 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   furnish(m,cf.new(x,1.5,-493)*cf.Angles(0,math.pi,0),'Waterfront',i)
   p('Entry bell post',1.1,4.8,1.1,7,2.5,-14,cream,'Limestone'); lease(p,m.Name,7,4.2,-14.85,200); glow(p,0,13,0)
  end
- local fixtures={}
+ local martModels={}
  for _,id in {'dispenser','ice-locker','coffee-brewer'} do
   local imported=rb.deserializeModel(require('@lune/fs').readFile('art/mart-'..id..'.rbxm'))[1]
-  fixtures[id]=assert(imported:FindFirstChildWhichIsA('MeshPart',true),'Missing mart mesh: '..id)
+  martModels[id]=assert(imported:FindFirstChildWhichIsA('MeshPart',true),'Missing mart mesh: '..id)
  end
  for _,v in {{'North Avenue Fuel',60,148,90,60},{'Franklin Fuel',-510,994,-90,60},{'Eastside Fuel',719,111,90,59}} do
   local m=group(v[1],service); local p=builder(m,v[2],v[3],v[4])
   local frame=cf.new(v[2],0,v[3])*cf.Angles(0,math.rad(v[4]),0)
   local function fixture(id,name,x,bottom,z,width,height,depth,yaw)
-   local mesh=fixtures[id]:Clone()
+   local mesh=martModels[id]:Clone()
    local size=mesh.Size
    mesh.Size=size*math.min(width/size.X,height/size.Y,depth/size.Z)
    mesh.Name=name; mesh.Anchored=true; mesh.CanCollide=false; mesh.CanTouch=false; mesh.CanQuery=false
@@ -181,7 +187,8 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   lettering(menu,'FRESH COFFEE   $6')
   action(menu,'Coffee','Buy coffee · $6')
   p('Checkout desk',9,3.2,3,0,3,13,'dark','Wood')
-  action(p('Mart till',2,1.5,1.7,0,5.4,12.8,'dark','Metal'),'Mart','Buy supplies')
+  local till=p('Mart till',2,1.5,1.7,0,5.4,12.8,'dark','Metal')
+  fixtures.staff(till,'Mart cashier',0,3.1,1.4);action(till,'Mart','Buy supplies')
   for _,s in {-1,1} do
    p('Pump island',4.6,.45,9,s*8,.83,-30,'cream','Concrete')
    p('Canopy column',.9,14,.9,s*8,7.4,-27.2,'stone','Metal')

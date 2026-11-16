@@ -1,4 +1,5 @@
 local rb=require('@lune/roblox')
+local fixtures=require('./shop-fixtures')
 local rgb,cf=rb.Color3.fromRGB,rb.CFrame
 return function(t,i,district,group,builder,landmark,lettering,glass,action,tableSet,lounge,glow)
  local name,x,z,style,floors=table.unpack(t)
@@ -69,7 +70,7 @@ return function(t,i,district,group,builder,landmark,lettering,glass,action,table
   f('Rooftop plant',width*.38,2.5,8,4,18+levels*9,4,'dark','Metal')
   if club then
    for a=-1,1 do for b=-1,1 do local tile=f('Dance tile',7,.2,6,a*7.2,1.52,b*6.2,teal,'Neon'); tile:SetAttribute('BeatTile',(a+b+2)%3) end end
-   local dj=f('DJ console',13,3.4,4,0,3.2,15,'dark','Metal'); action(dj,'Club','DJ booth')
+   local dj=f('DJ console',13,3.4,4,0,3.2,15,'dark','Metal'); action(dj,'Club','DJ booth'); fixtures.staff(dj,'Club host',0,4.1,1.42)
    local dance=f('Dance floor controls',2,3,2,-14,2.9,-7,brass,'Metal'); action(dance,'Dance','Dance / stop')
    lettering(f('Stage sign',23,3,.4,0,9,23.4,teal,'Metal'),'MERIDIAN  /  AFTERHOURS')
    for _,s in {-1,1} do f('Sound cabinet',4,8,4,s*13,5.4,17,'dark','Metal'); lounge(f,s*19,1.4,-7,teal) end
@@ -77,8 +78,11 @@ return function(t,i,district,group,builder,landmark,lettering,glass,action,table
    local blade=f('Illuminated blade',2.5,18,6,-width/2+3,22,-28,teal,'Neon')
    lettering(f('Blade lettering',6.5,18,.4,-width/2+3,22,-31.25,teal,'Metal'),'M\nE\nR\nI\nD\nI\nA\nN')
   else
-   tableSet(f,-width*.26,-7,1.4); lounge(f,width*.26,1.4,7,teal)
+   if shopName=='Park Avenue Clothiers' then fixtures.clothing(f,lettering,0,-1)
+   else tableSet(f,-width*.26,-7,1.4); lounge(f,width*.26,1.4,7,teal) end
    local counter=f('Sales counter',12,3.2,4,-9,3,16,brass,'Wood')
+   fixtures.staff(counter,shopName=='Park Avenue Clothiers' and 'Stylist' or 'Shop attendant',0,4.2,1.35)
+   if shopName=='Park Avenue Clothiers' then action(counter,'Clothing','Shop the collection') end
    if side==-1 and (i==3 or i==6) then action(f('City register',2,1.4,1.6,-9,5.25,16,'dark','Metal'),'Store','Rob register',225,12) end
   end
   glow(f,0,13,-3)

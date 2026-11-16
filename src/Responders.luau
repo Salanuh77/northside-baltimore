@@ -9,6 +9,16 @@ local function rig(name,home,medical,parent)
  health.DisplayDistanceType=Enum.HumanoidDisplayDistanceType.Viewer
  health.NameDisplayDistance=24;health.HealthDisplayDistance=0;health.WalkSpeed=12
  health.BreakJointsOnDeath=false
+ if not medical then
+  local cap=storage.ServiceCap:Clone()
+  local head=model.Head
+  local hair=head:FindFirstChild('Northside hair');if hair then hair:Destroy() end
+  cap.Name='Service cap';cap.Size=head.Size*Vector3.new(.96,.59,1.24)
+  cap.Color=Color3.fromRGB(45,57,75);cap.Material=Enum.Material.Fabric
+  cap.Anchored=false;cap.CanCollide=false;cap.CanTouch=false;cap.CanQuery=false;cap.Massless=true
+  cap.CFrame=head.CFrame*CFrame.new(0,head.Size.Y*.54,-head.Size.Z*.08);cap.Parent=model
+  local join=Instance.new('WeldConstraint');join.Part0=head;join.Part1=cap;join.Parent=cap
+ end
  local torso=model.UpperTorso
  local badge=Instance.new('Part'); badge.Name='Service badge'
  badge.Size=Vector3.new(.27,.32,.07);badge.Color=medical and Color3.fromRGB(236,242,240) or Color3.fromRGB(225,176,72)
@@ -61,12 +71,12 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest)
   end
   return true
  end
- local function canReachPatient(model,character)
-  local root=character:FindFirstChild('HumanoidRootPart')
+ local function visible(model,character,range)
+  local root=character and character:FindFirstChild('HumanoidRootPart')
   if not root then return false end
   local origin=model.HumanoidRootPart.Position+Vector3.yAxis
   local goal=root.Position+Vector3.yAxis
-  if (goal-origin).Magnitude>10 then return false end
+  if (goal-origin).Magnitude>range then return false end
   local ray=RaycastParams.new()
   ray.FilterType=Enum.RaycastFilterType.Exclude
   ray.FilterDescendantsInstances={model}
@@ -80,13 +90,13 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest)
   if calls[role][p] then return tell(p,'Dispatch already has your call.') end
   if role=='medic' then
    for _,unit in field:GetChildren() do
-    if unit:GetAttribute('Service')=='medic' and unit.Humanoid.Health>0 and canReachPatient(unit,p.Character) then
+    if unit:GetAttribute('Service')=='medic' and unit.Humanoid.Health>0 and visible(unit,p.Character,10) then
      settle(role,p,nil,false)
      return
     end
    end
   end
-  calls[role][p]=os.clock()
+  calls[role][p]=p.Character:GetPivot().Position
   for _,other in Players:GetPlayers() do
    if other~=p and jobs[other] and jobs[other].role==role then tell(other,'Dispatch • '..p.DisplayName..' requested assistance. Open Phone → Dispatch.') end
   end
@@ -100,20 +110,36 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest)
    model:Destroy(); task.delay(20,function() if field.Parent then bot(role,home,name) end end)
   end)
   task.spawn(function()
-   local patrol=false; local observed=nil; local observedAt=0
+   local patrol=1;local observed=nil;local observedAt=0
+   local route={Vector3.zero,Vector3.new(0,0,24),Vector3.new(0,0,42),Vector3.new(0,0,18)}
+   local lastSeen={}
+   local patrolSince=os.clock()
    while model.Parent do
-    local at=model:GetPivot().Position; local target,best=nil,math.huge
+    local at=model:GetPivot().Position;local target,best,goal=nil,math.huge,nil
+    local now=os.clock()
+    for p,memory in lastSeen do
+     if not p.Parent or now-memory.time>10 then lastSeen[p]=nil end
+    end
     for _,p in Players:GetPlayers() do
      local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
      if root and valid(role,p) then
-      local dist=(at-root.Position).Magnitude
-      if (calls[role][p] or dist<70) and dist<best then best=dist; target=p end
+      local direct=visible(model,p.Character,70)
+      if direct then lastSeen[p]={position=root.Position,time=now} end
+      local memory=lastSeen[p]
+      local call=calls[role][p]
+      local known=direct and root.Position or memory and memory.position or call
+      if known then
+       local score=(known-at).Magnitude-(call and 24 or 0)
+       if score<best then best=score;target=p;goal=known end
+      end
      end
     end
-    local dest=home+Vector3.new(0,0,patrol and 24 or 0)
-    if target and target.Character then dest=target.Character:GetPivot().Position end
-    if not target or best>10 then observed=nil end
-    if target and best<=10 and canReachPatient(model,target.Character) then
+    local dest=goal or home+route[patrol]
+    local close=target and visible(model,target.Character,10)
+    if not close then observed=nil end
+    model:SetAttribute('Activity',target and (close and (role=='medic' and 'Treating patient' or 'Requesting surrender') or lastSeen[target] and now-lastSeen[target].time>.01 and 'Searching' or 'Responding') or 'Patrolling')
+    health.WalkSpeed=target and role=='police' and 16 or 12
+    if close then
      if observed~=target then observed=target; observedAt=os.clock() end
      local caught=role=='police' and profiles[target].Heat>=2 and os.clock()-observedAt>=4.5
      if not settle(role,target,nil,caught) and role=='police' and (not model:GetAttribute('Spoke') or os.clock()>model:GetAttribute('Spoke')+12) then model:SetAttribute('Spoke',os.clock()); tell(target,'Officer nearby. Hands up to surrender.') end
@@ -134,11 +160,16 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest)
         repeat task.wait(.10) until not model.Parent or os.clock()>=deadline or ((point.Position-root.Position)*Vector3.new(1,0,1)).Magnitude<1.6
         if not model.Parent then return end
         if os.clock()>=deadline or (root.Position-start).Magnitude>=14 then break end
-        if target and (not target.Character or (target.Character:GetPivot().Position-dest).Magnitude>6 or (target.Character:GetPivot().Position-root.Position).Magnitude<9) then break end
+        if target and (not target.Character or visible(model,target.Character,10)) then break end
        end
       end
+     elseif not target and os.clock()-patrolSince>5 then
+      patrol=patrol%#route+1;patrolSince=os.clock()
      end
-    else patrol=not patrol end
+     path:Destroy()
+    elseif target then
+     if not visible(model,target.Character,70) then calls[role][target]=nil;lastSeen[target]=nil end
+    else patrol=patrol%#route+1;patrolSince=os.clock() end
     task.wait(target and .55 or 1.6)
    end
   end)

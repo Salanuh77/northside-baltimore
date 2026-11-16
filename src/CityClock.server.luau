@@ -1,5 +1,6 @@
 local lighting=game:GetService('Lighting')
 local city=workspace:WaitForChild('Baltimore')
+local streetLight=require(script.Parent.StreetLighting)
 local hands,lamps={},{}
 local wasNight
 for _,p in city:GetDescendants() do
@@ -11,6 +12,7 @@ while true do
  local total=math.floor(workspace:GetServerTimeNow())
  local minutes=total%1440
  lighting.ClockTime=minutes/60
+ streetLight(lighting,minutes/60)
  local night=minutes<360 or minutes>=1140
  if night~=wasNight then
   for _,lamp in lamps do lamp.PointLight.Enabled=night;lamp.Material=night and Enum.Material.Neon or Enum.Material.Glass end

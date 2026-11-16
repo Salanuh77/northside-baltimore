@@ -28,6 +28,7 @@ for _,building in city:GetDescendants() do
     if kind=='SitHome' or kind=='RestHome' then assert(item:IsA('Seat') and not item.CanTouch,'Seat must be intentional') end
    end
   end
+  if room:GetAttribute('HomeLayout')=='Flat' then assert(assets['Walnut sideboard'],'Missing hallway cabinet') end
   for _,name in {'Sofa upholstery','Quilted bed','Kitchen sink','Kitchen range'} do assert(assets[name],room:GetFullName()..' missing '..name) end
   assert(actions.SitHome==2 and actions.RestHome==1 and actions.UseTap==1 and actions.Cook==1,room:GetFullName()..' missing interactions')
  end
