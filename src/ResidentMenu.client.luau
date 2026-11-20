@@ -208,13 +208,18 @@ draw=function()
   local v=label(parent,text,13,gold);v.Size=UDim2.new(1,-4,0,26)
  end
  if not slot then
-  hint(pane,'RESIDENT FILES  /  3 SLOTS')
+  hint(pane,'SELECT A CHARACTER')
   for i,record in rows do
    local b=button(pane,record.Name or 'New resident',function() chooseFile(i) end)
-   b.Text=string.format('%02d   %s',i,record.Name or 'New resident')
-   b.Position=UDim2.fromOffset(0,32+(i-1)*68);b.Size=UDim2.new(1,-4,0,60)
-   b.TextXAlignment=Enum.TextXAlignment.Left;b.TextSize=14;b.TextWrapped=true
-   make('UIPadding',{PaddingLeft=UDim.new(0,12)},b)
+   b.Text='';b.Position=UDim2.fromOffset(0,34+(i-1)*88);b.Size=UDim2.new(1,-4,0,80)
+   local marker=label(b,string.format('%02d',i),27,selectedFile==i and ink or gold)
+   marker.Font=theme.TitleFont;at(marker,14,12,36,36)
+   local name=label(b,record.Name or 'New resident',16,selectedFile==i and ink or cream)
+   at(name,58,12,pane.AbsoluteSize.X-76,25);name.TextWrapped=true
+   local detail=record.Name and ('$'..tostring(record.Cash or 0)..' cash  /  Saved resident') or record.Occupied and 'Finish setting up this resident' or 'Start a new life in Baltimore'
+   local meta=label(b,detail,12,selectedFile==i and ink or paper)
+   at(meta,58,42,pane.AbsoluteSize.X-76,26);meta.TextWrapped=true
+   local rail=frame(b,selectedFile==i and gold or theme.Line);rail.Size=UDim2.new(0,3,1,0)
    b:SetAttribute('SlotIndex',i)
    if selectedFile==i then b.BackgroundColor3=cream;b.TextColor3=ink end
   end
@@ -312,7 +317,13 @@ draw=function()
 end
 local function files()
  local encoded=player:GetAttribute('ResidentFiles')
- if encoded then rows=game.HttpService:JSONDecode(encoded);footer.Text='';draw() end
+ if encoded then
+  rows=game.HttpService:JSONDecode(encoded);footer.Text=''
+  if not slot and not selectedFile and not waiting then
+   for i,record in rows do if record.Name then chooseFile(i);return end end
+  end
+  draw()
+ end
 end
 close=function()
  if not screen.Enabled then return end
