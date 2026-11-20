@@ -378,7 +378,7 @@ local function selectFile(p,index,creating)
   d.Cash=math.clamp(tonumber(result.Cash) or 500,0,10000000); d.Bank=math.clamp(tonumber(result.Bank) or 0,0,10000000); d.Loot=math.clamp(tonumber(result.Loot) or 0,0,20)
   for name in items do if type(result.Items)=='table' and result.Items[name]==true then d.Items[name]=true end end
   for _,key in {'Wardrobe','Stock','Receipts','Trades'} do if type(result[key])=='table' then d[key]=result[key] end end
-  d.Look=result.Look; d.Outfit=result.Outfit; d.PendingSale=result.PendingSale
+  d.Look=result.Look and require(RS.StreetStyle).restore(result.Look); d.Outfit=result.Outfit; d.PendingSale=result.PendingSale
   d.Stock.Sidearm=math.max(d.Items.Pistol and 1 or 0,tonumber(d.Stock.Sidearm) or 0)
   d.Magazine=d.Items.Pistol and math.clamp(math.floor(tonumber(result.Magazine) or 12),0,12) or 0
   d.Reserve=math.clamp(math.floor(tonumber(result.Reserve) or (d.Items.Pistol and 24 or 0)),0,120)

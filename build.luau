@@ -246,6 +246,7 @@ fringe.Size=Vector3.new(1.07,.56,1.04);fringe:SetAttribute('GroomCenter',Vector3
 require('./groom-materials')(rb,grooms)
 singleMesh('service-cap','ServiceCap',rs)
 local starterRig=rig:Clone();starterRig.Name='StarterCharacter';starterRig.Parent=starter
+local appearance=Instance.new('ModuleScript');appearance.Name='ResidentAppearance';appearance.Source=fs.readFile('src/ResidentAppearance.luau');appearance.Parent=rs
 local creatorLayout=Instance.new('ModuleScript');creatorLayout.Name='CreatorLayout';creatorLayout.Source=fs.readFile('src/CreatorLayout.luau');creatorLayout.Parent=rs
 local menu=Instance.new('LocalScript');menu.Name='ResidentMenu';menu.Source=fs.readFile('src/ResidentMenu.client.luau');menu.Parent=starter:FindFirstChildOfClass('StarterPlayerScripts')
 local portrait=Instance.new('ModuleScript'); portrait.Name='ResidentPortrait'; portrait.Source=fs.readFile('src/ResidentPortrait.luau'); portrait.Parent=rs

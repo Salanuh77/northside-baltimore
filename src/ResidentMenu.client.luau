@@ -74,7 +74,7 @@ for i=-3,3 do furnishing('Wall seam',Vector3.new(.025,13,.03),Vector3.new(i*3,6.
 furnishing('Floor trim',Vector3.new(28,.12,.1),Vector3.new(0,.18,4.64),{152,164,173})
 local roomOrigin=room:GetPivot()
 local rows={}
-local function fresh() return {Height='Medium',Build='Average',Tone='Amber',Hair='Close crop',Name='Avery Bell',FirstName='Avery',LastName='Bell',FaceShape='Oval',FaceWidth='Balanced',EyeSpacing='Balanced',LipFullness='Medium',Depth='Standard',Pants='Dark denim',Shoes='Bone low-tops',Mouth='Level',HairDetail='Natural',Starter='Ash pullover',Detail='Clean',HairColor='Black',Eye='Brown',Expression='Calm'} end
+local function fresh() return require(storage.ResidentAppearance).new() end
 local draft=fresh()
 local yaw=.22
 local rig
@@ -114,8 +114,7 @@ local function chooseFile(index)
  local record=rows[index]
  if not record then return end
  if record.Name then
-  selectedFile=index;slot=nil;draft=fresh()
-  for key,value in record.Look or {} do draft[key]=value end
+  selectedFile=index;slot=nil;draft=style.restore(record.Look)
   wornOutfit=record.Outfit;footer.Text=record.Name;closeup=false;rebuild();draw()
  else
   selectedFile=nil;wornOutfit=nil;slot=index;tab='Identity';draft=fresh();yaw=.22;footer.Text='';rebuild();draw()

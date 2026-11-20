@@ -32,6 +32,13 @@ Style.Expressions={'Calm','Smile','Focused'}
 Style.Eyes={'Brown','Hazel','Blue','Gray'}
 local iris={Brown=Color3.fromRGB(69,43,30),Hazel=Color3.fromRGB(108,102,60),Blue=Color3.fromRGB(83,114,128),Gray=Color3.fromRGB(105,112,112)}
 Style.Details={'Clean','Freckles','Goatee','Mustache','Stubble'}
+function Style.restore(data)
+ return require(game.ReplicatedStorage.ResidentAppearance).restore(data,{
+  Height=Style.Heights,Build=Style.Builds,Depth=Style.Depths,Hair=Style.Hair,Tone=Style.Tones,
+  Starter=Style.Starters,Detail=Style.Details,FaceShape=Style.FaceShapes,FaceWidth=Style.FaceWidths,
+  EyeSpacing=Style.EyeSpacings,LipFullness=Style.LipFullness,HairColor=Style.HairColors,
+  Eye=Style.Eyes,Expression=Style.Expressions,Mouth=Style.Mouths,Pants=Style.Pants,Shoes=Style.Shoes,HairDetail=Style.HairDetails})
+end
 function Style.valid(data)
  if type(data)~='table' or (data.Starter~=nil and not table.find(Style.Starters,data.Starter)) or (data.Detail~=nil and not table.find(Style.Details,data.Detail)) then return false end
  for key,list in {FaceShape=Style.FaceShapes,FaceWidth=Style.FaceWidths,EyeSpacing=Style.EyeSpacings,LipFullness=Style.LipFullness,HairColor=Style.HairColors,Eye=Style.Eyes,Expression=Style.Expressions,Mouth=Style.Mouths,Pants=Style.Pants,Shoes=Style.Shoes,Depth=Style.Depths,HairDetail=Style.HairDetails} do if data[key]~=nil and not table.find(list,data[key]) then return false end end
