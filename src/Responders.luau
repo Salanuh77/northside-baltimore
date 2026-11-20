@@ -111,7 +111,7 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
   end
   if witnessed then
    local previous=reports[p]
-   reports[p]={position=origin,time=now,violentUntil=kind=='robbery' and (previous and previous.violentUntil or 0) or now+12}
+   reports[p]={position=origin,time=now,seenAt=previous and previous.seenAt,violentUntil=kind=='robbery' and (previous and previous.violentUntil or 0) or now+12}
    if addHeat and (not previous or now-previous.time>6) then addHeat(p,1) end
   end
  end
@@ -164,7 +164,7 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
       if seen then
        local position=p.Character.HumanoidRootPart.Position;unit.memory[p]={position=position,time=now}
        if role=='police' then
-        local previous=reports[p];reports[p]={position=position,time=now,violentUntil=previous and previous.violentUntil or 0}
+        local previous=reports[p];reports[p]={position=position,time=now,seenAt=now,violentUntil=previous and previous.violentUntil or 0}
         profiles[p].HeatNext=now+30
        end
       end
@@ -228,7 +228,7 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
    local now=os.clock()
    for _,p in Players:GetPlayers() do
     local report=reports[p]
-    p:SetAttribute('PoliceContact',valid('police',p) and report and now-report.time<12 and (now-report.time<.6 and 'Spotted' or 'Searching') or '')
+    p:SetAttribute('PoliceContact',valid('police',p) and Awareness.status(now,report) or '')
     if report and now-report.time>45 then reports[p]=nil end
     for _,role in {'medic','police'} do local call=calls[role][p];if call and now-call.time>45 then calls[role][p]=nil end end
    end

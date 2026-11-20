@@ -11,4 +11,8 @@ assert(Awareness.contact(16,seen,report,call)==call,'Expired sighting falls back
 assert(Awareness.contact(46,seen,report,call)==nil,'Search and call expire')
 assert(Awareness.contact(10,seen,nil,nil).position=='alley','Hidden movement cannot update a remembered position')
 assert(Awareness.contact(12,seen,nil,nil)==nil,'Sight memory expires on the boundary')
+assert(Awareness.status(0,{time=0})=='Searching','Hearing gunfire must not claim visual contact')
+assert(Awareness.status(.5,{time=0,seenAt=0})=='Spotted')
+assert(Awareness.status(1,{time=0,seenAt=0})=='Searching')
+assert(Awareness.status(12,{time=0,seenAt=0})=='')
 print('PASS: field of view, awareness range, shared sightings, snapshot locations and search expiry')

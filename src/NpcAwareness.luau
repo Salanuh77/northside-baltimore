@@ -1,4 +1,8 @@
 local Awareness={}
+function Awareness.status(now,contact)
+ if not contact or now-contact.time>=12 then return '' end
+ return contact.seenAt and now-contact.seenAt<.6 and 'Spotted' or 'Searching'
+end
 function Awareness.inView(distance,dot,focused)
  return distance<=70 and (distance<=14 or focused or dot>=.25)
 end
