@@ -236,9 +236,11 @@ local ok, message = pcall(function()
  local lipHeight=rig().Head:FindFirstChild('Resident mouth',true).Size.Y
  click(findButton(studio,'LipFullness next'))
  check('lip fullness changes the mouth',rig().Head:FindFirstChild('Resident mouth',true).Size.Y>lipHeight)
- local baseEyes=rig().Head:FindFirstChild("Resident face",true).TextureID
+ local eyeMaterial=rig().Head:FindFirstChild('Resident face',true):FindFirstChildOfClass('SurfaceAppearance')
+ check('face artwork uses cutout alpha',eyeMaterial and eyeMaterial.AlphaMode==Enum.AlphaMode.Transparency)
+ local baseEyes=eyeMaterial.ColorMap
  click(findButton(studio,"Mouth next"))
- check("eye and mouth selectors render separately",rig().Head:FindFirstChild("Resident face",true).TextureID==baseEyes and rig().Head:FindFirstChild("Resident mouth",true).TextureID:find(game.ReplicatedStorage.StreetStyle:GetAttribute("lips-smile"),1,true)~=nil)
+ check("eye and mouth selectors render separately",rig().Head:FindFirstChild("Resident face",true):FindFirstChildOfClass('SurfaceAppearance').ColorMap==baseEyes and rig().Head:FindFirstChild("Resident mouth",true):FindFirstChildOfClass('SurfaceAppearance').ColorMap:find(game.ReplicatedStorage.StreetStyle:GetAttribute("lips-smile"),1,true)~=nil)
  click(findButton(studio, "Enter city"))
  local character = waitUntil(function()
   local c = player.Character
@@ -334,6 +336,11 @@ local ok, message = pcall(function()
  click(findButton(modal,'Home'));opened('CITY PHONE')
  for _,app in {{'My bag','MY BAG'},{'My home','HOME & PARTIES'},{'Pay / trade','NEARBY PLAYERS'},{'Dispatch','CITY DISPATCH'}} do
   click(findButton(content,app[1]));opened(app[2])
+  if app[1]=='My bag' then
+   local card=content:FindFirstChild('Item Water')
+   local image=card and card:FindFirstChildWhichIsA('ViewportFrame',true)
+   check('bag item has lit product geometry and a quantity',image and image.CurrentCamera and #image:FindFirstChildOfClass('WorldModel'):GetDescendants()>5 and card.Price.Text~='',card)
+  end
   check(app[1]..' opens inside the handset',modal['Handset frame'].Visible and not gui.PHONE.Visible,title.Text)
   click(findButton(modal,'Home'));opened('CITY PHONE')
  end

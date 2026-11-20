@@ -40,7 +40,22 @@ local p=game.Players.LocalPlayer
 local event=game.ReplicatedStorage.CityAction
 while not p:GetAttribute('ProbeChoose') do task.wait(.05) end
 event.OnClientEvent:Connect(function(kind) if kind=='ReturnCheck' then event:FireServer('SelectFile',{Index=1}) end end)
-event:FireServer('SelectFile',{Index=2})
+local input=game:GetService('UserInputService'):CreateVirtualInput()
+local gui=p.PlayerGui:WaitForChild('ResidentStudio')
+local function click(button)
+ local point=button.AbsolutePosition+button.AbsoluteSize/2+game.GuiService:GetGuiInset()
+ input:SendMousePosition(point);input:SendMouseButton(point,Enum.UserInputType.MouseButton1,true,0)
+ task.wait(.1);input:SendMouseButton(point,Enum.UserInputType.MouseButton1,false,0);task.wait(.3)
+end
+local deadline=os.clock()+10
+repeat task.wait(.1) until gui:FindFirstChild('River',true) or os.clock()>deadline
+click(assert(gui:FindFirstChild('River',true),'Saved resident card is missing'))
+assert(not p.Character,'Clicking a save must preview it before entering')
+local preview=gui:FindFirstChild('ResidentRig',true)
+assert(preview and preview.Head:FindFirstChild('Head sculpt',true).MeshId==game.ReplicatedStorage.ResidentProfiles:FindFirstChild('Heart',true).MeshId,'Selected save preview is wrong')
+local enter
+for _,v in gui:GetDescendants() do if v:IsA('TextButton') and v.Text=='Enter city' then enter=v;break end end
+click(assert(enter,'Enter city button is missing'))
 ]=];client.Parent=game.StarterPlayer.StarterPlayerScripts
 task.wait(4)
 local result=game:GetService('StudioTestService'):ExecutePlayModeAsync({name='Restore an existing resident'})
