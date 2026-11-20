@@ -57,6 +57,13 @@ remote.OnClientInvoke=function(kind,data)
   input:SendKey(true,Enum.KeyCode.F,false);task.wait(.1);input:SendKey(false,Enum.KeyCode.F,false)
   return true
  end
+ if kind=='StandUp' then
+  local seat=p.Character.Humanoid.SeatPart
+  assert(seat and seat:IsA('Seat') and not seat:IsA('VehicleSeat'),'Furniture stand-up requires a furniture seat')
+  local input=assert(game:GetService('UserInputService'):CreateVirtualInput())
+  input:SendKey(true,Enum.KeyCode.Space,false);task.wait(.15);input:SendKey(false,Enum.KeyCode.Space,false)
+  return true
+ end
  if kind=='DriveInput' then
   local seat=p.Character.Humanoid.SeatPart
   local run=game:GetService('RunService')
