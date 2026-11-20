@@ -50,8 +50,11 @@ fs.writeFile('publish-receipt.json',serde.encode('json',done,true))
 print('PUBLISH_RECEIPT',serde.encode('json',done))
 assert(not done.error and done.response and done.response.isPublished==true,'Published state unconfirmed')
 
+-- Optional promotional text has its own Roblox review and must not be bundled
+-- into the required name/description update after a successful place upload.
+local listingUpdate={name=listing.name,description=listing.description}
 for _,url in {'https://develop.roblox.com/v2/universes/10755218391/configuration','https://develop.roblox.com/v2/places/'..target} do
- local renamed=request('PATCH',url,serde.encode('json',listing),'application/json')
+ local renamed=request('PATCH',url,serde.encode('json',listingUpdate),'application/json')
  print('RENAME_RESULT',renamed.statusCode,renamed.body)
  assert(renamed.statusCode==200,'Name update rejected')
 end

@@ -4,7 +4,9 @@ The former bed implementation failed the new Studio assertion: the occupant rema
 
 The creator's new sidebar/category layout passed 52 checks each at desktop and iPhone 7 sizes, including preview/editor separation, independent facial controls, outfits, naming, saved appearance on entry and phone navigation. The mobile run initially exposed a phone app overlapping the touch controls; the HUD now renders above them. Later release runs additionally cycle and load all 17 hair choices. The face regression suite checks all 54 head/eye-spacing/lip-fullness combinations and three headings. Source-space front and profile renders prompted replacement of the floating flat eye/lip cards with conforming geometry; those renders are not in-engine screenshots.
 
-All 28 unit/build suites pass. The final release still requires all nine Studio suites on the exact hosted CI artifact, with game-script errors monitored on both clients and the server. The prior upload was rejected for an ongoing Team Create session, so that upload did not change live revision 19.
+All 28 unit/build suites and all nine Studio suites passed on the exact artifact from CI run 44661070902 (commit `1d4ec0229ac2dd60b73bd642fb010fe72e8256a4`). The final UI run passed 53 checks per desktop/iPhone 7 profile, including every hairstyle; the home run also confirmed another player sees the supine rest pose. Game-script errors were monitored on both clients and the server.
+
+Published as Roblox revision 20. Downloading that revision matched the tested artifact byte-for-byte: SHA256 `7CF9FF709858AD59309EAA65BB201B0C7EAF95C00BE991CEDA9868864BC9514A`. An empty Team Create session initially blocked publication. After verifying no active editors, Team Create was temporarily disabled for the upload and restored immediately afterward. Roblox rejected the optional promotional-text field, but accepted the name and description when sent separately; the publisher now excludes that optional field from the required listing update. The post-publication script/documentation correction does not change the tested game artifact.
 
 # November 19 Alpha regression pass
 
