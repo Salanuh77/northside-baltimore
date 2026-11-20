@@ -196,7 +196,7 @@ end
 draw=function()
  clear(pane);clear(sidePane);clear(categoryBar)
  pane.CanvasPosition=Vector2.zero;sidePane.CanvasPosition=Vector2.zero
- title.Text=not slot and 'CHOOSE YOUR RESIDENT' or tab=='Identity' and 'CREATE YOUR IDENTITY' or 'APPEARANCE'
+ title.Text=not slot and 'CHARACTER SELECT' or tab=='Identity' and 'YOUR IDENTITY' or 'CUSTOMIZE CHARACTER'
  servers.Visible=slot==nil;east.Visible=slot~=nil
  back.Visible=slot~=nil;enter.Visible=slot~=nil or selectedFile~=nil
  zoom.Visible=slot~=nil and tab=='Appearance';zoom.Text=closeup and 'Full body' or 'Face view'
@@ -226,6 +226,7 @@ draw=function()
   return
  end
  if tab=='Identity' then
+  footer.Text='Choose a fictional name for roleplay.'
   local function names(parent,field,caption,list)
    hint(parent,caption)
    local box=make('TextBox',{Name=field..' input',Text=draft[field],PlaceholderText=caption,
@@ -238,13 +239,15 @@ draw=function()
      item.BackgroundColor3=name==box.Text and gold or slate;item.TextColor3=name==box.Text and ink or cream
     end
    end)
-   local suggestions=label(parent,'Suggestions',12,paper)
+   make('UIStroke',{Color=theme.Line,Thickness=1,ApplyStrokeMode=Enum.ApplyStrokeMode.Border},box)
+   make('UIPadding',{PaddingLeft=UDim.new(0,10),PaddingRight=UDim.new(0,10)},box)
+   local suggestions=label(parent,'OR PICK A NAME',11,paper)
    suggestions.Position=UDim2.fromOffset(2,72);suggestions.Size=UDim2.new(1,-4,0,20)
    for i,value in list do
     local b=button(parent,value,function()
      box.Text=value
     end)
-    buttons[value]=b;b.Position=UDim2.fromOffset(0,96+(i-1)*34);b.Size=UDim2.new(1,-4,0,30)
+    buttons[value]=b;b.Position=UDim2.fromOffset(0,96+(i-1)*44);b.Size=UDim2.new(1,-4,0,40)
     if draft[field]==value then b.BackgroundColor3=gold;b.TextColor3=ink end
    end
   end
