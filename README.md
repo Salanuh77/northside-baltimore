@@ -28,13 +28,13 @@ Each account gets three resident files. Choose an occupied file to resume its sa
 
 ## Play
 
-Press **Play**. Open **MAP** to see the streets, neighborhoods and your location. **GUIDE** lists controls and jobs. Use **Drive** at a parked car, steer with movement controls and jump to exit.
+Press **Play**, select a resident file and enter the city. Press **P** or use the phone icon to open **City map**, **Work**, **My bag**, **Dispatch** and **Guide**. Press **M** or tap the radar for the map. Use **Drive** at a parked car, steer with movement controls, hold **Space** to brake and press **F** or **X** to exit beside the vehicle. Controller players use **LT** to brake and **B** to exit; touch players have on-screen controls.
 
 - **E** / touch prompts: interact; doors open and close.
 - **H**: surrender / stop surrendering.
 - **T**: nearby player payments, item offers and robbery.
 - Equipped pistol: click/tap to fire; **R** reloads. Mobile buttons cover player menu, surrender and reload.
-- Harbor Freight sells a knife for $55, a crowbar for $90, and a medkit for $70. Union Athletics sells a wood bat for $80. Eastern Outfitters sells sidearms for Robux. Eligible players can agree on a city-cash price in the nearby player trade menu.
+- Freight Expectations sells a knife for $55, a crowbar for $90, and a medkit for $70. Bench Authority sells a wood bat for $80. River Pro Outfitters sells sidearms for Robux. Eligible players can agree on a city-cash price in the nearby player trade menu.
 - House lockbox: equip crowbar and stay nearby for 9 seconds. Sell stolen goods at the warehouse salvage counter for $110 each.
 - Store register: equip pistol and stay nearby for 12 seconds for $225. Locations reset after 3 minutes.
 - Player robbery: target must surrender; remain nearby for 8 seconds. Takes 25% of cash, capped at $200, with a 5 minute victim cooldown. Bank money is protected.
@@ -75,13 +75,13 @@ Renting a home locks its door controls to the tenant and accepted party guests. 
 
 The crime RP direction prioritizes readable police pursuits and consequences. NPC officers use limited vision, heard incidents and shared last-known positions; hidden players are searched for rather than tracked live. Armed aggressors trigger a reaction delay, inaccurate three-shot bursts, twelve-round magazines and reloads. Officers seek nearby cover while reloading or wounded. Surrender stops firing immediately; arrest requires contact at close range. Paramedics wait out nearby gunfire before a timed treatment, and shop staff react to witnessed incidents. The HUD distinguishes Spotted from Searching. These new behaviors require a Studio multiplayer playtest before the next place release; automated tests cover their policy, navigation and damage boundaries.
 
-Two NPC officers and two NPC paramedics patrol and respond. Use **PHONE → Emergency dispatch** for help. Police officers can settle a surrendered wanted character's citation. Paramedics treat injured players. Players can apply to either service and start a paid shift. Additional in-person dispatch payments are capped by a per-recipient cooldown.
+Two NPC officers and two NPC paramedics patrol and respond. Use **Phone → Dispatch** for help. Police book surrendered wanted residents into Patapsco; a nearby stationary suspect below 25 health can also be subdued. A healthy resisting player must be pursued. Paramedics treat injured players. Players can apply to either service and start a paid shift. Additional in-person dispatch payments are capped by a per-recipient cooldown.
 
 ## Interiors
 
 Use the phone or press **P** to apply for work, begin a shift, check its objective, view your balances or open the map. Parcel courier, building porter and dockworker shifts pay $110, $125 and $145. The off-book runner and unauthorized poster jobs pay $190 and $155 and raise the wanted level on completion. Route shifts pay once at the final marked stop. Barbers earn the customer fee for each completed cut.
 
-Harbor Freight sells twelve reserve rounds for $30. Reloading transfers rounds from the reserve. The HUD shows health, cash, bank balance, wanted level, stolen goods, and ammo when the pistol is equipped.
+Freight Expectations sells twelve reserve rounds for $30. Reloading transfers rounds from the reserve. The HUD shows health, cash, bank balance, wanted level, stolen goods, and ammo when the pistol is equipped.
 
 Follow the open galleries and end stairs at the housing courts to reach the flats. Each flat has a living area, kitchen, bedroom and lockbox. Commercial towers have furnished ground-floor lobbies. Their upper office and hotel floors are exterior scenery.
 
