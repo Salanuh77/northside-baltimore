@@ -28,5 +28,8 @@ assert(not nav.points and paths[3].destroyed,'Stopping cancels an in-flight rout
 clock=3;success=false;nav:step(v(40,0,0),clock,16);flush()
 assert(not nav.points and moves[#moves]==model.HumanoidRootPart.Position,'No direct walk through wall when path fails')
 clock=5;success=true;nav:step(v(40,0,0),clock,16);flush()
+local currentPath=nav.path
+paths[2].block(2)
+assert(nav.path==currentPath and not currentPath.destroyed,'Queued blockage from a retired path cannot discard the replacement route')
 model.Parent=false;nav:stop();assert(paths[5].destroyed,'Death disconnects navigation')
 print('PASS: navigation concurrency, moving targets, blockage, cancellation, no-path safety and cleanup')

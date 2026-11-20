@@ -31,7 +31,7 @@ function Navigation:step(goal,now,speed)
    self:clearPath();self.path=path;self.points=path:GetWaypoints();self.index=2
    self.progressAt=self.progressAt or os.clock();self.progress=self.progress or self.root.Position
    self.blocked=path.Blocked:Connect(function(index)
-    if index>=self.index then self.nextPlan=0;self:clearPath() end
+    if self.path==path and index>=self.index then self.nextPlan=0;self:clearPath() end
    end)
   end)
  end
