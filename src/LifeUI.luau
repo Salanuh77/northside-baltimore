@@ -1,4 +1,6 @@
 local Players=game:GetService('Players')
+local cards=require(game.ReplicatedStorage:WaitForChild('ItemCard'))
+local catalog=require(game.ReplicatedStorage:WaitForChild('ItemCatalog'))
 return function(p,event,modal,title,clear,row,paragraph,notify)
  local pins={}
  local function pin(key,data)
@@ -20,7 +22,11 @@ return function(p,event,modal,title,clear,row,paragraph,notify)
  end
  local function bag()
   clear('MY BAG')
-  for _,item in {'Water','Coffee','Sandwich','Bandage','Flashlight'} do row(item..'  × '..(p:GetAttribute('Bag'..item) or 0),function() event:FireServer('UseSupply',{Item=item}) end) end
+  for _,item in {'Water','Coffee','Sandwich','Bandage','Flashlight'} do
+   local entry=catalog[item];local count=p:GetAttribute('Bag'..item) or 0
+   local card=cards.decorate(row('',function() if count>0 then event:FireServer('UseSupply',{Item=item}) end end),entry.Icon,entry.Name,entry.Description,count>0 and ('USE · '..count..' in bag') or 'NOT OWNED')
+   card.button.Selectable=count>0;card.button.Active=count>0
+  end
  end
  local function homes()
   clear('HOME & PARTIES')
@@ -48,7 +54,10 @@ return function(p,event,modal,title,clear,row,paragraph,notify)
  event.OnClientEvent:Connect(function(kind,data)
   if kind=='Mart' then
    clear('FUEL MART')
-   for _,v in {{'Water',4,'8 HP'},{'Coffee',6,'13 HP'},{'Sandwich',9,'22 HP'},{'Bandage',15,'35 HP'},{'Flashlight',25,'reusable'}} do row(v[1]..'  ·  $'..v[2]..'  ·  '..v[3],function() event:FireServer('BuySupply',{Item=v[1]}) end) end
+   for _,key in {'Water','Coffee','Sandwich','Bandage','Flashlight'} do
+    local entry=catalog[key]
+    cards.decorate(row('',function() event:FireServer('BuySupply',{Item=key}) end),entry.Icon,entry.Name,entry.Description,'$'..entry.Price)
+   end
    row('Open my bag',bag)
   elseif kind=='Residence' then
    clear(data.Name:upper()); paragraph(data.Taken and 'This unit has a tenant.' or ('Session lease  •  '..(data.Price==0 and 'No move-in fee' or '$'..data.Price)))
