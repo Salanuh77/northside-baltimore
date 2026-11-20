@@ -343,6 +343,16 @@ local function settleSidearm(seller,buyer,price)
  activeSales[seller]=nil
  reconcileSale(seller);sd.Trading=nil;bd.Trading=nil
 end
+local function loadResident(p,d)
+ if d.Spawning or p.Character or not d.Look then return end
+ d.Spawning=true
+ task.spawn(function()
+  local ok=pcall(function() p:LoadCharacterAsync() end)
+  if profiles[p]~=d then return end
+  d.Spawning=false
+  if not ok and p.Parent and not p.Character then tell(p,'Your character could not load. Press Enter city to retry. Your save is safe.') end
+ end)
+end
 local function join(p)
  local account
  if store then
@@ -368,7 +378,12 @@ local function join(p)
 end
 local function selectFile(p,index,creating)
  local account=accounts[p]
- if not account or account.Index or not Files.valid(index) then tell(p,'Your resident list is not ready. Please try again.');return end
+ if not account or not Files.valid(index) then tell(p,'Your resident list is not ready. Please try again.');return end
+ if account.Index then
+  if account.Index==index and profiles[p] and not p.Character then loadResident(p,profiles[p])
+  else tell(p,'A resident is already selected for this session.') end
+  return
+ end
  local existing=account.State.Files[tostring(index)]
  if not creating and (not existing or not existing.Look) then tell(p,'Create a resident in this file first.');return end
  account.Index=index
@@ -406,7 +421,7 @@ local function selectFile(p,index,creating)
   end)
  end
  p.CharacterAdded:Connect(character)
- if d.Look then task.spawn(function() p:LoadCharacterAsync() end) end
+ if d.Look then loadResident(p,d) end
  sync(p)
 end
 Players.PlayerAdded:Connect(join); for _,p in Players:GetPlayers() do task.spawn(join,p) end
@@ -443,12 +458,11 @@ event.OnServerEvent:Connect(function(p,kind,data)
   local before=d.Look
   retail.handle(p,kind,data,approvedName)
   if not before and d.Look and not d.Spawning and not p.Character and profiles[p]==d then
-   d.Spawning=true
    if not saveConfirmed(p,d) then
     if p.Parent then p:Kick('Your resident could not be saved. Rejoin to try again.') end
    elseif p.Parent then
     p:SetAttribute('ShowFirstJob',true)
-    p:LoadCharacterAsync()
+    loadResident(p,d)
    end
   end
   return
