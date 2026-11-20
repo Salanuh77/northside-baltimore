@@ -9,7 +9,9 @@ end
 local function call(p,kind,data) return drive:InvokeClient(p,kind,data or {}) end
 local function position(p,point)
  p:RequestStreamAroundAsync(point,5)
- p.Character:PivotTo(CFrame.new(point))
+ local root=p.Character.HumanoidRootPart
+ p.Character:PivotTo(CFrame.new(point)*root.CFrame:ToObjectSpace(p.Character:GetPivot()))
+ root.AssemblyLinearVelocity=Vector3.zero;root.AssemblyAngularVelocity=Vector3.zero
  task.wait(.5)
 end
 local function waitFor(condition,seconds)
@@ -26,7 +28,7 @@ end
 local ok,err=pcall(function()
  assert(waitFor(function() return #players:GetPlayers()==2 end,65))
  local a,b=table.unpack(players:GetPlayers())
- for _,p in {a,b} do assert(waitFor(function() return p.Character and p.Character:FindFirstChild('HumanoidRootPart') and p:GetAttribute('Cash')~=nil end,65)) end
+ for _,p in {a,b} do assert(waitFor(function() return p.Character and p.Character:FindFirstChild('HumanoidRootPart') and p:GetAttribute('Cash')~=nil and p:GetAttribute('ProbeSpawnFinished') end,65)) end
  local flat=assert(city:FindFirstChild('Lanvale Court A',true))
  local room=flat['Home furnishings 101']
  local door
