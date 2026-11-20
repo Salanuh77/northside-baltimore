@@ -24,7 +24,7 @@ function Brain.step(s,now,i)
  if not i.visible then return {mode='Searching',goal=i.goal} end
  if not i.threat then return {mode='Requesting surrender',goal=i.goal} end
  s.threatAt=s.threatAt or now
- local fire=now-s.seenAt>=.75 and now-s.threatAt>=.45 and now>=s.nextShot and i.distance<=70
+ local fire=i.clearShot~=false and now-s.seenAt>=.75 and now-s.threatAt>=.45 and now>=s.nextShot and i.distance<=70
  if fire then
   s.ammo-=1;s.burst+=1
   s.nextShot=now+(s.burst>=3 and .9 or .2)

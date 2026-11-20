@@ -33,4 +33,7 @@ assert(not Brain.step(s,11,input()).fire,'A newly aggressive suspect still gets 
 assert(Brain.step(s,11.5,input()).fire)
 assert(Brain.step(s,12,input({ownHealth=30})).cover,'Wounded officer seeks cover')
 s=Brain.new();assert(not Brain.step(s,0,input({health=20,distance=4,speed=8})).arrest,'Fast-moving wounded player cannot be cuffed remotely')
+local lane=Brain.new();Brain.step(lane,0,input({clearShot=false}))
+assert(not Brain.step(lane,1,input({clearShot=false})).fire and lane.ammo==12,'Officer holds ammunition when a bystander blocks the firing lane')
+assert(Brain.step(lane,1.2,input({clearShot=true})).fire,'Clear firing lane permits an aimed shot')
 print('PASS: responder reaction, bursts, reloads, occlusion, surrender, arrest range and target protection')

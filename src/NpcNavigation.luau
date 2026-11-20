@@ -38,7 +38,8 @@ function Navigation:step(goal,now,speed)
  local point=self.points and self.points[self.index]
  if not point then return end
  local planar=(point.Position-self.root.Position)*Vector3.new(1,0,1)
- if planar.Magnitude<1.8 then
+ local feetY=self.root.Position.Y-(self.human.HipHeight or 2)-(self.root.Size and self.root.Size.Y/2 or 1)
+ if planar.Magnitude<1.8 and math.abs(point.Position.Y-feetY)<1.8 then
   self.index+=1;self.progressAt=now;self.progress=self.root.Position
   point=self.points[self.index]
  end

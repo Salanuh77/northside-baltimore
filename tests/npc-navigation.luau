@@ -31,5 +31,12 @@ clock=5;success=true;nav:step(v(40,0,0),clock,16);flush()
 local currentPath=nav.path
 paths[2].block(2)
 assert(nav.path==currentPath and not currentPath.destroyed,'Queued blockage from a retired path cannot discard the replacement route')
-model.Parent=false;nav:stop();assert(paths[5].destroyed,'Death disconnects navigation')
+-- Arriving below a stair landing is not the same as reaching the waypoint.
+currentPath.GetWaypoints=function() return {{Position=v(0,0,0)},{Position=v(0,8,0),Action='Jump'},{Position=v(40,8,0),Action='Walk'}} end
+nav.points=currentPath:GetWaypoints();nav.index=2;nav.goal=v(40,8,0)
+nav:step(v(40,8,0),clock,16)
+assert(nav.index==2,'Do not skip a raised waypoint just because its X/Z matches')
+model.HumanoidRootPart.Position=v(0,11,0);nav:step(v(40,8,0),clock,16)
+assert(nav.index==3,'Advance once the feet reach the stair landing')
+model.Parent=false;nav:stop();assert(currentPath.destroyed,'Death disconnects navigation')
 print('PASS: navigation concurrency, moving targets, blockage, cancellation, no-path safety and cleanup')
