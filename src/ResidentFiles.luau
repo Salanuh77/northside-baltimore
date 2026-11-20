@@ -17,7 +17,9 @@ function Files.list(account)
  local rows={}
  for index=1,3 do
   local slot=account.Files[tostring(index)]
-  rows[index]={Index=index,Name=slot and slot.Look and slot.Look.Name,Cash=slot and slot.Cash}
+  rows[index]={Index=index,Name=slot and slot.Look and slot.Look.Name,Cash=slot and slot.Cash,
+   Look=slot and slot.Look and table.clone(slot.Look),Outfit=slot and slot.Outfit,
+   Occupied=slot~=nil,Employment=slot and slot.Employment}
  end
  return rows
 end
