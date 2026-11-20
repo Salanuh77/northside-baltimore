@@ -61,6 +61,8 @@ local function hair(head,style,dye,detail,scale)
   if groom then
    handle.Size=source.Size*scale;offset=source:GetAttribute('GroomCenter')
    handle.Color=dye;handle.Material=Enum.Material.SmoothPlastic
+   local surface=handle:FindFirstChildOfClass('SurfaceAppearance')
+   if surface then surface.Color=dye end
   else
    local proportions={
     ['Close crop']=Vector3.new(1.08,.76,1.10),Curls=Vector3.new(1.12,.88,1.13),
@@ -68,8 +70,10 @@ local function hair(head,style,dye,detail,scale)
     ['Side part']=Vector3.new(1.09,.88,1.15),Ponytail=Vector3.new(1.16,1.49,1.53)
    }
    handle.Size=scale*proportions[style]
-   if dye~=dyes.Black then
-    local surface=handle:FindFirstChildOfClass('SurfaceAppearance');if surface then surface:Destroy() end
+   local surface=handle:FindFirstChildOfClass('SurfaceAppearance')
+   if surface then
+    surface.Color=dye;handle.Color=dye
+   elseif dye~=dyes.Black then
     handle.TextureID='';handle.Color=dye
    end
    offset=style=='Ponytail' and Vector3.new(0,.18,.23) or style=='Braids' and Vector3.new(0,.16,.11) or Vector3.new(0,.34,.04)
