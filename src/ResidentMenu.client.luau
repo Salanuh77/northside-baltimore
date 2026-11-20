@@ -6,11 +6,8 @@ local style=require(storage:WaitForChild('StreetStyle'))
 local geometry=require(storage:WaitForChild('CreatorLayout'))
 local template=storage:WaitForChild('ResidentRig')
 local event=storage:WaitForChild('CityAction')
-local cream=Color3.fromRGB(246,247,248)
-local paper=Color3.fromRGB(163,170,180)
-local ink=Color3.fromRGB(16,19,25)
-local slate=Color3.fromRGB(32,37,46)
-local gold=Color3.fromRGB(159,211,190)
+local theme=require(storage:WaitForChild('UITheme'))
+local cream,paper,ink,slate,gold=theme.Text,theme.Muted,theme.Background,theme.Surface,theme.Accent
 local function make(class,props,parent)
  local v=Instance.new(class)
  for k,value in props do v[k]=value end
@@ -44,8 +41,8 @@ local world=make('WorldModel',{},viewport)
 local camera=make('Camera',{FieldOfView=35},viewport)
 viewport.CurrentCamera=camera
 local panel=frame(canvas,ink)
-local imprint=label(panel,'BALTIMORE  /  ONLINE',10,gold)
-local title=label(panel,'CHOOSE YOUR RESIDENT',24,cream);title.Font=Enum.Font.GothamBold
+local imprint=label(panel,'BALTIMORE  /  RESIDENT REGISTRATION',10,gold)
+local title=label(panel,'CHOOSE YOUR RESIDENT',24,cream);title.Font=theme.TitleFont
 local function scroller(parent)
  return make('ScrollingFrame',{CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollingDirection=Enum.ScrollingDirection.Y,ScrollBarThickness=3,BackgroundTransparency=1,BorderSizePixel=0},parent)
 end
