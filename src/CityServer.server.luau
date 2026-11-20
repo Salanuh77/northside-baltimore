@@ -366,9 +366,11 @@ local function join(p)
  if not p.Parent then save(p,true);accounts[p]=nil;return end
  p:SetAttribute('ResidentFiles',game.HttpService:JSONEncode(Files.list(account)))
 end
-local function selectFile(p,index)
+local function selectFile(p,index,creating)
  local account=accounts[p]
- if not account or account.Index or not Files.valid(index) then return end
+ if not account or account.Index or not Files.valid(index) then tell(p,'Your resident list is not ready. Please try again.');return end
+ local existing=account.State.Files[tostring(index)]
+ if not creating and (not existing or not existing.Look) then tell(p,'Create a resident in this file first.');return end
  account.Index=index
  local result=account.State.Files[tostring(index)]
  local d={Cash=500,Bank=0,Loot=0,Items={},Supplies={},Magazine=0,Reserve=0,Employment='',Wages=0,Heat=0,LastSave=os.time(),Wardrobe={},Stock={},Receipts={},Trades={}}
@@ -420,7 +422,7 @@ event.OnServerEvent:Connect(function(p,kind,data)
  local approvedName
  if kind=='CreateResident' and typeof(data)=='table' and data.Index~=nil then
   local account=accounts[p]
-  if not account or account.Index or not Files.valid(data.Index) or account.State.Files[tostring(data.Index)] then
+  if not account or account.Index or not Files.valid(data.Index) or (account.State.Files[tostring(data.Index)] and account.State.Files[tostring(data.Index)].Look) then
    tell(p,'That file is unavailable. Select a free file.');return
   end
   if not require(game.ReplicatedStorage.StreetStyle).valid(data) then tell(p,'Choose an available appearance.');return end
@@ -430,7 +432,7 @@ event.OnServerEvent:Connect(function(p,kind,data)
   naming[p]=nil
   if accounts[p]~=account or not p.Parent then return end
   if not approvedName then tell(p,reason);return end
-  selectFile(p,data.Index)
+  selectFile(p,data.Index,true)
  end
  if kind=='SelectFile' then if typeof(data)=='table' then selectFile(p,data.Index) end;return end
  if not profiles[p] then return end
