@@ -10,6 +10,7 @@ for _,key in {'Vector3','Instance','CFrame','Color3','Enum'} do env[key]=rb[key]
 local Portrait=luau.load(fs.readFile('src/ResidentPortrait.luau'),{environment=env,injectGlobals=true})()
 local art=rb.Instance.new('ModuleScript')
 local assets=require('@lune/serde').decode('json',fs.readFile('art/assets.json'))
+env.game.ReplicatedStorage.ResidentFaceMaterials=require('../face-materials')(rb,nil,assets)
 for key,id in assets do art:SetAttribute(key,id) end
 local head=rb.Instance.new('Part');head.Size=rb.Vector3.new(1.48,1.08,1.10)
 local count=0
