@@ -12,7 +12,7 @@ local function position(p,frame)
  local root=p.Character.HumanoidRootPart
  p:RequestStreamAroundAsync(frame.Position,5)
  p.Character:PivotTo(frame*root.CFrame:ToObjectSpace(p.Character:GetPivot()))
- root.AssemblyLinearVelocity=Vector3.zero;task.wait(.4)
+ root.AssemblyLinearVelocity=Vector3.zero;root.AssemblyAngularVelocity=Vector3.zero;task.wait(.4)
 end
 local ok,err=pcall(function()
  check(waitFor(function()
@@ -27,6 +27,19 @@ local ok,err=pcall(function()
  local closed=door.CFrame
  local residence=door.Residence.Value
  position(a,closed*CFrame.new(0,-1,-5));position(b,closed*CFrame.new(9,-1,-5))
+ local function intercomSight(p)
+  local eye=p.Character.HumanoidRootPart.Position+Vector3.new(0,1.5,0)
+  local ray=RaycastParams.new();ray.FilterType=Enum.RaycastFilterType.Exclude;ray.FilterDescendantsInstances={p.Character}
+  return workspace:Raycast(eye,residence.Position-eye,ray)
+ end
+ local initialHit=intercomSight(a)
+ print('ACCESS_INTERCOM_APPROACH',initialHit and initialHit.Instance:GetFullName() or 'clear')
+ local function approachIntercom(p)
+  position(p,residence.CFrame*CFrame.new(0,0,-4))
+  local hit=intercomSight(p)
+  check(not hit or hit.Instance==residence,'Intercom is reachable from its own frontage: '..(hit and hit.Instance:GetFullName() or 'clear'))
+ end
+ approachIntercom(a)
  call(a,'Lease');check(residence:GetAttribute('Tenant')==a.UserId,'Intercom reserves the correct flat (tenant='..tostring(residence:GetAttribute('Tenant'))..', player='..tostring(a.Character.HumanoidRootPart.Position)..', intercom='..tostring(residence.Position)..')')
  position(a,closed*CFrame.new(9,-1,-5));position(b,closed*CFrame.new(0,-1,-5))
  call(b,'Prompt',door);check(not door:GetAttribute('Open'),'Stranger cannot open a rented flat')
@@ -49,6 +62,7 @@ local ok,err=pcall(function()
  position(a,closed*CFrame.new(9,-1,-5));position(b,closed*CFrame.new(0,-1,-5))
  call(b,'Prompt',door);check(not door:GetAttribute('Open'),'Revoked guest cannot reopen from the street')
  call(a,'ReleaseHome');check(residence:GetAttribute('Tenant')==nil,'Release removes tenant lock')
+ approachIntercom(b)
  call(b,'Lease');check(residence:GetAttribute('Tenant')==b.UserId,'A new tenant can claim the released flat')
 end)
 print(ok and 'NORTHSIDE_ACCESS_PASS' or 'NORTHSIDE_ACCESS_FAIL',err or '')
