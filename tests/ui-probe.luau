@@ -28,7 +28,7 @@ game.ReplicatedStorage.UiProbeResult.OnServerEvent:Connect(function(player, resu
  if count>0 then result.ok=false; result.error=result.error.." character spawned before file selection" end
  test:EndTest(game.HttpService:JSONEncode(result))
 end)
-task.delay(60, function()
+task.delay(90, function()
  if not done then test:EndTest(game.HttpService:JSONEncode({ok=false, error="UI client deadline"})) end
 end)
 ]==]
@@ -306,13 +306,23 @@ local ok, message = pcall(function()
   string.format("viewport %s, usable %s, modal %s..%s", tostring(view), tostring(gui.AbsoluteSize), tostring(lo), tostring(hi)))
  close()
  click(findButton(gui,'PHONE'));opened('CITY PHONE')
- click(findButton(content,'City map'));opened('NORTHSIDE STREET MAP')
+ click(findButton(content,'City map'));opened('CITY MAP')
  click(findButton(modal,'Home'));opened('CITY PHONE')
  click(findButton(content,'Work'));opened('WORK')
  click(findButton(modal,'Home'));opened('CITY PHONE')
- click(findButton(content,'My bag'))
- check('Bag opens from phone grid',title.Text~='CITY PHONE' and modal.Visible,title.Text)
- click(findButton(modal,'Home'));opened('CITY PHONE');close()
+ for _,app in {{'My bag','MY BAG'},{'My home','HOME & PARTIES'},{'Pay / trade','NEARBY PLAYERS'},{'Dispatch','CITY DISPATCH'}} do
+  click(findButton(content,app[1]));opened(app[2])
+  check(app[1]..' opens inside the handset',modal['Handset frame'].Visible and not gui.PHONE.Visible,title.Text)
+  click(findButton(modal,'Home'));opened('CITY PHONE')
+ end
+ click(findButton(content,'Servers'))
+ local cities=waitUntil(function() return playerGui:FindFirstChild('CityServerBrowser') end,'Phone did not open the server browser')
+ check('server browser replaces and dismisses the phone',not modal.Visible and gui.PHONE.Visible)
+ click(findButton(cities,'Close'))
+ click(findButton(gui,'PHONE'));opened('CITY PHONE')
+ controls:SendKey(true,Enum.KeyCode.P,false);controls:SendKey(false,Enum.KeyCode.P,false)
+ waitUntil(function() return not modal.Visible and gui.PHONE.Visible end,'P did not put away the handset')
+ check('phone shortcut closes the phone and restores its launcher',true)
  local root = player.Character:WaitForChild("HumanoidRootPart")
  local start = root.Position
  controls:SendKey(true, Enum.KeyCode.W, false)
