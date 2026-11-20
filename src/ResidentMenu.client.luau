@@ -3,6 +3,7 @@ local storage=game:GetService('ReplicatedStorage')
 local input=game:GetService('UserInputService')
 local player=Players.LocalPlayer
 local style=require(storage:WaitForChild('StreetStyle'))
+local geometry=require(storage:WaitForChild('CreatorLayout'))
 local template=storage:WaitForChild('ResidentRig')
 local event=storage:WaitForChild('CityAction')
 local cream=Color3.fromRGB(246,247,248)
@@ -16,8 +17,9 @@ local function make(class,props,parent)
  v.Parent=parent
  return v
 end
-local screen=make('ScreenGui',{Name='ResidentStudio',DisplayOrder=24,ResetOnSpawn=false,IgnoreGuiInset=false},player:WaitForChild('PlayerGui'))
+local screen=make('ScreenGui',{Name='ResidentStudio',DisplayOrder=24,ResetOnSpawn=false,IgnoreGuiInset=false,ScreenInsets=Enum.ScreenInsets.CoreUISafeInsets,ClipToDeviceSafeArea=true},player:WaitForChild('PlayerGui'))
 local page=make('Frame',{Name='Studio',Size=UDim2.fromScale(1,1),BackgroundColor3=ink,BorderSizePixel=0,Active=true},screen)
+local canvas=make('Frame',{Name='Creator canvas',BackgroundTransparency=1,Size=UDim2.fromScale(1,1)},page)
 local function frame(parent,color)
  return make('Frame',{BorderSizePixel=0,BackgroundColor3=color},parent)
 end
@@ -34,27 +36,28 @@ end
 local function at(v,x,y,w,h)
  v.Position=UDim2.fromOffset(x,y);v.Size=UDim2.fromOffset(math.max(1,w),math.max(1,h))
 end
-local set=frame(page,paper);set.Name='Character preview'
+local set=frame(canvas,paper);set.Name='Character preview'
 set.ClipsDescendants=true
 make('UIGradient',{Rotation=90,Color=ColorSequence.new(Color3.fromRGB(100,113,125),Color3.fromRGB(44,51,63))},set)
 local viewport=make('ViewportFrame',{Size=UDim2.fromScale(1,1),BackgroundTransparency=1,Ambient=Color3.fromRGB(190,193,202),LightColor=Color3.fromRGB(255,243,230),LightDirection=Vector3.new(-.65,-.35,-1)},set)
 local world=make('WorldModel',{},viewport)
 local camera=make('Camera',{FieldOfView=35},viewport)
 viewport.CurrentCamera=camera
-local panel=frame(page,ink)
+local panel=frame(canvas,ink)
 local imprint=label(panel,'BALTIMORE  /  ONLINE',10,gold)
 local title=label(panel,'CHOOSE YOUR RESIDENT',24,cream);title.Font=Enum.Font.GothamBold
 local function scroller(parent)
  return make('ScrollingFrame',{CanvasSize=UDim2.new(),AutomaticCanvasSize=Enum.AutomaticSize.Y,ScrollingDirection=Enum.ScrollingDirection.Y,ScrollBarThickness=3,BackgroundTransparency=1,BorderSizePixel=0},parent)
 end
-local west=frame(page,ink);local east=frame(page,ink)
+local west=frame(canvas,ink);local east=frame(canvas,ink)
 west.Name='Editor';east.Name='Last name editor'
 local pane=scroller(west);local sidePane=scroller(east)
-local categoryBar=frame(page,ink);categoryBar.Name='Appearance categories'
+local categoryBar=frame(canvas,ink);categoryBar.Name='Appearance categories'
 local category='Hair'
 local caption=label(set,'DRAG TO ROTATE',10,cream)
 caption.TextTransparency=.2
-local footer=label(panel,'Loading your files…',14,cream);footer.TextWrapped=true
+local actionBar=frame(canvas,ink);actionBar.Name='Actions'
+local footer=label(actionBar,'Loading your files…',14,cream);footer.TextWrapped=true
 local slot,tab,waiting=nil,'Identity',false
 local selectedFile
 local closeup=false
@@ -125,7 +128,7 @@ local function send()
  local request=table.clone(draft);request.Index=slot
  event:FireServer('CreateResident',request)
 end
-local enter=button(panel,'Continue',function()
+local enter=button(actionBar,'Continue',function()
  if waiting then return end
  if selectedFile and not slot then
   waiting=true;footer.Text='Loading '..draft.Name..'…';event:FireServer('SelectFile',{Index=selectedFile});return
@@ -139,7 +142,7 @@ local enter=button(panel,'Continue',function()
  else send() end
 end)
 enter.BackgroundColor3=gold;enter.TextColor3=ink
-local back=button(panel,'Back',function()
+local back=button(actionBar,'Back',function()
  if waiting then return end
  if mirror then close();return end
  if tab=='Appearance' then tab='Identity' else slot=nil;draft=fresh() end
@@ -149,35 +152,30 @@ local servers=button(panel,'City servers',function() require(storage.ServerBrows
 local zoom=button(set,'Face view',function() closeup=not closeup;pose() end)
 zoom.Activated:Connect(function() zoom.Text=closeup and 'Full body' or 'Face view' end)
 local function layout()
- local w,h=page.AbsoluteSize.X,page.AbsoluteSize.Y
- local portrait=w<560 and h>w
- local header=h<420 and 42 or 66
- local footerHeight=h<420 and 44 or 58
- local editor=portrait and w-24 or math.clamp(math.floor(w*.31),226,350)
- local top=portrait and math.floor(h*.46) or header+10
- local tabs=slot and tab=='Appearance' and 38 or 0
- local available=h-top-footerHeight-10-tabs
- local identity=slot~=nil and tab=='Identity'
- if portrait then at(set,0,header,w,top-header-6)
- else at(set,editor+24,header+10,w-editor-36,h-header-footerHeight-20) end
- at(panel,0,0,w,header);panel.ClipsDescendants=false
- at(imprint,18,header<50 and 2 or 9,w-36,13);at(title,18,header<50 and 16 or 27,w-155,header<50 and 23 or 30);title.TextSize=header<50 and 17 or 24
- at(servers,w-126,header<50 and 6 or 20,110,30)
- categoryBar.Visible=tabs>0
- at(categoryBar,12,top,editor,tabs)
- local column=identity and (editor-8)/2 or editor
- at(west,12,top+tabs,column,available)
- at(east,20+column,top+tabs,column,available)
- east.Visible=identity
- at(pane,6,6,column-12,available-12);at(sidePane,6,6,column-12,available-12)
- at(back,14,h-footerHeight+7,70,footerHeight-14);at(enter,w-137,h-footerHeight+7,123,footerHeight-14)
- at(footer,98,h-footerHeight+5,w-250,footerHeight-10);footer.TextSize=h<420 and 12 or 14
- local center=set.AbsoluteSize.X/2;local yy=set.AbsoluteSize.Y-42
- at(left,center-91,yy,40,34);at(right,center+51,yy,40,34);at(zoom,center-47,yy,94,34)
- at(caption,12,10,set.AbsoluteSize.X-24,16)
- left.Text='‹';right.Text='›';zoom.TextSize=11
+ local g=geometry.measure(page.AbsoluteSize.X,page.AbsoluteSize.Y,slot~=nil and tab=='Appearance',slot~=nil and tab=='Identity')
+ local w,h=g.width,g.height
+ at(canvas,g.x,0,w,h)
+ at(set,table.unpack(g.preview))
+ at(panel,g.margin,0,w-g.margin*2,g.header)
+ at(imprint,0,8,w-36,14);at(title,0,g.header<60 and 22 or 31,w-155,g.header<60 and 24 or 36)
+ title.TextSize=g.header<60 and 20 or 30
+ at(servers,w-g.margin*2-126,12,126,36)
+ categoryBar.Visible=g.tabs>0;at(categoryBar,g.margin,g.top,g.sidebar,g.tabs)
+ at(west,g.margin,g.top+g.tabs,g.column,g.available)
+ at(east,g.margin+g.column+12,g.top+g.tabs,g.column,g.available)
+ east.Visible=slot~=nil and tab=='Identity'
+ at(pane,0,4,g.column,g.available-8);at(sidePane,0,4,g.column,g.available-8)
+ at(actionBar,g.margin,h-g.footer,w-g.margin*2,g.footer)
+ at(back,0,6,78,g.footer-14);at(enter,w-g.margin*2-150,6,150,g.footer-14)
+ at(footer,92,6,math.max(1,w-g.margin*2-256),g.footer-14)
+ footer.TextSize=h<430 and 12 or 14
+ local center=set.AbsoluteSize.X/2;local yy=set.AbsoluteSize.Y-48
+ at(left,center-102,yy,44,40);at(right,center+58,yy,44,40);at(zoom,center-54,yy,108,40)
+ at(caption,16,14,set.AbsoluteSize.X-32,18)
+ left.Text='‹';right.Text='›';zoom.TextSize=12
  pose()
 end
+
 local function clear(parent) for _,v in parent:GetChildren() do v:Destroy() end end
 local function chosenName()
  draft.Name=draft.FirstName..' '..draft.LastName
