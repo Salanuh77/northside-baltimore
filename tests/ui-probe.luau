@@ -326,6 +326,7 @@ local ok, message = pcall(function()
  local lo, hi = modal.AbsolutePosition, modal.AbsolutePosition + modal.AbsoluteSize
  check("portrait handset stays at right edge",modal.AbsoluteSize.Y>1.45*modal.AbsoluteSize.X and lo.X>=gui.AbsoluteSize.X*.52 and gui.AbsoluteSize.X-hi.X<=18,modal.AbsoluteSize)
  check("handset bezel and in-screen apps",modal:FindFirstChild("Handset frame")~=nil and content:FindFirstChild("Apps") and #content.Apps:GetChildren()==10,modal.Name)
+ check('handset wallpaper stays below interactive app content',gui.ZIndexBehavior==Enum.ZIndexBehavior.Sibling and modal['Handset frame'].ZIndex<content.ZIndex)
  check("phone fits usable viewport", lo.X>=0 and lo.Y>=0 and hi.X<=gui.AbsoluteSize.X+1 and hi.Y<=gui.AbsoluteSize.Y+1,
   string.format("viewport %s, usable %s, modal %s..%s", tostring(view), tostring(gui.AbsoluteSize), tostring(lo), tostring(hi)))
  close()

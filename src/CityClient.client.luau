@@ -19,6 +19,7 @@ local catalog=require(game:GetService('ReplicatedStorage'):WaitForChild('WorkCat
 local itemCards=require(game.ReplicatedStorage:WaitForChild('ItemCard'))
 local itemCatalog=require(game.ReplicatedStorage:WaitForChild('ItemCatalog'))
 local gui=Instance.new('ScreenGui'); gui.Name='NorthsideHUD'; gui.DisplayOrder=12; gui.ResetOnSpawn=false; gui.IgnoreGuiInset=false; gui.Parent=p:WaitForChild('PlayerGui')
+gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
 gui.Enabled=p.Character~=nil
 p.CharacterAdded:Connect(function() gui.Enabled=true end)
 local theme=require(game.ReplicatedStorage:WaitForChild('UITheme'))
@@ -46,6 +47,7 @@ local ammo=text(gui,'',UDim2.fromOffset(200,40),UDim2.new(1,-220,1,-110),22,gold
 local progress=make('Frame',{Size=UDim2.fromOffset(300,5),Position=UDim2.new(0.5,-150,0.73,0),BackgroundColor3=gold,BorderSizePixel=0,Visible=false},gui)
 local progressTween
 local modal=make('Frame',{Size=UDim2.new(1,-32,1,-82),Position=UDim2.fromOffset(16,64),BackgroundColor3=dark,Visible=false,BorderSizePixel=0},gui)
+modal.ZIndex=20
 make('UISizeConstraint',{MaxSize=Vector2.new(350,460)},modal)
 make('UICorner',{CornerRadius=UDim.new(0,4)},modal)
 local title=text(modal,'',UDim2.new(1,-70,0,40),UDim2.fromOffset(16,8),22,cream);title.Font=theme.TitleFont
