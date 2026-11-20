@@ -257,10 +257,11 @@ draw=function()
  local function controls(parent,fields,offset)
   for i,field in fields do
    local key,caption,values=table.unpack(field)
-   local y=(offset or 0)+(i-1)*62
+   local y=(offset or 0)+(i-1)*74
    local l=label(parent,caption,12,paper);l.Position=UDim2.fromOffset(3,y);l.Size=UDim2.new(1,-6,0,16)
    local current=label(parent,draft[key],14,cream);current.TextXAlignment=Enum.TextXAlignment.Center
-   current.Position=UDim2.fromOffset(41,y+19);current.Size=UDim2.new(1,-84,0,35)
+   current.Position=UDim2.fromOffset(49,y+21);current.Size=UDim2.new(1,-100,0,42)
+   local line=frame(parent,theme.Line);line.Position=UDim2.new(0,3,0,y+68);line.Size=UDim2.new(1,-6,0,1)
    for _,delta in {-1,1} do
     local b=button(parent,delta==1 and '›' or '‹',function()
      local index=table.find(values,draft[key]) or 1
@@ -271,7 +272,7 @@ draw=function()
      rebuild()
     end)
     b.Name=key..(delta==1 and ' next' or ' previous');b.TextSize=20
-    b.Position=UDim2.new(delta==1 and 1 or 0,delta==1 and -40 or 0,0,y+18);b.Size=UDim2.fromOffset(38,38)
+    b.Position=UDim2.new(delta==1 and 1 or 0,delta==1 and -46 or 0,0,y+20);b.Size=UDim2.fromOffset(44,44)
    end
   end
  end
@@ -282,7 +283,7 @@ draw=function()
    category=name;closeup=name=='Face' or name=='Hair';draw()
   end)
   b.Name='Category '..name;b.TextSize=12
-  b.Size=UDim2.new(1/#categories,-3,0,30);b.Position=UDim2.new((i-1)/#categories,0,0,0)
+  b.Size=UDim2.new(1/#categories,-3,0,40);b.Position=UDim2.new((i-1)/#categories,0,0,0)
   b.BackgroundColor3=selected and cream or slate;b.TextColor3=selected and ink or paper
  end
  if category=='Face' then
@@ -292,7 +293,7 @@ draw=function()
  elseif category=='Hair' then
   controls(pane,{{'Hair','Haircut',style.Hair},{'HairDetail','Hairline',style.HairDetails}})
   local palette=label(pane,'HAIR COLOR  /  '..draft.HairColor:upper(),11,paper)
-  palette.Position=UDim2.fromOffset(3,134);palette.Size=UDim2.new(1,-6,0,24)
+  palette.Position=UDim2.fromOffset(3,156);palette.Size=UDim2.new(1,-6,0,24)
   local swatches={}
   for index,color in style.HairColors do
    local swatch=button(pane,'',function()
@@ -302,8 +303,8 @@ draw=function()
    end)
    swatch.Name='Dye '..color;swatch.BackgroundColor3=style.Dyes[color];swatch.BorderColor3=cream
    swatch.BorderSizePixel=draft.HairColor==color and 2 or 0
-   swatch.Position=UDim2.new((index-1)%4/4,3,0,166+math.floor((index-1)/4)*44)
-   swatch.Size=UDim2.new(1/4,-8,0,36);swatches[color]=swatch
+   swatch.Position=UDim2.new((index-1)%4/4,3,0,190+math.floor((index-1)/4)*50)
+   swatch.Size=UDim2.new(1/4,-8,0,44);swatches[color]=swatch
   end
  elseif category=='Outfit' then
   hint(pane,'STARTER LOOKS')
