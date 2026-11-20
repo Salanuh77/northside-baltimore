@@ -3,6 +3,12 @@ local rs=game:GetService('ReplicatedStorage')
 local remote=rs:WaitForChild('TestDrive')
 local action=rs:WaitForChild('CityAction')
 remote.OnClientInvoke=function(kind,data)
+ if kind=='Equip' then
+  local tool=p.Backpack:WaitForChild(data.Name,5)
+  assert(tool,'Owned tool missing: '..data.Name)
+  p.Character.Humanoid:EquipTool(tool);task.wait(.4)
+  return tool.Parent==p.Character
+ end
  if kind=='CreateResident' and not p:GetAttribute('ResidentSlot') then data=table.clone(data);data.Index=1 end
  if kind=='ItemCard' then
   local gui=p.PlayerGui:WaitForChild('NorthsideHUD')
