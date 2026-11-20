@@ -22,4 +22,12 @@ for _,flag in {'valid','visible'} do state[flag]=false;local before=state.rays;s
 local checks=0
 fire(unit,target,function() return true end,function() checks+=1;return checks>1 end,function() return true end,{FireAllClients=function() end},{NextNumber=function() return 0 end})
 assert(state.health==91,'Protection is rechecked immediately before damage')
+local incidents=0
+local function warnScene(position) incidents+=1;assert(position.Magnitude>0) end
+state.surrender=false
+fire(unit,target,function() return true end,function() return false end,function() return true end,{FireAllClients=function() end},{NextNumber=function() return 0 end},warnScene)
+assert(incidents==1,'Actual officer shots must warn nearby paramedics')
+state.surrender=true
+fire(unit,target,function() return true end,function() return false end,function() return true end,{FireAllClients=function() end},{NextNumber=function() return 0 end},warnScene)
+assert(incidents==1,'Suppressed shots cannot keep a medical scene dangerous')
 print('PASS: NPC shots, bounded damage, walls, misses, bystanders, friendly fire, protected targets and surrender')

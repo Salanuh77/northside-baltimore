@@ -130,7 +130,14 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
   end
  end
  local combat=require(script.Parent.NpcCombat)
- local function shoot(unit,target) return combat(unit,target,valid,safe,visible,event,random) end
+ local function sceneGunfire(origin)
+  for _,unit in units do
+   if unit.role=='medic' and unit.model.Parent and (unit.model.HumanoidRootPart.Position-origin).Magnitude<100 then
+    unit.danger={position=origin,untilTime=os.clock()+7}
+   end
+  end
+ end
+ local function shoot(unit,target) return combat(unit,target,valid,safe,visible,event,random,sceneGunfire) end
 
  local function bot(role,home,name)
   local model=rig(name,home,role=='medic',field);model:SetAttribute('Service',role)
