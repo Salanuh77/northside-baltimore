@@ -29,21 +29,25 @@ local ok,err=pcall(function()
  local trafficDone,trafficError=false,nil
  task.spawn(function()
   local passed,message=pcall(function()
-   local seen={}; local stop=os.clock()+40
+   local seen={}; local stop=os.clock()+40;local clearanceOn,clearanceOff=false,false
    repeat
     local axes={}
     for _,h in junction do
      local axis=h:GetAttribute('Axis'); local phase=h:GetAttribute('Phase')
      assert(not axes[axis] or axes[axis]==phase,'Opposite heads disagree'); axes[axis]=phase
      local ped=h['Crossing signal'].SurfaceGui
-     assert(ped.Walk.Visible==(phase=='Green') and ped.Stop.Visible~=ped.Walk.Visible,'Pedestrian indication disagrees')
+     assert(not (ped.Walk.Visible and ped.Stop.Visible),'Both pedestrian symbols are lit')
+     assert(phase=='Green' or (not ped.Walk.Visible and ped.Stop.Visible),'Crossing stays stopped throughout amber and red')
+     if phase=='Green' and not ped.Walk.Visible then
+      if ped.Stop.Visible then clearanceOn=true else clearanceOff=true end
+     end
      assert(h[phase].Material==Enum.Material.Neon,'Dark active lens')
     end
     assert(axes[0]=='Red' or axes[1]=='Red','Conflicting phases')
     seen[axes[0]..'/'..axes[1]]=true
     task.wait(.12)
-   until os.clock()>stop or (seen['Green/Red'] and seen['Amber/Red'] and seen['Red/Red'] and seen['Red/Green'] and seen['Red/Amber'])
-   check(seen['Green/Red'] and seen['Amber/Red'] and seen['Red/Red'] and seen['Red/Green'] and seen['Red/Amber'],'Both directions cycle through green, amber and all red with matching crossings')
+   until os.clock()>stop or (seen['Green/Red'] and seen['Amber/Red'] and seen['Red/Red'] and seen['Red/Green'] and seen['Red/Amber'] and clearanceOn and clearanceOff)
+   check(seen['Green/Red'] and seen['Amber/Red'] and seen['Red/Red'] and seen['Red/Green'] and seen['Red/Amber'] and clearanceOn and clearanceOff,'Both directions cycle safely and the crossing hand flashes before amber')
   end)
   trafficError=not passed and tostring(message) or nil; trafficDone=true
  end)
@@ -148,7 +152,10 @@ local ok,err=pcall(function()
  for _,symbol in clue do call('LightPress',{Symbol=symbol}) end
  check(p:GetAttribute('CustodyUntil')==0 and p:GetAttribute('Heat')==3,'Successful escape grants wanted status outside the walls')
  task.wait(.5); beside(p,field['Westside officer'],5)
- check(waitFor(function() return p:GetAttribute('CustodyUntil')>os.time() end,15),'Pursuing officer captures escaped player without surrender')
+ task.wait(2)
+ check(p:GetAttribute('CustodyUntil')==0,'A healthy resisting escapee is not automatically teleported back into custody')
+ p.Character.Humanoid.Health=20
+ check(waitFor(function() return p:GetAttribute('CustodyUntil')>os.time() end,15),'Officer subdues a wounded stationary escapee at close range')
  local expiry=p:GetAttribute('CustodyUntil')
  check(waitFor(function() return p:GetAttribute('CustodyUntil')==0 end,expiry-os.time()+4),'Full sentence expires and releases the player')
  check((p.Character:GetPivot().Position-prison.Release.Position).Magnitude<10,'Timed release returns player to visitor entrance')
