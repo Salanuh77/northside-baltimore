@@ -19,6 +19,14 @@ for _,file in fs.readDir('src/ItemModels') do
  luau.load(fs.readFile('src/ItemModels/'..file))()(builder)
  assert(#parts>=3,file..' has no recognizable product silhouette')
  if file=='Clothing.luau' then assert(model['Jacket body'].Color==rb.Color3.fromRGB(51,83,124),'Clothing preview ignores garment color') end
+ local function height(p) return math.abs(p.CFrame.RightVector.Y)*p.Size.X+math.abs(p.CFrame.UpVector.Y)*p.Size.Y+math.abs(p.CFrame.LookVector.Y)*p.Size.Z end
+ if file=='Coffee.luau' then
+  local cup,lid=model['Paper cup'],model.Lid
+  assert(height(lid)<.2,'Coffee lid is vertical instead of sitting on the cup')
+  assert(math.abs(cup.CFrame.Position.Y+height(cup)/2-(lid.CFrame.Position.Y-height(lid)/2))<.08,'Coffee lid is disconnected')
+ elseif file=='Water.luau' then
+  assert(height(model.Bottle)>1.3 and height(model['Blue cap'])<.2,'Water bottle is assembled on the wrong cylinder axis')
+ end
  total+=1
 end
 assert(total==17,'Missing a shop product image')
