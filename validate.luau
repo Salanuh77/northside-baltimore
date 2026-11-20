@@ -5,6 +5,9 @@ for _,name in {'src/ResidentMenu.client.luau','src/ResidentFiles.luau','src/Vehi
  local f=luau.load(fs.readFile(name),{debugName=name}); assert(f); print('COMPILES',name)
 end
 local game=rb.deserializePlace(fs.readFile('Northside Baltimore - Heritage Harbor.rbxl'))
+for _,source in game:GetDescendants() do
+ if source:IsA('LuaSourceContainer') then assert(luau.load(source.Source,{debugName=source:GetFullName()})) end
+end
 local world=game:GetService('Workspace'); local city=world:FindFirstChild('Baltimore'); assert(city)
 local counts={}; local parts=0
 for _,v in city:GetDescendants() do

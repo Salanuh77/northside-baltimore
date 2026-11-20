@@ -1,5 +1,7 @@
 local Players=game:GetService('Players')
-local Path=game:GetService('PathfindingService')
+local Brain=require(script.Parent.ResponderBrain)
+local Navigation=require(script.Parent.NpcNavigation)
+local Awareness=require(script.Parent.NpcAwareness)
 local function rig(name,home,medical,parent)
  local storage=game:GetService('ReplicatedStorage')
  local model=storage.ResidentRig:Clone()
@@ -43,151 +45,215 @@ local function rig(name,home,medical,parent)
  end)
  return model
 end
-return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest)
- local field=Instance.new('Folder'); field.Name='Emergency responders'; field.Parent=workspace
- local calls={police={},medic={}}; local cooldown={}
+return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHeat)
+ local field=Instance.new('Folder');field.Name='Emergency responders';field.Parent=workspace
+ local calls={police={},medic={}};local cooldown={};local reports={};local units={}
+ local random=Random.new()
  local function valid(role,p)
   local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid')
-  if not h or h.Health<=0 or not profiles[p] then return false end
+  if not h or h.Health<=0 or not profiles[p] or (p:GetAttribute('CustodyUntil') or 0)>0 then return false end
   return role=='medic' and h.Health<h.MaxHealth-1 or role=='police' and profiles[p].Heat>=1 and not safe(p)
+ end
+ local function visible(model,character,range,focused)
+  local root=character and character:FindFirstChild('HumanoidRootPart')
+  if not root or not model.Parent then return false end
+  local head=model.Head;local delta=root.Position+Vector3.yAxis-head.Position
+  if delta.Magnitude>range then return false end
+  if not Awareness.inView(delta.Magnitude,delta.Magnitude>.01 and head.CFrame.LookVector:Dot(delta.Unit) or 1,focused) then return false end
+  local ray=RaycastParams.new();ray.FilterType=Enum.RaycastFilterType.Exclude;ray.FilterDescendantsInstances={model};ray.RespectCanCollide=true
+  local hit=workspace:Raycast(head.Position,delta,ray)
+  return not hit or hit.Instance:IsDescendantOf(character)
  end
  local function settle(role,target,responder,caught)
   if not valid(role,target) then return false end
   if role=='police' and not caught and not target:GetAttribute('Surrendered') then return false end
   if responder then
-   local h=target.Character:FindFirstChild('HumanoidRootPart')
-   if responder==target or not h or not near(responder,h.Position,12) or not sight(responder,h.Position,target.Character) then return false end
+   local root=target.Character:FindFirstChild('HumanoidRootPart')
+   if responder==target or not root or not near(responder,root.Position,8) or not sight(responder,root.Position,target.Character) then return false end
   end
-  if role=='medic' then target.Character.Humanoid.Health=target.Character.Humanoid.MaxHealth; tell(target,'A paramedic treated you.')
-  else
-   if not arrest(target) then return false end
-  end
-  calls[role][target]=nil
+  if role=='medic' then target.Character.Humanoid.Health=target.Character.Humanoid.MaxHealth;tell(target,'A paramedic treated you.')
+  elseif not arrest(target) then return false end
+  calls[role][target]=nil;reports[target]=nil
   if responder then
-   local last=cooldown[target] or {}; cooldown[target]=last
+   local last=cooldown[target] or {};cooldown[target]=last
    if os.clock()>=(last[role] or 0) then
-    last[role]=os.clock()+90; local pay=role=='medic' and 85 or 95; local d=profiles[responder]; d.Cash+=pay; d.Wages+=pay; sync(responder); tell(responder,'Dispatch complete • +$'..pay)
+    last[role]=os.clock()+90;local pay=role=='medic' and 85 or 95;local d=profiles[responder]
+    d.Cash+=pay;d.Wages+=pay;sync(responder);tell(responder,'Dispatch complete • +$'..pay)
    end
   end
   return true
- end
- local function visible(model,character,range)
-  local root=character and character:FindFirstChild('HumanoidRootPart')
-  if not root then return false end
-  local origin=model.HumanoidRootPart.Position+Vector3.yAxis
-  local goal=root.Position+Vector3.yAxis
-  if (goal-origin).Magnitude>range then return false end
-  local ray=RaycastParams.new()
-  ray.FilterType=Enum.RaycastFilterType.Exclude
-  ray.FilterDescendantsInstances={model}
-  ray.RespectCanCollide=true
-  local hit=workspace:Raycast(origin,goal-origin,ray)
-  return not hit or hit.Instance:IsDescendantOf(character)
  end
  local function request(p,role)
   if not calls[role] then return end
   if not valid(role,p) then return tell(p,role=='medic' and 'Treatment is available when you are injured.' or 'Police processing is available for a wanted character.') end
   if calls[role][p] then return tell(p,'Dispatch already has your call.') end
-  if role=='medic' then
-   for _,unit in field:GetChildren() do
-    if unit:GetAttribute('Service')=='medic' and unit.Humanoid.Health>0 and visible(unit,p.Character,10) then
-     settle(role,p,nil,false)
-     return
-    end
-   end
-  end
-  calls[role][p]=p.Character:GetPivot().Position
+  calls[role][p]={position=p.Character:GetPivot().Position,time=os.clock()}
   for _,other in Players:GetPlayers() do
    if other~=p and jobs[other] and jobs[other].role==role then tell(other,'Dispatch • '..p.DisplayName..' requested assistance. Open Phone → Dispatch.') end
   end
   tell(p,'Dispatch received your location.')
  end
+ -- Only validated server attacks can call this; there is no client alert remote.
+ local function alert(p,origin,kind,victim)
+  if not profiles[p] or safe(p) then return end
+  local now=os.clock();local witnessed=false
+  for _,unit in units do
+   if unit.model.Parent and unit.model.Humanoid.Health>0 then
+    local distance=(unit.model.HumanoidRootPart.Position-origin).Magnitude
+    if (kind=='gunfire' and distance<100) or (distance<55 and visible(unit.model,p.Character,55,false)) or victim==unit.model then
+     unit.danger={position=origin,untilTime=now+7}
+     if unit.role=='police' then witnessed=true end
+    end
+   end
+  end
+  for _,clerk in game:GetService('CollectionService'):GetTagged('RouteClerk') do
+   if clerk.Parent and visible(clerk,p.Character,45,false) then clerk:SetAttribute('AlarmUntil',now+9);witnessed=true end
+  end
+  if witnessed then
+   local previous=reports[p]
+   reports[p]={position=origin,time=now,violentUntil=kind=='robbery' and (previous and previous.violentUntil or 0) or now+12}
+   if addHeat and (not previous or now-previous.time>6) then addHeat(p,1) end
+  end
+ end
+ local function cover(unit,threat)
+  local root=unit.model.HumanoidRootPart
+  local ray=RaycastParams.new();ray.FilterType=Enum.RaycastFilterType.Exclude;ray.FilterDescendantsInstances={unit.model};ray.RespectCanCollide=true
+  local overlap=OverlapParams.new();overlap.FilterType=Enum.RaycastFilterType.Exclude;overlap.FilterDescendantsInstances={unit.model};overlap.RespectCanCollide=true
+  for i=0,7 do
+   local a=i*math.pi/4;local candidate=root.Position+Vector3.new(math.cos(a)*9,0,math.sin(a)*9)
+   local ground=workspace:Raycast(candidate+Vector3.new(0,4,0),Vector3.new(0,-12,0),ray)
+   if ground and ground.Normal.Y>.7 then
+    candidate=ground.Position+Vector3.new(0,3,0)
+    local obstruction=workspace:Raycast(threat+Vector3.yAxis,candidate-(threat+Vector3.yAxis),ray)
+    if obstruction and (obstruction.Position-candidate).Magnitude<5 and #workspace:GetPartBoundsInBox(CFrame.new(candidate),Vector3.new(3,4,3),overlap)==0 then return candidate end
+   end
+  end
+ end
+ local combat=require(script.Parent.NpcCombat)
+ local function shoot(unit,target) return combat(unit,target,valid,safe,visible,event,random) end
+
  local function bot(role,home,name)
-  local model=rig(name,home,role=='medic',field); model:SetAttribute('Service',role)
+  local model=rig(name,home,role=='medic',field);model:SetAttribute('Service',role)
+  local unit={model=model,role=role,brain=Brain.new(),memory={},patrol=1,patrolAt=os.clock(),nextCover=0}
+  unit.nav=Navigation.new(model);table.insert(units,unit)
   local health=model.Humanoid
+  local arm=model:FindFirstChild('RightShoulder',true)
+  if arm and not arm:IsA('Motor6D') then arm=nil end
+  local armRest=arm and arm.C0
+  if role=='police' then
+   local tool=Instance.new('Tool');tool.Name='Service pistol';tool.CanBeDropped=false
+   local handle=Instance.new('Part');handle.Name='Handle';handle.CanCollide=false;handle.Massless=true;handle.Parent=tool
+   require(script.Parent.PistolVisual)(tool,'Slate compact')
+   health:EquipTool(tool);unit.weapon=tool
+  end
   health.HealthChanged:Connect(function(current)
    if current>0 or not model.Parent then return end
-   model:Destroy(); task.delay(20,function() if field.Parent then bot(role,home,name) end end)
+   unit.nav:stop();model:Destroy()
+   local index=table.find(units,unit);if index then table.remove(units,index) end
+   task.delay(20,function() if field.Parent then bot(role,home,name) end end)
   end)
   task.spawn(function()
-   local patrol=1;local observed=nil;local observedAt=0
    local route={Vector3.zero,Vector3.new(0,0,24),Vector3.new(0,0,42),Vector3.new(0,0,18)}
-   local lastSeen={}
-   local patrolSince=os.clock()
-   while model.Parent do
-    local at=model:GetPivot().Position;local target,best,goal=nil,math.huge,nil
-    local now=os.clock()
-    for p,memory in lastSeen do
-     if not p.Parent or now-memory.time>10 then lastSeen[p]=nil end
-    end
+   while model.Parent and health.Health>0 do
+    local now=os.clock();local at=model.HumanoidRootPart.Position
+    local target,best,goal,direct=nil,math.huge,nil,false
     for _,p in Players:GetPlayers() do
-     local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
-     if root and valid(role,p) then
-      local direct=visible(model,p.Character,70)
-      if direct then lastSeen[p]={position=root.Position,time=now} end
-      local memory=lastSeen[p]
-      local call=calls[role][p]
-      local known=direct and root.Position or memory and memory.position or call
-      if known then
-       local score=(known-at).Magnitude-(call and 24 or 0)
-       if score<best then best=score;target=p;goal=known end
-      end
-     end
-    end
-    local dest=goal or home+route[patrol]
-    local close=target and visible(model,target.Character,10)
-    if not close then observed=nil end
-    model:SetAttribute('Activity',target and (close and (role=='medic' and 'Treating patient' or 'Requesting surrender') or lastSeen[target] and now-lastSeen[target].time>.01 and 'Searching' or 'Responding') or 'Patrolling')
-    health.WalkSpeed=target and role=='police' and 16 or 12
-    if close then
-     if observed~=target then observed=target; observedAt=os.clock() end
-     local caught=role=='police' and profiles[target].Heat>=2 and os.clock()-observedAt>=4.5
-     if not settle(role,target,nil,caught) and role=='police' and (not model:GetAttribute('Spoke') or os.clock()>model:GetAttribute('Spoke')+12) then model:SetAttribute('Spoke',os.clock()); tell(target,'Officer nearby. Hands up to surrender.') end
-    elseif (dest-at).Magnitude>4 then
-     local path=Path:CreatePath({AgentRadius=2,AgentHeight=5,AgentCanJump=true})
-     local ok=pcall(function() path:ComputeAsync(at,dest) end)
-     if not model.Parent then break end
-     if ok and path.Status==Enum.PathStatus.Success then
-      local start=at
-      for _,point in path:GetWaypoints() do
-       if not model.Parent then return end
-       local root=model.PrimaryPart
-       local planar=(point.Position-root.Position)*Vector3.new(1,0,1)
-       if planar.Magnitude>1.5 then
-        if point.Action==Enum.PathWaypointAction.Jump then health.Jump=true end
-        health:MoveTo(point.Position)
-        local deadline=os.clock()+math.min(3,planar.Magnitude/health.WalkSpeed+1)
-        repeat task.wait(.10) until not model.Parent or os.clock()>=deadline or ((point.Position-root.Position)*Vector3.new(1,0,1)).Magnitude<1.6
-        if not model.Parent then return end
-        if os.clock()>=deadline or (root.Position-start).Magnitude>=14 then break end
-        if target and (not target.Character or visible(model,target.Character,10)) then break end
+     if valid(role,p) then
+      local broadcast=reports[p]
+      local seen=visible(model,p.Character,70,unit.target==p or (broadcast and now-broadcast.time<12))
+      if seen then
+       local position=p.Character.HumanoidRootPart.Position;unit.memory[p]={position=position,time=now}
+       if role=='police' then
+        local previous=reports[p];reports[p]={position=position,time=now,violentUntil=previous and previous.violentUntil or 0}
+        profiles[p].HeatNext=now+30
        end
       end
-     elseif not target and os.clock()-patrolSince>5 then
-      patrol=patrol%#route+1;patrolSince=os.clock()
-     end
-     path:Destroy()
-    elseif target then
-     if not visible(model,target.Character,70) then calls[role][target]=nil;lastSeen[target]=nil end
-    else patrol=patrol%#route+1;patrolSince=os.clock() end
-    task.wait(target and .55 or 1.6)
+      local memory=unit.memory[p];local report=role=='police' and reports[p];local call=calls[role][p]
+      local known=Awareness.contact(now,memory,report,call)
+      if known then
+       local score=(known.position-at).Magnitude-(unit.target==p and 18 or 0)-(seen and 12 or 0)
+       if score<best then target=p;best=score;goal=known.position;direct=seen end
+      end
+     else unit.memory[p]=nil end
+    end
+    unit.target=target
+    local action={mode='Patrolling',goal=home+route[unit.patrol]}
+    if role=='police' and target then
+     local human=target.Character.Humanoid;local root=target.Character.HumanoidRootPart
+     local report=reports[target]
+     local armed=target.Character:FindFirstChild('Pistol') or target.Character:FindFirstChild('Knife') or target.Character:FindFirstChild('Bat')
+     local threat=armed and report and (report.violentUntil or 0)>now
+     action=Brain.step(unit.brain,now,{id=target.UserId,valid=true,visible=direct,distance=(root.Position-at).Magnitude,surrendered=target:GetAttribute('Surrendered'),health=human.Health,ownHealth=health.Health,speed=root.AssemblyLinearVelocity.Magnitude,threat=threat,goal=goal})
+     if action.arrest and settle(role,target,nil,true) then action={mode='Patrolling',goal=home} end
+     if action.fire then shoot(unit,target) end
+     if action.mode=='Requesting surrender' and direct and now>=(unit.spokeAt or 0) then unit.spokeAt=now+12;tell(target,'Police: put your hands up to surrender, or break line of sight to lose the search.') end
+    elseif role=='medic' and unit.danger and now<unit.danger.untilTime then
+     local away=(at-unit.danger.position)*Vector3.new(1,0,1)
+     action={mode='Waiting for a safe scene',goal=away.Magnitude>1 and at+away.Unit*18 or home};unit.treatAt=nil
+    elseif role=='medic' and target then
+     action={mode=direct and 'Responding' or 'Searching for patient',goal=goal}
+     if direct and (goal-at).Magnitude<6 then
+      action.mode='Treating patient';action.goal=nil
+      if unit.patient~=target then unit.patient=target;unit.treatAt=nil end
+      unit.treatAt=unit.treatAt or now
+      if now-unit.treatAt>=2.5 then settle(role,target,nil,false);unit.treatAt=nil end
+     else unit.treatAt=nil end
+    else
+     Brain.step(unit.brain,now,{valid=false});unit.treatAt=nil
+     if (action.goal-at).Magnitude<3 or now-unit.patrolAt>15 then unit.patrol=unit.patrol%#route+1;unit.patrolAt=now end
+    end
+    local aiming=action.mode=='Engaging'
+    if unit.weapon then
+     for _,piece in unit.weapon:GetChildren() do if piece:IsA('BasePart') then piece.Transparency=aiming and piece.Name~='Handle' and 0 or 1 end end
+    end
+    if arm then arm.C0=armRest*(aiming and CFrame.Angles(math.rad(65),0,0) or CFrame.new()) end
+    if action.cover and goal then
+     if now>=unit.nextCover then unit.nextCover=now+3;unit.cover=cover(unit,goal) end
+     if unit.cover then action.goal=unit.cover end
+    elseif aiming and direct and goal and (goal-at).Magnitude<48 then
+     action.goal=nil
+     local look=Vector3.new(goal.X,at.Y,goal.Z)
+     if (look-at).Magnitude>.1 then model.HumanoidRootPart.CFrame=CFrame.lookAt(at,look) end
+    end
+    model:SetAttribute('Activity',action.mode);model:SetAttribute('Magazine',unit.brain.ammo)
+    if action.goal then unit.nav:step(action.goal,now,target and role=='police' and 16 or 11) else unit.nav:stop() end
+    task.wait(.2)
    end
   end)
  end
- bot('police',Vector3.new(-26,3.8,87),'District officer'); bot('medic',Vector3.new(26,3.8,135),'City paramedic')
- bot('police',Vector3.new(-426,3.8,740),'Westside officer'); bot('medic',Vector3.new(217,3.8,838),'Downtown paramedic')
- Players.PlayerRemoving:Connect(function(p) calls.police[p]=nil; calls.medic[p]=nil; cooldown[p]=nil end)
- return function(p,kind,data)
+ bot('police',Vector3.new(-26,3.8,87),'District officer');bot('medic',Vector3.new(26,3.8,135),'City paramedic')
+ bot('police',Vector3.new(-426,3.8,740),'Westside officer');bot('medic',Vector3.new(217,3.8,838),'Downtown paramedic')
+ task.spawn(function()
+  while field.Parent do
+   local now=os.clock()
+   for _,p in Players:GetPlayers() do
+    local report=reports[p]
+    p:SetAttribute('PoliceContact',valid('police',p) and report and now-report.time<12 and (now-report.time<.6 and 'Spotted' or 'Searching') or '')
+    if report and now-report.time>45 then reports[p]=nil end
+    for _,role in {'medic','police'} do local call=calls[role][p];if call and now-call.time>45 then calls[role][p]=nil end end
+   end
+   task.wait(.5)
+  end
+ end)
+ Players.PlayerRemoving:Connect(function(p)
+  calls.police[p]=nil;calls.medic[p]=nil;cooldown[p]=nil;reports[p]=nil
+  for _,unit in units do unit.memory[p]=nil end
+ end)
+ local function handle(p,kind,data)
   if kind=='CallResponder' then return request(p,data.Role) end
-  local job=jobs[p]; local role=job and job.role
+  local job=jobs[p];local role=job and job.role
   if role~='medic' and role~='police' then return tell(p,'Start a police or paramedic shift first.') end
   if kind=='DispatchList' then
-   local list={}
-   for _,target in Players:GetPlayers() do if target~=p and valid(role,target) and (calls[role][target] or role=='police') then table.insert(list,{Id=target.UserId,Name=target.DisplayName,Position=target.Character:GetPivot().Position}) end end
+   local list={};local now=os.clock()
+   for _,target in Players:GetPlayers() do
+    local known=Awareness.contact(now,nil,role=='police' and reports[target],calls[role][target])
+    if target~=p and valid(role,target) and known and now-known.time<45 then table.insert(list,{Id=target.UserId,Name=target.DisplayName,Position=known.position}) end
+   end
    event:FireClient(p,'DispatchList',list)
   elseif kind=='Assist' and type(data.Target)=='number' and data.Target%1==0 then
    local target=Players:GetPlayerByUserId(data.Target)
    if target and not settle(role,target,p) then tell(p,'Move beside the eligible patient or surrendered wanted player.') end
   end
  end
+ return {handle=handle,alert=alert}
 end

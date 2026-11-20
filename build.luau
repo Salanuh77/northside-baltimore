@@ -77,6 +77,7 @@ local function home(x,z,index,flip)
  for i=1,3 do p('Marble stoop',{8,i*0.5,1.7},{x-6.5,0.85+i*0.25,front-6+i*1.7},'cream') end
  local door=p('Door',{6.5,9.5,0.6},{x-6.5,6.5,front},Color3.fromRGB(42+index%3*18,58,59),'Wood')
  action(door,'Door','Open / close');facade.entry(door,Enum.NormalId.Front)
+ facade.frame(door,6.8,9.7,.15,-1)
  sign(tostring(1800+index),x-6.5,12,front-0.6,5,m)
  furnish(m,CFrame.new(x,1.8,z),'Rowhome',index)
  local safe=p('House lockbox',{3,2,2},{x+1,3,z+14},'dark','Metal'); action(safe,'Home','Search lockbox',110,9)
@@ -257,6 +258,9 @@ local input=Instance.new('LocalScript'); input.Name='TrafficClient'; input.Sourc
 local route=Instance.new('RemoteFunction'); route.Name='WalkingRoute'; route.Parent=rs
 local trail=Instance.new('ModuleScript'); trail.Name='StreetTrail'; trail.Source=fs.readFile('src/StreetTrail.luau'); trail.Parent=rs
 local staff=Instance.new('ModuleScript');staff.Name='ShopStaff';staff.Source=fs.readFile('src/ShopStaff.luau');staff.Parent=server.Parent
+for _,name in {'ResponderBrain','NpcNavigation','PistolVisual','NpcCombat','NpcAwareness'} do
+ local module=Instance.new('ModuleScript');module.Name=name;module.Source=fs.readFile('src/'..name..'.luau');module.Parent=server.Parent
+end
 local routes=Instance.new('ModuleScript'); routes.Name='WalkingRoutes'; routes.Source=fs.readFile('src/WalkingRoutes.luau'); routes.Parent=server.Parent
 local bearing=Instance.new('ModuleScript'); bearing.Name='JobBearing'; bearing.Source=fs.readFile('src/JobBearing.luau'); bearing.Parent=rs
 local catalog=Instance.new('ModuleScript'); catalog.Name='WorkCatalog'; catalog.Source=fs.readFile('src/WorkCatalog.luau'); catalog.Parent=rs

@@ -1,0 +1,36 @@
+local Brain=require('../src/ResponderBrain')
+local function input(extra)
+ local i={id=1,valid=true,visible=true,distance=30,threat=true,surrendered=false,speed=0,health=100,ownHealth=100,goal='last seen'}
+ for k,v in extra or {} do i[k]=v end
+ return i
+end
+local s=Brain.new()
+assert(not Brain.step(s,0,input()).fire,'No instant shot on acquisition')
+assert(Brain.step(s,.8,input()).fire,'Visible armed aggressor can be engaged after reaction')
+assert(not Brain.step(s,.81,input()).fire,'Rate limiting')
+assert(Brain.step(s,1,input()).fire)
+assert(Brain.step(s,1.2,input()).fire)
+assert(not Brain.step(s,1.4,input()).fire,'Pause between bursts')
+local before=s.ammo
+assert(not Brain.step(s,2.1,input({visible=false})).fire,'No fire through occlusion')
+assert(s.ammo==before,'Occlusion cannot consume magazine')
+assert(not Brain.step(s,2.2,input({surrendered=true})).fire,'Surrender interrupts a burst')
+assert(not Brain.step(s,3,input({distance=10,surrendered=true})).arrest,'Cannot arrest across a room')
+assert(not Brain.step(s,4,input({distance=4,surrendered=true})).arrest)
+assert(Brain.step(s,5.1,input({distance=4,surrendered=true})).arrest)
+assert(not Brain.step(s,6.1,input({valid=false})).fire,'Protected/dead/cleared target cannot be shot')
+assert(not Brain.step(s,7.1,input({id=2})).fire,'New target gets its own reaction delay')
+assert(not Brain.step(s,8.1,input({id=2,threat=false})).fire,'Wanted alone is not a shoot-on-sight order')
+assert(not Brain.step(s,9,input({distance=4,health=100})).arrest,'Healthy resisting suspect is not automatically teleported to jail')
+s=Brain.new();s.ammo=0
+assert(Brain.step(s,0,input()).mode=='Reloading')
+assert(not Brain.step(s,1,input()).fire and s.ammo==0,'Reload must take time')
+Brain.step(s,2.3,input());assert(s.ammo==12,'Reload restores a bounded magazine')
+assert(not Brain.step(s,2.4,input({visible=false})).fire)
+assert(Brain.step(s,2.5,input({visible=false,goal=nil,expired=true})).mode=='Patrolling','Lost contact expires')
+s=Brain.new();Brain.step(s,0,input({threat=false}));Brain.step(s,10,input({threat=false}))
+assert(not Brain.step(s,11,input()).fire,'A newly aggressive suspect still gets a reaction delay')
+assert(Brain.step(s,11.5,input()).fire)
+assert(Brain.step(s,12,input({ownHealth=30})).cover,'Wounded officer seeks cover')
+s=Brain.new();assert(not Brain.step(s,0,input({health=20,distance=4,speed=8})).arrest,'Fast-moving wounded player cannot be cuffed remotely')
+print('PASS: responder reaction, bursts, reloads, occlusion, surrender, arrest range and target protection')

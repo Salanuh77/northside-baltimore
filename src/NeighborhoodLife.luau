@@ -15,7 +15,7 @@ return function(city,event,profiles,closest,near,sync,tell)
    local light=home:FindFirstChild('Party light'); if light then light:Destroy() end
   end
   host:SetAttribute('Hosting',false)
-  for guest in Players:GetPlayers() do
+  for _,guest in Players:GetPlayers() do
    if invites[guest]==host then invites[guest]=nil; guest:SetAttribute('InvitedBy',nil) end
    if guests[guest]==host then guests[guest]=nil; event:FireClient(guest,'PartyRoute',false) end
   end
@@ -71,7 +71,7 @@ return function(city,event,profiles,closest,near,sync,tell)
    tell(p,'Residence reserved for this server. Open Phone → Home & parties.')
   elseif kind=='ReleaseHome' then release(p)
   elseif kind=='HostParty' then
-   if not home or not near(p,home.Position,20) then return tell(p,'Start the party from your leased home.') end
+   if not home or not near(p,home.CFrame.Position,20) then return tell(p,'Start the party from your leased home.') end
    if open[p] then return end
    open[p]=true; p:SetAttribute('Hosting',true)
    local light=Instance.new('PointLight'); light.Name='Party light'; light.Brightness=2; light.Range=24; light.Parent=home
@@ -88,7 +88,7 @@ return function(city,event,profiles,closest,near,sync,tell)
    local host=invites[p]; invites[p]=nil; p:SetAttribute('InvitedBy',nil)
    if data.Accept==true and host and open[host] and homes[host] then
     guests[p]=host; local marker=homes[host]
-    event:FireClient(p,'PartyRoute',{Position=marker.Position,Text=marker:GetAttribute('Address')}); tell(host,p.DisplayName..' accepted the invitation.')
+    event:FireClient(p,'PartyRoute',{Position=marker.CFrame.Position,Text=marker:GetAttribute('Address')}); tell(host,p.DisplayName..' accepted the invitation.')
    end
   elseif kind=='LeaveParty' then guests[p]=nil; event:FireClient(p,'PartyRoute',false)
   elseif kind=='ClubMix' then
@@ -112,5 +112,20 @@ return function(city,event,profiles,closest,near,sync,tell)
   if d.Cash<cost then return tell(p,'Refill costs $'..cost..'.') end
   d.Cash-=cost; best:SetAttribute('Fuel',100); sync(p); tell(p,'Tank filled for $'..cost..'.')
  end
- return {handle=handle,refuel=refuel,costs=costs}
+ local function canUseDoor(p,door)
+  local link=door:FindFirstChild('Residence')
+  local residence=link and link.Value
+  local tenant=residence and residence:GetAttribute('Tenant')
+  if not tenant or tenant==p.UserId then return true end
+  local host=guests[p]
+  if host and open[host] and homes[host]==residence and host.UserId==tenant then return true end
+  -- A visitor already indoors can always leave. Use the closed frame rather
+  -- than the rotated leaf, and keep the exit allowance inside this flat.
+  local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
+  if not root then return false end
+  local frame=door:GetAttribute('ClosedFrame') or door.CFrame
+  local at=frame:PointToObjectSpace(root.CFrame.Position)
+  return at.Z*(door:GetAttribute('ExteriorSign') or -1)<-.65 and math.abs(at.X)<door.Size.X/2+1 and math.abs(at.Y)<door.Size.Y/2
+ end
+ return {handle=handle,refuel=refuel,costs=costs,canUseDoor=canUseDoor}
 end

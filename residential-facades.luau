@@ -2,6 +2,29 @@ local rb = require('@lune/roblox')
 local rgb = rb.Color3.fromRGB
 local Facade = {}
 
+-- A rebated, solid frame bridges the leaf to the masonry. The jamb overlaps
+-- the edge of the leaf in depth, so the visual seam is never a walk-through gap.
+function Facade.frame(door,width,height,offsetY,outward)
+ local frame=door.CFrame*rb.CFrame.new(0,offsetY or 0,0)
+ door.CFrame=frame
+ door.Size=rb.Vector3.new(width-.24,height-.18,door.Size.Z)
+ door:SetAttribute('ExteriorSign',outward or -1)
+ local function trim(name,size,offset)
+  local part=rb.Instance.new('Part');part.Name=name;part.Size=size
+  part.Anchored=true;part.CanCollide=true;part.Material=rb.Enum.Material.Metal
+  part.Color=rgb(70,77,73);part.CFrame=frame*rb.CFrame.new(offset);part.Parent=door.Parent
+ end
+ for _,side in {-1,1} do
+  trim('Sealed entry jamb',rb.Vector3.new(.48,height+.48,1.04),rb.Vector3.new(side*(width/2-.07),0,0))
+ end
+ trim('Sealed entry head',rb.Vector3.new(width+.34,.40,1.04),rb.Vector3.new(0,height/2-.04,0))
+ trim('Entry threshold',rb.Vector3.new(width+.34,.18,1.08),rb.Vector3.new(0,-height/2+.03,0))
+end
+
+function Facade.link(door,residence)
+ local link=rb.Instance.new('ObjectValue');link.Name='Residence';link.Value=residence;link.Parent=door
+end
+
 -- Lay masonry up to each edge of a real opening, including on the room side.
 function Facade.bay(p,left,right,bottom,top,z,tint,material,x,y,width,height)
  local a,b=x-width/2,x+width/2

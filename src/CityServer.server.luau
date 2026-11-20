@@ -87,35 +87,7 @@ local function tool(p,name)
  end
  if name=='Pistol' then
   t:SetAttribute('Ammo',profiles[p].Magazine); t:SetAttribute('Reloading',false)
-  local finish=(profiles[p].Look or {}).Armory or 'Slate compact'
-  local long=finish=='Field carbine'
-  local steel=finish=='Silver service' and Color3.fromRGB(157,162,161) or Color3.fromRGB(72,78,82)
-  local charcoal=Color3.fromRGB(43,46,47)
-  local trim=long and Color3.fromRGB(146,129,98) or charcoal
-  handle.Size=Vector3.new(.27,.64,.36);handle.Transparency=1;handle.CanTouch=false;handle.CanQuery=false
-  t.Grip=CFrame.new(0,-.12,0)
-  t:SetAttribute('Finish',finish)
-  local function shell(label,size,pose,color,wedge)
-   local part=Instance.new(wedge and 'WedgePart' or 'Part');part.Name=label;part.Size=size;part.Color=color
-   part.Material=Enum.Material.SmoothPlastic;part.CanCollide=false;part.CanTouch=false;part.CanQuery=false;part.Massless=true
-   part.CFrame=handle.CFrame*pose;part.Parent=t
-   local join=Instance.new('WeldConstraint');join.Part0=handle;join.Part1=part;join.Parent=part
-  end
-  shell('Palm',Vector3.new(.28,.66,.36),CFrame.new(0,0,.03)*CFrame.Angles(-.20,0,0),charcoal)
-  shell('Lower silhouette',Vector3.new(.31,.20,long and 1.68 or 1.05),CFrame.new(0,.28,-.32),trim)
-  shell('Upper silhouette',Vector3.new(.31,.22,long and 1.9 or 1.12),CFrame.new(0,.45,-.3),steel)
-  shell('Sloped back',Vector3.new(.30,.16,.18),CFrame.new(0,.42,.31),steel,true)
-  shell('Guard base',Vector3.new(.13,.08,.43),CFrame.new(0,-.004,-.30),charcoal)
-  shell('Guard edge',Vector3.new(.13,.29,.08),CFrame.new(0,.13,-.49)*CFrame.Angles(.16,0,0),charcoal)
-  for _,side in {-1,1} do
-   shell('Inset grip panel',Vector3.new(.032,.44,.235),CFrame.new(side*.147,-.02,.04)*CFrame.Angles(-.20,0,0),trim)
-   shell('Slide highlight',Vector3.new(.02,.036,long and 1.58 or .88),CFrame.new(side*.155,.50,-.32),steel:Lerp(Color3.new(1,1,1),.18))
-  end
-  if long then
-   shell('Stock silhouette',Vector3.new(.30,.45,.92),CFrame.new(0,.27,.86),trim)
-   shell('Fore-end',Vector3.new(.32,.27,.95),CFrame.new(0,.30,-1.05),trim)
-   shell('Front silhouette',Vector3.new(.15,.16,.58),CFrame.new(0,.45,-1.65),charcoal)
-  end
+  require(script.Parent.PistolVisual)(t,(profiles[p].Look or {}).Armory or 'Slate compact')
  end
  t.Parent=bag
 end
@@ -198,7 +170,7 @@ end
 local custody=require(script.Parent:WaitForChild('Custody'))(city,event,profiles,sync,tell,closest,function(p)
  cancelBusy(p); workService.finish(p); offers[p]=nil
 end)
-local respond=require(script.Parent:WaitForChild('Responders'))(city,event,profiles,jobs,sync,tell,safe,near,sight,custody.arrest)
+local respond=require(script.Parent:WaitForChild('Responders'))(city,event,profiles,jobs,sync,tell,safe,near,sight,custody.arrest,heat)
 local function timed(p,marker,seconds,valid,done)
  if busy[p] then return tell(p,'Finish your current action first.') end
  local _,h=alive(p); if not h then return end
@@ -227,14 +199,14 @@ local function interact(p,marker)
  if kind=='BailDesk' or kind=='EscapeGame' then return custody.prompt(p,kind) end
  if (d.CustodyUntil or 0)>0 then return end
  if kind=='Door' then
+  if not life.canUseDoor(p,marker) then return tell(p,'This residence is locked. The tenant can invite you from their phone.') end
   local now=os.clock(); if now<(marker:GetAttribute('DoorNext') or 0) then return end; marker:SetAttribute('DoorNext',now+0.8)
   local open=not marker:GetAttribute('Open'); marker:SetAttribute('Open',open); local closed=marker:GetAttribute('ClosedFrame') or marker.CFrame
   marker:SetAttribute('ClosedFrame',closed)
   local hinge=marker.Size.X/2
   local opened=closed*CFrame.new(-hinge,0,0)*CFrame.Angles(0,-math.pi/2,0)*CFrame.new(hinge,0,0)
-  marker.CanCollide=false
+  marker.CanCollide=true
   game:GetService('TweenService'):Create(marker,TweenInfo.new(.28),{CFrame=open and opened or closed}):Play()
-  task.delay(.3,function() if marker.Parent and not marker:GetAttribute('Open') then marker.CanCollide=true end end)
  elseif kind=='SitHome' or kind=='RestHome' then
   local _,human=alive(p)
   if not human or not marker:IsA('Seat') or marker.Occupant or human.SeatPart then return end
@@ -265,6 +237,7 @@ local function interact(p,marker)
   local needed=kind=='Store' and 'Pistol' or 'Crowbar'
   if not equipped(p,needed) then return tell(p,'Equip a '..needed..' first.') end
   local duration=kind=='Store' and 12 or 9
+  if kind=='Store' then local root=alive(p);if root and not safe(p) then respond.alert(p,root.Position,'robbery') end end
   timed(p,marker,duration,function() return near(p,marker.Position,10) and sight(p,marker.Position,marker) and equipped(p,needed) and not safe(p) end,function()
    if os.time()<(marker:GetAttribute('ReadyAt') or 0) then return end
    marker:SetAttribute('ReadyAt',os.time()+180)
@@ -488,7 +461,7 @@ event.OnServerEvent:Connect(function(p,kind,data)
  if d.Trading or d.Leaving then return end
  if retail.handle(p,kind,data) then return end
  if lifeActions[kind] then life.handle(p,kind,data)
- elseif kind=='CallResponder' or kind=='DispatchList' or kind=='Assist' then respond(p,kind,data)
+ elseif kind=='CallResponder' or kind=='DispatchList' or kind=='Assist' then respond.handle(p,kind,data)
  elseif kind=='ApplyJob' or kind=='StartShift' or kind=='CancelShift' or kind=='Resign' then
   workService.handle(p,kind,data)
  elseif kind=='RideLift' then
@@ -590,7 +563,7 @@ event.OnServerEvent:Connect(function(p,kind,data)
   local hit=workspace:Raycast(head.Position,(aim-head.Position).Unit*7,ray)
   local model=hit and hit.Instance:FindFirstAncestorOfClass('Model')
   local hum=model and model:FindFirstChildOfClass('Humanoid');local victim=model and Players:GetPlayerFromCharacter(model)
-  if hum and hum.Health>0 and ((victim and not safe(victim) and (victim:GetAttribute('CustodyUntil') or 0)==0) or model.Parent==workspace:FindFirstChild('Emergency responders')) then hum:TakeDamage(equipped(p,'Bat') and 16 or 20);heat(p,1) end
+  if hum and hum.Health>0 and ((victim and not safe(victim) and (victim:GetAttribute('CustodyUntil') or 0)==0) or model.Parent==workspace:FindFirstChild('Emergency responders')) then respond.alert(p,head.Position,'assault',model);hum:TakeDamage(equipped(p,'Bat') and 16 or 20);heat(p,1) end
  elseif kind=='Shoot' then
   if safe(p) or not equipped(p,'Pistol') or typeof(data.Position)~='Vector3' then return end
   local pos=data.Position
@@ -603,6 +576,7 @@ event.OnServerEvent:Connect(function(p,kind,data)
   local ray=RaycastParams.new(); ray.FilterDescendantsInstances={p.Character}; ray.FilterType=Enum.RaycastFilterType.Exclude
   local hit=workspace:Raycast(origin,direction.Unit*250,ray); local endPos=hit and hit.Position or origin+direction.Unit*250
   event:FireAllClients('Shot',{From=origin,To=endPos})
+  respond.alert(p,origin,'gunfire',hit and hit.Instance:FindFirstAncestorOfClass('Model'))
   if hit then
    local model=hit.Instance:FindFirstAncestorOfClass('Model'); local victim=model and Players:GetPlayerFromCharacter(model)
    if victim and victim~=p and not safe(victim) then

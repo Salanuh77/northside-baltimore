@@ -85,7 +85,7 @@ return function(part,group,label,action,city)
     p('Sash division',.7,7.1,.42,-42,y+7.15,pos+3,bone,'Metal')
     p('Lintel',.9,2.3,19.9,-42,y+11.75,pos+3,tint,'Brick')
    end
-   for _,edge in {-9,24} do p('Party wall',.7,12.6,40,edge,y+6.6,3.5,tint,'Brick') end
+   for _,edge in {-9,24} do p('Party wall',.7,12.6,40.4,edge,y+6.6,3.5,tint,'Brick') end
    for n=1,2 do
     local u=-25.5+(n-1)*33
     local base,ceiling=y+.35,y+12.65
@@ -97,6 +97,7 @@ return function(part,group,label,action,city)
     local paint=coats[(n+level)%#coats+1]
     local door=p('Apartment door',6.75,10.3,.42,u-8.7,y+5.55,-17,paint,'SmoothPlastic')
     action(door,'Door','Open / close')
+    facade.frame(door,7.1,10.4,0,-1)
     facade.entry(door,Enum.NormalId.Front)
     for _,side in {-1,1} do
      p('Entry casing',.24,10.4,.8,u-8.7+side*3.50,y+5.55,-17.1,bone,'Metal')
@@ -126,6 +127,7 @@ return function(part,group,label,action,city)
     action(buzzer,'Residence','Apartment & parties')
     buzzer:SetAttribute('Address',name..' / '..tostring((level+1)*100+n))
     buzzer:SetAttribute('LeasePrice',0)
+    facade.link(door,buzzer)
     local box=p('Apartment lockbox',2.8,2,2,u-11,y+1.5,18,'dark','Metal')
     action(box,'Home','Search apartment lockbox',110,9)
     glow(p,u,y+11.7,-3)

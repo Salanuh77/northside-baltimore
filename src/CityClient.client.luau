@@ -248,7 +248,8 @@ Run.Heartbeat:Connect(function()
  else
   local heat=math.clamp(state.Heat or 0,0,5)
   local goods=state.Loot or 0
-  hud.status.Text=(goods>0 and ('Goods '..goods..'  ') or '')..(heat>0 and string.rep('★',heat) or '')
+  local contact=p:GetAttribute('PoliceContact') or ''
+  hud.status.Text=(goods>0 and ('Goods '..goods..'  ') or '')..(heat>0 and ((contact~='' and contact..'  ' or '')..string.rep('★',heat)) or '')
  end
 end)
 local function setClock()

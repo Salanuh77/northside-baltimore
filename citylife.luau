@@ -33,6 +33,7 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
  local function lease(p,where,u,y,v,cost)
   local key=p('Residence intercom',1.5,2.2,.55,u,y,v,'dark','Metal')
   action(key,'Residence','Apartment & parties'); key:SetAttribute('Address',where); key:SetAttribute('LeasePrice',cost or 0)
+  return key
  end
  for i=1,18 do
   local stretch=math.floor((i-1)/6)
@@ -86,8 +87,9 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   else
    local door=p('Rowhouse door',6.4,9.6,.45,-4.4,6.5,14.3,blue,'Wood')
    action(door,'Door','Open / close'); facade.entry(door,rb.Enum.NormalId.Back)
+   facade.frame(door,6.6,10.6,-.2,1)
    furnish(m,cf.new(-700,1.7,z)*cf.Angles(0,-math.pi/2,0),'Hollins',i)
-   lease(p,m.Name,1,5,13.5,0); glow(p,0,12,0) end
+   facade.link(door,lease(p,m.Name,1,5,13.5,0)); glow(p,0,12,0) end
   if i%3==0 then
    p('Utility pole',.85,32,.85,8,16,22,rgb(101,84,69),'Wood')
    p('Crossarm',5,.55,.55,8,30,22,'dark','Wood')
@@ -123,9 +125,10 @@ return function(city,group,builder,lettering,glass,action,lounge,glow)
   for _,u in {-14,0,14} do p('Bronze mullion',.6,12,.8,u,21,-12.8,'gold','Metal') end
   local door=p('Townhouse door',11.3,10,.45,0,6.5,-12.5,blue,'Wood')
   action(door,'Door','Open / close')
+  facade.frame(door,11.4,10,0,-1);facade.entry(door,rb.Enum.NormalId.Front)
   p('Townhouse transom',11.4,2.4,.4,0,12.7,-12.5,cream,'Limestone')
   furnish(m,cf.new(x,1.5,-493)*cf.Angles(0,math.pi,0),'Waterfront',i)
-  p('Entry bell post',1.1,4.8,1.1,7,2.5,-14,cream,'Limestone'); lease(p,m.Name,7,4.2,-14.85,200); glow(p,0,13,0)
+  p('Entry bell post',1.1,4.8,1.1,7,2.5,-14,cream,'Limestone'); facade.link(door,lease(p,m.Name,7,4.2,-14.85,200)); glow(p,0,13,0)
  end
  local martModels={}
  for _,id in {'dispenser','ice-locker','coffee-brewer'} do

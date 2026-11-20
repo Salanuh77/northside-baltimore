@@ -32,7 +32,12 @@ local function build(station)
  model:SetAttribute('RouteDesk',station.Position);Tags:AddTag(model,'RouteClerk')
  local neck=model:FindFirstChild('Neck',true)
  if neck and not neck:IsA('Motor6D') then neck=nil end
- return {model=model,neck=neck,rest=neck and neck.C0,unseen=0}
+ local protective={}
+ for _,name in {'Waist','LeftShoulder','RightShoulder'} do
+  local joint=model:FindFirstChild(name,true)
+  if joint and joint:IsA('Motor6D') then table.insert(protective,{joint=joint,rest=joint.C0,name=name}) end
+ end
+ return {model=model,neck=neck,rest=neck and neck.C0,protective=protective,unseen=0}
 end
 
 return function(city)
@@ -66,8 +71,16 @@ return function(city)
       local head=clerk.model.Head
       seen=not workspace:Raycast(head.Position,guest.root.Position+Vector3.yAxis-head.Position,ray)
      end
-     local mode=seen and (guest.armed and 'Alarmed' or 'Serving') or 'On duty'
+     local alarm=(clerk.model:GetAttribute('AlarmUntil') or 0)>os.clock()
+     local mode=alarm and 'Taking shelter' or seen and (guest.armed and 'Alarmed' or 'Serving') or 'On duty'
      clerk.model:SetAttribute('Activity',mode)
+     if clerk.sheltering~=alarm then
+      clerk.sheltering=alarm
+      for _,pose in clerk.protective do
+       local tilt=alarm and (pose.name=='Waist' and -.35 or 1.1) or 0
+       Tween:Create(pose.joint,TweenInfo.new(.3),{C0=pose.rest*CFrame.Angles(tilt,0,0)}):Play()
+      end
+     end
      if clerk.neck then
       local yaw=0
       if seen then
@@ -76,7 +89,7 @@ return function(city)
       end
       if clerk.yaw==nil or math.abs(clerk.yaw-yaw)>.05 or clerk.mode~=mode then
        clerk.yaw=yaw;clerk.mode=mode
-       Tween:Create(clerk.neck,TweenInfo.new(.35),{C0=clerk.rest*CFrame.Angles(mode=='Alarmed' and -.22 or 0,yaw,0)}):Play()
+       Tween:Create(clerk.neck,TweenInfo.new(.35),{C0=clerk.rest*CFrame.Angles((alarm or mode=='Alarmed') and -.22 or 0,yaw,0)}):Play()
       end
      end
     end
