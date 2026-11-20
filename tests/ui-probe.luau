@@ -130,6 +130,11 @@ local ok, message = pcall(function()
  firstBox.Text='Andre';lastBox.Text='Brooks'
  click(findButton(studio,"Continue"))
  check("appearance controls show both directions", findButton(studio,"Hair previous").Text=="‹" and findButton(studio,"Hair next").Text=="›")
+ local preview=studio:FindFirstChild('Character preview',true)
+ local editor=studio:FindFirstChild('Editor',true)
+ check('editor leaves most landscape screen for the resident',preview.AbsoluteSize.X>studio.AbsoluteSize.X*.56,preview.AbsoluteSize)
+ check('preview and editor do not overlap',preview.AbsolutePosition.X>=editor.AbsolutePosition.X+editor.AbsoluteSize.X,preview.AbsolutePosition)
+ click(findButton(studio,'Category Outfit'))
  local function rig()
   for _, obj in studio:GetDescendants() do
    if obj:IsA("WorldModel") and visible(obj) then
@@ -149,6 +154,7 @@ local ok, message = pcall(function()
   check('Trouser joint covered '..key,rig().LeftUpperLeg.Color~=rig().Head.Color)
  end
  model=rig()
+ click(findButton(studio,'Category Body'))
  local baseHeight = model:GetExtentsSize().Y
  click(findButton(studio, "Height next"))
  waitUntil(function() local r=rig(); return r and r:GetExtentsSize().Y>baseHeight+0.01 end, "Tall did not change rendered preview height")
@@ -160,11 +166,13 @@ local ok, message = pcall(function()
  local baseDepth=torso(rig()).Size.Z
  click(findButton(studio,"Depth next"))
  check("torso depth changes independently",torso(rig()).Size.Z>baseDepth)
+ click(findButton(studio,'Category Outfit'))
  click(findButton(studio,"Pants next"));click(findButton(studio,"Shoes next"))
  local pants=rig():FindFirstChildOfClass("Pants")
  check("washed denim and black shoes combine",pants.PantsTemplate:find(game.ReplicatedStorage.StreetStyle:GetAttribute("washed-denim-black"),1,true)~=nil)
 
  local baseColor = rig().Head.Color
+ click(findButton(studio,'Category Body'))
  click(findButton(studio, "Tone previous"))
  local function previewColor() local r=rig(); return r and r.Head.Color end
  waitUntil(function() return previewColor() and previewColor()~=baseColor end, "tone swatch did not change preview skin")
@@ -174,6 +182,7 @@ local ok, message = pcall(function()
   return mesh and mesh:GetAttribute('CatalogId')
  end
  local initialHair=haircutId()
+ click(findButton(studio,'Category Hair'))
  click(findButton(studio,'Hair next'))
  waitUntil(function() return haircutId()==7193452166 and haircutId()~=initialHair end,'Curls mesh did not render')
  check('style tab changes rendered hair',true,haircutId())
@@ -189,6 +198,19 @@ local ok, message = pcall(function()
  click(findButton(studio,'Hair next'))
  local twists=rig().Head:FindFirstChild('Hair mesh',true)
  check('two-strand twists have their own sculpt',twists.MeshId~=puffMesh and twists.MeshId==game.ReplicatedStorage.ResidentGrooms:FindFirstChild('Twists',true).MeshId)
+ local styles=require(game.ReplicatedStorage.StreetStyle).Hair
+ for step=1,#styles do
+  click(findButton(studio,'Hair next'))
+  local selected=styles[(3+step)%#styles+1]
+  local visibleHair=rig().Head:FindFirstChild('Hair mesh',true)
+  assert((selected=='Shaved' and not visibleHair) or (selected~='Shaved' and visibleHair),'Missing haircut '..selected)
+  if visibleHair then
+   local failed={}
+   game.ContentProvider:PreloadAsync({visibleHair},function(id,status) if status~=Enum.AssetFetchStatus.Success then table.insert(failed,id) end end)
+   assert(#failed==0,'Haircut asset failed: '..selected)
+  end
+ end
+ check('all 17 hair choices cycle and load, including shaved and Meshy fringe',true)
  local function viewPose()
   local r = rig()
   local viewport = r and r:FindFirstAncestorOfClass("ViewportFrame")
@@ -198,7 +220,7 @@ local ok, message = pcall(function()
  click(findButton(studio, "Turn right"))
  waitUntil(function() local pose=viewPose(); return pose and angle.LookVector:Dot(pose.LookVector)<0.999 end, "Turn right did not rotate preview")
  check("turn control changes preview angle", true, viewPose().LookVector)
- click(findButton(studio,"Face view"))
+ click(findButton(studio,'Category Face'))
  click(findButton(studio,"Expression next"));click(findButton(studio,"Eye next"))
  local oval=rig().Head:FindFirstChild('Head sculpt',true)
  local firstMesh=oval.MeshId
@@ -208,15 +230,15 @@ local ok, message = pcall(function()
  local priorWidth=square.Size.X
  click(findButton(studio,'FaceWidth next'))
  check('face width changes the sculpt',rig().Head:FindFirstChild('Head sculpt',true).Size.X>priorWidth)
- local eyeWidth=rig().Head:FindFirstChild('Resident face plate',true).Size.X
+ local eyeWidth=rig().Head:FindFirstChild('Resident face',true).Size.X
  click(findButton(studio,'EyeSpacing next'))
- check('eye spacing changes the artwork',rig().Head:FindFirstChild('Resident face plate',true).Size.X>eyeWidth)
- local lipHeight=rig().Head:FindFirstChild('Resident mouth plate',true).Size.Y
+ check('eye spacing changes the artwork',rig().Head:FindFirstChild('Resident face',true).Size.X>eyeWidth)
+ local lipHeight=rig().Head:FindFirstChild('Resident mouth',true).Size.Y
  click(findButton(studio,'LipFullness next'))
- check('lip fullness changes the mouth',rig().Head:FindFirstChild('Resident mouth plate',true).Size.Y>lipHeight)
- local baseEyes=rig().Head:FindFirstChild("Resident face",true).Texture
+ check('lip fullness changes the mouth',rig().Head:FindFirstChild('Resident mouth',true).Size.Y>lipHeight)
+ local baseEyes=rig().Head:FindFirstChild("Resident face",true).TextureID
  click(findButton(studio,"Mouth next"))
- check("eye and mouth selectors render separately",rig().Head:FindFirstChild("Resident face",true).Texture==baseEyes and rig().Head:FindFirstChild("Resident mouth",true).Texture:find(game.ReplicatedStorage.StreetStyle:GetAttribute("lips-smile"),1,true)~=nil)
+ check("eye and mouth selectors render separately",rig().Head:FindFirstChild("Resident face",true).TextureID==baseEyes and rig().Head:FindFirstChild("Resident mouth",true).TextureID:find(game.ReplicatedStorage.StreetStyle:GetAttribute("lips-smile"),1,true)~=nil)
  click(findButton(studio, "Enter city"))
  local character = waitUntil(function()
   local c = player.Character
@@ -226,7 +248,7 @@ local ok, message = pcall(function()
  check("selected fictional name applies to the live resident", character.Humanoid.DisplayName=="Andre Brooks",character.Humanoid.DisplayName)
  check("enter city spawns game-owned resident", character:GetAttribute("GameOwnedRig")==true, character.Name)
  local wardrobe=game.ReplicatedStorage.StreetStyle
- local assets={character.Head:FindFirstChild('Head sculpt',true),character.Head:FindFirstChild('Hair mesh',true)}
+ local assets={character.Head:FindFirstChild('Head sculpt',true),character.Head:FindFirstChild('Hair mesh',true),character.Head:FindFirstChild('Resident face',true),character.Head:FindFirstChild('Resident mouth',true)}
  local textures={}
  for _,key in {'portrait-calm','portrait-smile','portrait-focused','lips-level','lips-smile','lips-set','ash-pullover','dock-denim','field-liner'} do
   local image=Instance.new('ImageLabel')

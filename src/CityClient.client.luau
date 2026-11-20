@@ -16,10 +16,10 @@ end)
 local mouse=p:GetMouse()
 local openPhone,showGuide,handset
 local catalog=require(game:GetService('ReplicatedStorage'):WaitForChild('WorkCatalog'))
-local gui=Instance.new('ScreenGui'); gui.Name='NorthsideHUD'; gui.ResetOnSpawn=false; gui.IgnoreGuiInset=false; gui.Parent=p:WaitForChild('PlayerGui')
+local gui=Instance.new('ScreenGui'); gui.Name='NorthsideHUD'; gui.DisplayOrder=12; gui.ResetOnSpawn=false; gui.IgnoreGuiInset=false; gui.Parent=p:WaitForChild('PlayerGui')
 gui.Enabled=p.Character~=nil
 p.CharacterAdded:Connect(function() gui.Enabled=true end)
-local dark=Color3.fromRGB(21,27,29); local cream=Color3.fromRGB(236,229,212); local gold=Color3.fromRGB(224,176,83)
+local dark=Color3.fromRGB(16,19,25); local cream=Color3.fromRGB(246,247,248); local gold=Color3.fromRGB(159,211,190)
 local function make(class,props,parent)
  local v=Instance.new(class); for k,val in props do v[k]=val end; v.Parent=parent; return v
 end
@@ -27,8 +27,8 @@ local function text(parent,value,size,pos,fontSize,color)
  return make('TextLabel',{Text=value,Size=size,Position=pos,TextSize=fontSize or 16,TextColor3=color or cream,BackgroundTransparency=1,Font=Enum.Font.Gotham,TextXAlignment=Enum.TextXAlignment.Left,TextWrapped=true},parent)
 end
 local function button(parent,value,size,pos,fn)
- local b=make('TextButton',{Text=value,Size=size,Position=pos,BackgroundColor3=Color3.fromRGB(45,57,59),TextColor3=cream,TextSize=15,Font=Enum.Font.GothamMedium,AutoButtonColor=true,BorderSizePixel=0},parent)
- make('UICorner',{CornerRadius=UDim.new(0,6)},b); b.Activated:Connect(fn); return b
+ local b=make('TextButton',{Text=value,Size=size,Position=pos,BackgroundColor3=Color3.fromRGB(32,37,46),TextColor3=cream,TextSize=14,Font=Enum.Font.GothamMedium,AutoButtonColor=true,BorderSizePixel=0},parent)
+ make('UICorner',{CornerRadius=UDim.new(0,3)},b); b.Activated:Connect(fn); return b
 end
 local city=workspace:WaitForChild('Baltimore')
 local hud=require(game.ReplicatedStorage:WaitForChild('StreetHUD'))(gui,make,text,city)
@@ -42,12 +42,12 @@ end
 local ammo=text(gui,'',UDim2.fromOffset(200,40),UDim2.new(1,-220,1,-110),22,gold)
 local progress=make('Frame',{Size=UDim2.fromOffset(300,5),Position=UDim2.new(0.5,-150,0.73,0),BackgroundColor3=gold,BorderSizePixel=0,Visible=false},gui)
 local progressTween
-local modal=make('Frame',{Size=UDim2.new(1,-24,1,-24),Position=UDim2.fromScale(0.5,0.5),AnchorPoint=Vector2.new(0.5,0.5),BackgroundColor3=dark,Visible=false,BorderSizePixel=0},gui)
-make('UISizeConstraint',{MaxSize=Vector2.new(380,440)},modal)
-make('UICorner',{CornerRadius=UDim.new(0,10)},modal)
-local title=text(modal,'',UDim2.new(1,-70,0,40),UDim2.fromOffset(18,10),20,gold)
+local modal=make('Frame',{Size=UDim2.new(1,-32,1,-82),Position=UDim2.fromOffset(16,64),BackgroundColor3=dark,Visible=false,BorderSizePixel=0},gui)
+make('UISizeConstraint',{MaxSize=Vector2.new(350,460)},modal)
+make('UICorner',{CornerRadius=UDim.new(0,4)},modal)
+local title=text(modal,'',UDim2.new(1,-70,0,40),UDim2.fromOffset(16,8),18,cream);title.Font=Enum.Font.GothamBold
 local content=make('ScrollingFrame',{Size=UDim2.new(1,-30,1,-65),Position=UDim2.fromOffset(15,58),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=4,AutomaticCanvasSize=Enum.AutomaticSize.Y,CanvasSize=UDim2.new()},modal)
-make('UIListLayout',{Padding=UDim.new(0,10),SortOrder=Enum.SortOrder.LayoutOrder},content)
+make('UIListLayout',{Padding=UDim.new(0,5),SortOrder=Enum.SortOrder.LayoutOrder},content)
 local closeButton=button(modal,'×',UDim2.fromOffset(35,35),UDim2.new(1,-48,0,12),function() modal.Visible=false end)
 closeButton.Name='Close'
 handset=require(game.ReplicatedStorage:WaitForChild('Handset'))(gui,modal,title,content,closeButton,make,text,button,function() openPhone() end)
@@ -59,7 +59,13 @@ local function clear(name)
  title.Text=name; modal.Visible=true; order=0
 end
 local function row(s,fn)
- order+=1; local b=button(content,s,UDim2.new(1,-6,0,43),UDim2.new(),fn); b.LayoutOrder=order; return b
+ order+=1; local b=button(content,s,UDim2.new(1,-6,0,39),UDim2.new(),fn); b.LayoutOrder=order
+ b.TextXAlignment=Enum.TextXAlignment.Left;b.TextWrapped=true
+ make('UIPadding',{PaddingLeft=UDim.new(0,10),PaddingRight=UDim.new(0,10)},b)
+ local function focus() b.BackgroundColor3=cream;b.TextColor3=dark end
+ local function blur() b.BackgroundColor3=Color3.fromRGB(32,37,46);b.TextColor3=cream end
+ b.MouseEnter:Connect(focus);b.SelectionGained:Connect(focus);b.MouseLeave:Connect(blur);b.SelectionLost:Connect(blur)
+ return b
 end
 local function paragraph(s)
  order+=1; local l=text(content,s,UDim2.new(1,-6,0,22),UDim2.new(),14); l.AutomaticSize=Enum.AutomaticSize.Y; l.LayoutOrder=order; return l

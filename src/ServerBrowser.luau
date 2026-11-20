@@ -1,10 +1,10 @@
 local remote=game.ReplicatedStorage:WaitForChild('CityServers')
 local player=game.Players.LocalPlayer
 local dialog,body,status
-local cream=Color3.fromRGB(244,238,217)
-local dark=Color3.fromRGB(24,39,42)
+local cream=Color3.fromRGB(246,247,248)
+local dark=Color3.fromRGB(16,19,25)
 local function control(class,parent,text)
- local obj=Instance.new(class);obj.BackgroundColor3=Color3.fromRGB(48,68,71)
+ local obj=Instance.new(class);obj.BackgroundColor3=Color3.fromRGB(32,37,46)
  obj.TextColor3=cream;obj.Text=text;obj.Font=Enum.Font.GothamMedium;obj.TextSize=15
  obj.BorderSizePixel=0;obj.Parent=parent;return obj
 end

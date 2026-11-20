@@ -80,9 +80,9 @@ return function(gui,modal,title,content,close,make,text,button,openHome)
   session=false
   shell.Visible=false;home.Visible=false;title.Visible=true
   modal.BackgroundTransparency=0
-  modal.Size=UDim2.new(1,-24,1,-24);modal.AnchorPoint=Vector2.new(.5,.5);modal.Position=UDim2.fromScale(.5,.5)
+  modal.Size=UDim2.new(1,-32,1,-82);modal.AnchorPoint=Vector2.zero;modal.Position=UDim2.fromOffset(16,64)
   close.Size=UDim2.fromOffset(35,35);close.Position=UDim2.new(1,-48,0,12);close.BackgroundTransparency=0
-  title.TextSize=20;title.Size=UDim2.new(1,-70,0,40);title.Position=UDim2.fromOffset(18,10)
+  title.TextSize=18;title.Size=UDim2.new(1,-70,0,40);title.Position=UDim2.fromOffset(16,8)
   content.Position=UDim2.fromOffset(15,58);content.Size=UDim2.new(1,-30,1,-65)
   launcher.Visible=true
  end
