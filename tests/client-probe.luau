@@ -33,14 +33,17 @@ remote.OnClientInvoke=function(kind,data)
   return distance<=1.15,tostring(root.Position)
  end
  if kind=='PreloadFurniture' then
-  local parts={}
-  for _,v in data:GetDescendants() do if v:IsA('MeshPart') then table.insert(parts,v) end end
-  if #parts~=4 then return false,'Expected four meshes, received '..#parts end
+  local parts,names={},{}
+  for _,v in data:GetDescendants() do if v:IsA('MeshPart') then table.insert(parts,v);names[v.Name]=true end end
+  for _,name in {'Sofa upholstery','Quilted bed','Kitchen sink','Kitchen range'} do
+   if not names[name] then return false,'Missing required furniture: '..name end
+  end
+  if data:GetAttribute('HomeLayout')=='Flat' and not names['Walnut sideboard'] then return false,'Flat has no hallway cabinet' end
   local failed={}
   game:GetService('ContentProvider'):PreloadAsync(parts,function(id,status)
    if status~=Enum.AssetFetchStatus.Success then table.insert(failed,id..' '..status.Name) end
   end)
-  return #failed==0,table.concat(failed,', ')
+  return #failed==0,#failed>0 and table.concat(failed,', ') or (tostring(#parts)..' furnished assets loaded')
  end
  if kind=='ActivatePistol' then
   p.Character.Pistol:Activate(); task.wait(.45); return true
