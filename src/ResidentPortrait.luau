@@ -6,7 +6,7 @@ Portrait.Lips={'Thin','Medium','Full'}
 
 function Portrait.scale(head,look)
  local width=({Narrow=.91,Balanced=1,Wide=1.09})[look.FaceWidth or 'Balanced']
- return head.Size*Vector3.new(.84*width,1.19,1.04)
+ return head.Size*Vector3.new(.88*width,1.10,1.04)
 end
 
 local function fit(part,head,folder,position,rotation)
@@ -31,20 +31,19 @@ function Portrait.draw(head,look,art,tone,dye,iris)
   local part=Instance.new('Part');part.Name=name;part.Shape=Enum.PartType.Ball;part.Color=color
   part.Size=Vector3.new(w,h,d)*scale;return fit(part,head,folder,Vector3.new(x,y,z)*scale)
  end
- local function plate(name,key,color,x,y,z,w,h)
-  local surface=Instance.new('Part');surface.Name=name..' plate';surface.Transparency=1;surface.CastShadow=false
-  surface.Size=Vector3.new(w*scale.X,h*scale.Y,.01)
-  -- Tilt the mouth plate along the receding chin before attaching it.
-  local tilt=name=='Resident mouth' and -math.atan(.60*scale.Z/scale.Y) or 0
-  fit(surface,head,folder,Vector3.new(x,y,z)*scale,CFrame.Angles(tilt,0,0))
-  local ink=Instance.new('Decal');ink.Name=name;ink.Face=Enum.NormalId.Front
-  ink.Texture='rbxassetid://'..art:GetAttribute(key);ink.Color3=color;ink.Parent=surface
+ local function plate(name,key,color,kind,variant)
+  local source=game.ReplicatedStorage.ResidentFeatures:FindFirstChild((look.FaceShape or 'Oval')..' '..kind..' '..variant,true)
+  local surface=source:Clone();surface.Name=name;surface.CastShadow=false
+  surface.Size=source.Size*scale;surface.Color=color
+  local material=surface:FindFirstChildOfClass('SurfaceAppearance');if material then material:Destroy() end
+  surface.TextureID='rbxassetid://'..art:GetAttribute(key)
+  -- Each overlay follows this specific sculpt, including cheeks and chin in profile.
+  fit(surface,head,folder,source:GetAttribute('FeatureCenter')*scale,CFrame.Angles(0,math.pi,0))
  end
- local span=({Close=.63,Balanced=.70,Wide=.76})[look.EyeSpacing or 'Balanced']
- local lipHeight=({Thin=.085,Medium=.109,Full=.135})[look.LipFullness or 'Medium']
- plate('Resident face','portrait-'..string.lower(look.Expression or 'Calm'),iris:Lerp(Color3.new(1,1,1),.65),0,.092,-.487,span,.178)
+ -- Keep brows and lids legible at normal conversation distance, not only in a close-up.
+ plate('Resident face','portrait-'..string.lower(look.Expression or 'Calm'),iris:Lerp(Color3.new(1,1,1),.86),'Eyes',look.EyeSpacing or 'Balanced')
  local mouth=look.Mouth or (look.Expression=='Smile' and 'Smile' or 'Level')
- plate('Resident mouth','lips-'..string.lower(mouth),Color3.new(1,1,1),0,-.219,-.461,.345,lipHeight)
+ plate('Resident mouth','lips-'..string.lower(mouth),Color3.new(1,1,1),'Mouth',look.LipFullness or 'Medium')
  for _,side in {-1,1} do
   feature('Ear',side*profile.Size.X*.48,-.018,.015,.126,.232,.145,tone)
   if look.Detail=='Freckles' then

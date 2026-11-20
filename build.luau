@@ -224,6 +224,10 @@ rig.Parent=rs
 local hairLibrary=rb.deserializeModel(fs.readFile('art/resident-hair.rbxm'))[1];hairLibrary.Name='ResidentHair';hairLibrary.Parent=rs
 local profiles=rb.deserializeModel(fs.readFile('art/resident-profiles.rbxm'))[1]
 profiles.Name='ResidentProfiles';profiles.Parent=rs
+local features=rb.deserializeModel(fs.readFile('art/resident-features.rbxm'))[1]
+features.Name='ResidentFeatures';features.Parent=rs
+local featureBounds=require('@lune/serde').decode('json',fs.readFile('art/feature-bounds.json'))
+for name,box in featureBounds do features:FindFirstChild(name,true):SetAttribute('FeatureCenter',Vector3.new(table.unpack(box.center))) end
 local grooms=rb.deserializeModel(fs.readFile('art/resident-grooms.rbxm'))[1]
 grooms.Name='ResidentGrooms';grooms.Parent=rs
 local bounds=require('@lune/serde').decode('json',fs.readFile('art/groom-bounds.json'))

@@ -86,7 +86,7 @@ class Groom:
             axis=np.array([1.,0.,0.]) if abs(tangent[0])<.85 else np.array([0.,0.,1.])
             side=np.cross(tangent,axis);side/=np.linalg.norm(side)
             other=np.cross(side,tangent)
-            rows.append([c+radii[i]*(cos(a)*side+sin(a)*other) for a in np.arange(6)*pi/3])
+            rows.append([c+radii[i]*(cos(a)*side+sin(a)*other) for a in np.arange(8)*pi/4])
         self.surface(rows,2)
 
     def rope(self,path,radius,turns,double=True):
@@ -109,7 +109,7 @@ class Groom:
 
     def twists(self,loose=False,locs=False):
         # Stagger three rows of parts. Keep the center of the forehead open.
-        for row,count in enumerate([16,13,8]):
+        for row,count in enumerate([14,11,7]):
             for k in range(count):
                 a=(k+.5+.35*row+self.random.uniform(-.11,.11))*2*pi/count
                 startY=[.35,.438,.49][row]+self.random.uniform(-.013,.013)
@@ -121,7 +121,9 @@ class Groom:
                 for t in np.linspace(0,1,47):
                     y=startY+(tipY-startY)*t
                     swept=a+.08*sin(2.2*a+.7)*t
-                    clearance=.027+.024*row+.042*sin(t*pi*.8)+(.038 if loose else .012)*t
+                    # Lift each rope away from the scalp before letting its end fall.
+                    # Flat paths read as cornrows; twists need separate hanging tips.
+                    clearance=.030+.027*row+(.13 if loose else .095)*sin(t*pi)+.075*t
                     path.append(self.skull(swept,y,clearance))
                 self.rope(path,radius,3.0 if loose else 3.7,not locs)
 
@@ -147,8 +149,8 @@ class Groom:
 
 def make(style):
     g=Groom(style);g.scalp(-.021 if style in ("Cornrows","Barrel twists") else -.008)
-    if style=="High puff": g.puff((0,.63,.11),(.43,.32,.40))
-    elif style=="Low puff": g.puff((0,.23,.45),(.35,.28,.32))
+    if style=="High puff": g.puff((0,.71,.08),(.49,.37,.45))
+    elif style=="Low puff": g.puff((0,.23,.49),(.35,.28,.32))
     elif style=="Twin buns":
         for side in [-1,1]: g.puff((side*.30,.53,.17),(.23,.21,.22))
     elif style in ("Twists","Twist out","Short locs"): g.twists(style=="Twist out",style=="Short locs")
