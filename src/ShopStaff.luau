@@ -2,6 +2,7 @@ local Players=game:GetService('Players')
 local Storage=game:GetService('ReplicatedStorage')
 local Tags=game:GetService('CollectionService')
 local Tween=game:GetService('TweenService')
+local Reactions=require(script.Parent.NpcReactions)
 local looks={
  {'Copper','Cropped fringe','Short','Average','Dock denim','Oval'},
  {'Umber','High puff','Medium','Slender','Field liner','Heart'},
@@ -51,7 +52,7 @@ return function(city)
    local visitors={}
    for _,player in Players:GetPlayers() do
     local char=player.Character;local root=char and char:FindFirstChild('HumanoidRootPart')
-    if root then table.insert(visitors,{root=root,armed=char:FindFirstChild('Pistol')~=nil}) end
+    if root and char:FindFirstChildOfClass('Humanoid') and char.Humanoid.Health>0 then table.insert(visitors,{root=root,armed=char:FindFirstChild('Pistol')~=nil or char:FindFirstChild('Knife')~=nil or char:FindFirstChild('Bat')~=nil}) end
    end
    for _,station in stations do
     local spot=station:GetAttribute('StaffSpot')
@@ -65,14 +66,17 @@ return function(city)
     if clerk then
      if dist>160 then clerk.unseen+=1 else clerk.unseen=0 end
      if clerk.unseen>=12 then clerk.model:Destroy();staff[station]=nil;continue end
-     local seen=dist<16
-     if seen then
-      local ray=RaycastParams.new();ray.FilterType=Enum.RaycastFilterType.Exclude;ray.FilterDescendantsInstances={clerk.model,guest.root.Parent,station};ray.RespectCanCollide=true
-      local head=clerk.model.Head
-      seen=not workspace:Raycast(head.Position,guest.root.Position+Vector3.yAxis-head.Position,ray)
+     local seen=false;local nearest=math.huge
+     -- A closer passerby behind the wall must not hide a visible customer.
+     for _,visitor in visitors do
+      local range=(visitor.root.Position-clerk.model.Head.Position).Magnitude
+      local score=range-(visitor.armed and 24 or 0)
+      if range>=18 or score>=nearest then continue end
+      local ray=RaycastParams.new();ray.FilterType=Enum.RaycastFilterType.Exclude;ray.FilterDescendantsInstances={clerk.model,station};ray.RespectCanCollide=true
+      local hit=workspace:Raycast(clerk.model.Head.Position,visitor.root.Position+Vector3.yAxis-clerk.model.Head.Position,ray)
+      if not hit or hit.Instance:IsDescendantOf(visitor.root.Parent) then guest=visitor;nearest=score;seen=true end
      end
-     local alarm=(clerk.model:GetAttribute('AlarmUntil') or 0)>os.clock()
-     local mode=alarm and 'Taking shelter' or seen and (guest.armed and 'Alarmed' or 'Serving') or 'On duty'
+     local mode,alarm=Reactions.step(clerk,os.clock(),{alarmUntil=clerk.model:GetAttribute('AlarmUntil'),visible=seen,armed=seen and guest.armed})
      clerk.model:SetAttribute('Activity',mode)
      if clerk.sheltering~=alarm then
       clerk.sheltering=alarm

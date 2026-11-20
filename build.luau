@@ -276,7 +276,7 @@ local restServer=Instance.new('ModuleScript');restServer.Name='HomeRest';restSer
 local route=Instance.new('RemoteFunction'); route.Name='WalkingRoute'; route.Parent=rs
 local trail=Instance.new('ModuleScript'); trail.Name='StreetTrail'; trail.Source=fs.readFile('src/StreetTrail.luau'); trail.Parent=rs
 local staff=Instance.new('ModuleScript');staff.Name='ShopStaff';staff.Source=fs.readFile('src/ShopStaff.luau');staff.Parent=server.Parent
-for _,name in {'ResponderBrain','NpcNavigation','PistolVisual','NpcCombat','NpcAwareness'} do
+for _,name in {'ResponderBrain','NpcNavigation','PistolVisual','NpcCombat','NpcAwareness','NpcTactics','NpcGround','NpcReactions','NpcSight'} do
  local module=Instance.new('ModuleScript');module.Name=name;module.Source=fs.readFile('src/'..name..'.luau');module.Parent=server.Parent
 end
 local routes=Instance.new('ModuleScript'); routes.Name='WalkingRoutes'; routes.Source=fs.readFile('src/WalkingRoutes.luau'); routes.Parent=server.Parent

@@ -2,6 +2,9 @@ local Players=game:GetService('Players')
 local Brain=require(script.Parent.ResponderBrain)
 local Navigation=require(script.Parent.NpcNavigation)
 local Awareness=require(script.Parent.NpcAwareness)
+local Tactics=require(script.Parent.NpcTactics)
+local Ground=require(script.Parent.NpcGround)
+local Sight=require(script.Parent.NpcSight)
 local function rig(name,home,medical,parent)
  local storage=game:GetService('ReplicatedStorage')
  local model=storage.ResidentRig:Clone()
@@ -93,6 +96,17 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
   end
   tell(p,'Dispatch received your location.')
  end
+ local function warnClerks(origin,suspect)
+  local witnessed=false
+  for _,clerk in game:GetService('CollectionService'):GetTagged('RouteClerk') do
+   local root=clerk:FindFirstChild('HumanoidRootPart')
+   if not root then continue end
+   local seen=suspect and visible(clerk,suspect.Character,45,false)
+   if seen or (root.Position-origin).Magnitude<85 then clerk:SetAttribute('AlarmUntil',os.clock()+9) end
+   witnessed=witnessed or seen==true
+  end
+  return witnessed
+ end
  -- Only validated server attacks can call this; there is no client alert remote.
  local function alert(p,origin,kind,victim)
   if not profiles[p] or safe(p) then return end
@@ -106,8 +120,11 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
     end
    end
   end
-  for _,clerk in game:GetService('CollectionService'):GetTagged('RouteClerk') do
-   if clerk.Parent and visible(clerk,p.Character,45,false) then clerk:SetAttribute('AlarmUntil',now+9);witnessed=true end
+  if kind=='gunfire' then witnessed=warnClerks(origin,p) or witnessed
+  else
+   for _,clerk in game:GetService('CollectionService'):GetTagged('RouteClerk') do
+    if clerk.Parent and visible(clerk,p.Character,45,false) then clerk:SetAttribute('AlarmUntil',now+9);witnessed=true end
+   end
   end
   if witnessed then
    local previous=reports[p]
@@ -131,6 +148,7 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
  end
  local combat=require(script.Parent.NpcCombat)
  local function sceneGunfire(origin)
+  warnClerks(origin)
   for _,unit in units do
    if unit.role=='medic' and unit.model.Parent and (unit.model.HumanoidRootPart.Position-origin).Magnitude<100 then
     unit.danger={position=origin,untilTime=os.clock()+7}
@@ -141,9 +159,13 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
 
  local function bot(role,home,name)
   local model=rig(name,home,role=='medic',field);model:SetAttribute('Service',role)
-  local unit={model=model,role=role,brain=Brain.new(),memory={},patrol=1,patrolAt=os.clock(),nextCover=0}
+  local unit={model=model,role=role,brain=Brain.new(),memory={},patrol=1,patrolAt=os.clock(),nextCover=0,side=math.floor(#units/2)%2==0 and 1 or -1,sector=#units}
   unit.nav=Navigation.new(model);table.insert(units,unit)
   local health=model.Humanoid
+  local facingAnchor=Instance.new('Attachment');facingAnchor.Name='Responder facing';facingAnchor.Parent=model.HumanoidRootPart
+  local facing=Instance.new('AlignOrientation');facing.Name='Aim facing';facing.Attachment0=facingAnchor
+  facing.Mode=Enum.OrientationAlignmentMode.OneAttachment;facing.MaxTorque=60000;facing.MaxAngularVelocity=5
+  facing.Responsiveness=12;facing.Enabled=false;facing.Parent=model.HumanoidRootPart
   local arm=model:FindFirstChild('RightShoulder',true)
   if arm and not arm:IsA('Motor6D') then arm=nil end
   local armRest=arm and arm.C0
@@ -183,6 +205,9 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
       end
      else unit.memory[p]=nil end
     end
+    if unit.target~=target then
+     unit.footworkAt=0;unit.footworkThreat=nil;unit.searchCenter=nil;unit.searchStep=0;unit.nextCover=0;unit.cover=nil
+    end
     unit.target=target
     local action={mode='Patrolling',goal=home+route[unit.patrol]}
     if role=='police' and target then
@@ -190,13 +215,26 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
      local report=reports[target]
      local armed=target.Character:FindFirstChild('Pistol') or target.Character:FindFirstChild('Knife') or target.Character:FindFirstChild('Bat')
      local threat=armed and report and (report.violentUntil or 0)>now
-     action=Brain.step(unit.brain,now,{id=target.UserId,valid=true,visible=direct,distance=(root.Position-at).Magnitude,surrendered=target:GetAttribute('Surrendered'),health=human.Health,ownHealth=health.Health,speed=root.AssemblyLinearVelocity.Magnitude,threat=threat,goal=goal})
+     local clearShot=direct and threat and Sight.clearShot(model,target.Character)
+     action=Brain.step(unit.brain,now,{id=target.UserId,valid=true,visible=direct,distance=(root.Position-at).Magnitude,surrendered=target:GetAttribute('Surrendered'),health=human.Health,ownHealth=health.Health,speed=root.AssemblyLinearVelocity.Magnitude,threat=threat,goal=goal,clearShot=clearShot})
+     if action.mode=='Searching' then
+      -- A search uses a frozen report location, never the hidden character position.
+      if not unit.searchCenter or (unit.searchCenter-goal).Magnitude>4 then
+       unit.searchCenter=goal;unit.searchStep=0;unit.searchAt=now+2
+      end
+      if (at-goal).Magnitude<5 or unit.searchStep>0 then
+       if now>=unit.searchAt then unit.searchStep+=1;unit.searchAt=now+2.2 end
+       action.goal=Ground.choose(model,{Tactics.search(unit.searchCenter,unit.searchStep,unit.sector)},false) or goal
+      end
+     else unit.searchCenter=nil;unit.searchStep=0 end
      if action.arrest and settle(role,target,nil,true) then action={mode='Patrolling',goal=home} end
      if action.fire then shoot(unit,target) end
      if action.mode=='Requesting surrender' and direct and now>=(unit.spokeAt or 0) then unit.spokeAt=now+12;tell(target,'Police: put your hands up to surrender, or break line of sight to lose the search.') end
     elseif role=='medic' and unit.danger and now<unit.danger.untilTime then
-     local away=(at-unit.danger.position)*Vector3.new(1,0,1)
-     action={mode='Waiting for a safe scene',goal=away.Magnitude>1 and at+away.Unit*18 or home};unit.treatAt=nil
+     if now>=(unit.fleeAt or 0) then
+      unit.fleeAt=now+1.6;unit.fleeGoal=Ground.choose(model,Tactics.flee(at,unit.danger.position),true)
+     end
+     action={mode='Waiting for a safe scene',goal=unit.fleeGoal};unit.treatAt=nil
     elseif role=='medic' and target then
      action={mode=direct and 'Responding' or 'Searching for patient',goal=goal}
      if direct and (goal-at).Magnitude<6 then
@@ -215,17 +253,33 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
     end
     if arm then arm.C0=armRest*(aiming and CFrame.Angles(math.rad(65),0,0) or CFrame.new()) end
     if action.cover and goal then
-     if now>=unit.nextCover then unit.nextCover=now+3;unit.cover=cover(unit,goal) end
-     if unit.cover then action.goal=unit.cover end
-    elseif aiming and direct and goal and (goal-at).Magnitude<48 then
-     action.goal=nil
-     local look=Vector3.new(goal.X,at.Y,goal.Z)
-     if (look-at).Magnitude>.1 then model.HumanoidRootPart.CFrame=CFrame.lookAt(at,look) end
+     if now>=unit.nextCover then
+      unit.nextCover=now+2;unit.cover=cover(unit,goal) or Ground.choose(model,Tactics.ranged(at,goal,unit.side,true),true)
+     end
+     action.goal=unit.cover
+    elseif aiming and direct and goal then
+     if now>=(unit.footworkAt or 0) or not unit.footworkThreat or (goal-unit.footworkThreat).Magnitude>6 then
+      unit.footworkAt=now+1.8;unit.footworkThreat=goal
+      unit.footwork=Ground.choose(model,Tactics.ranged(at,goal,unit.side,false),true)
+      unit.side=-unit.side
+     end
+     action.goal=unit.footwork
+    else unit.footwork=nil;unit.footworkAt=0 end
+    local direction=aiming and direct and goal and (goal-at)*Vector3.new(1,0,1)
+    facing.Enabled=direction~=nil and direction~=false and direction.Magnitude>.1
+    health.AutoRotate=not facing.Enabled
+    if facing.Enabled then facing.CFrame=CFrame.lookAt(Vector3.zero,direction) end
+    if not aiming then unit.footworkThreat=nil end
+    if not action.goal then
+     model:SetAttribute('NavigationGoal',nil)
+    else
+     model:SetAttribute('NavigationGoal',action.goal)
     end
     model:SetAttribute('Activity',action.mode);model:SetAttribute('Magazine',unit.brain.ammo)
-    if action.goal then unit.nav:step(action.goal,now,target and role=='police' and 16 or 11) else unit.nav:stop() end
+    if action.goal then unit.nav:step(action.goal,now,aiming and 9 or target and role=='police' and 16 or unit.danger and now<unit.danger.untilTime and 15 or 11) else unit.nav:stop() end
     task.wait(.2)
    end
+   unit.nav:stop()
   end)
  end
  bot('police',Vector3.new(-26,3.8,87),'District officer');bot('medic',Vector3.new(26,3.8,135),'City paramedic')

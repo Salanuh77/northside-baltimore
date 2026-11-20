@@ -1,0 +1,11 @@
+local R=require('../src/NpcReactions')
+local s={}
+assert(R.step(s,0,{visible=true})=='Serving')
+local mode,pose=R.step(s,1,{visible=true,armed=true});assert(mode=='Alarmed' and pose)
+assert(R.step(s,2,{visible=true,armed=false})=='Uneasy','Holstering does not instantly erase fear')
+assert(R.step(s,6,{visible=true})=='Serving','Peaceful service resumes after the memory expires')
+mode,pose=R.step(s,7,{visible=false,alarmUntil=16});assert(mode=='Taking shelter' and pose,'Heard gunfire works without magical visual detection')
+assert(R.step(s,16,{visible=false})=='Uneasy','Take time to recover after gunfire')
+assert(R.step(s,19,{visible=false})=='On duty')
+assert(R.step({},0,{visible=false,armed=true})=='On duty','Cannot see weapons through walls')
+print('PASS: customer service, armed threats, shelter and timed recovery')
