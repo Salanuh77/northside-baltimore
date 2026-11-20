@@ -87,7 +87,7 @@ local ok,err=pcall(function()
  check(path.Status==Enum.PathStatus.Success,'Street and stairs reach the closed top-floor door')
  move(a,threshold)
  call(a,'Prompt',entry); task.wait(.4)
- check(entry:GetAttribute('Open') and not entry.CanCollide,'Resident opens a hinged top-floor apartment door')
+ check(entry:GetAttribute('Open') and entry.CanCollide,'Resident swings a solid top-floor apartment door clear of its doorway')
  move(a,street)
  local navDeadline=os.clock()+8
  repeat
