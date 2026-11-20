@@ -1,3 +1,15 @@
+# November 19 Alpha regression pass
+
+The Windows unit/build pipeline runs 28 suites, including deterministic responder policy, navigation, damage, housing permissions, purchases, saved residents, map geometry, vehicle handling and traffic timing. The candidate gameplay binary has SHA256 `E0D633BE76E223C403E9AE02095FE63C634876BAACAD3383EAA6B8E526098206`.
+
+Red/green regressions reproduced and fixed three gameplay issues: a retired blocked-path callback invalidating an NPC's new route, heard incidents being labelled as visual police contact, and police gunfire failing to keep nearby paramedics away. The new unit cases passed after those fixes. Multiplayer runs then confirmed police damage, twelve-round magazines and reloads, searching behind cover, no fire through cover, surrender stopping fire, close-range arrest and paramedic scene safety. The isolated combat arena holds actors in position to measure these decisions; the city custody test exercises the moving police units.
+
+Two-player Studio runs also verified tenant locks with actual walking, the door-to-wall seam, accepted party guests, revoked access and safe exits. The vehicle tests now press the real Space brake while holding throttle and the real F exit key. Custody checks cover officer defeat and respawn, booking, reset, visitor bail, escape, no automatic capture of a healthy resisting player, subduing a wounded stationary escapee and a full sentence expiring.
+
+Desktop and iPhone 7 Studio emulation passed resident creation, face and hair asset loading, the resident file picker, compact phone layout, map, work, bag, home, payments, dispatch, server browser, home navigation and keyboard dismissal. Additional multiplayer checks covered retail, synthetic purchase receipts, trading, robberies, banking, ammo, jobs, food, fuel, parties, NPC medical response and street navigation. Furnished-home walking, shared seating, kitchen interactions and bed use passed after the asset check was expanded to include the new sideboard.
+
+Studio 0.748 now receives serialized JSON results across its multiplayer process boundary. Missing results, timeouts, game-script errors on either multiplayer client or the server, and changed candidate bytes fail the gate. The release command requires successful main-branch CI, downloads its checksummed artifact, reruns all nine Studio suites on disposable copies and verifies the published bytes. Receipts and raw engine logs stay outside Git. Simulated receipts do not charge Robux; Studio saves are temporary. Public-server transfers, live DataStore recovery and physical-device performance remain separate live-service checks.
+
 # Patapsco street and custody playtest
 
 The second November 15 street build passed two separate two-player Roblox Studio tests. `tests/Patapsco-final-155907.log` records the sports-car and custody run. `tests/Patapsco-city-155703.log` records the city-life regression run.
