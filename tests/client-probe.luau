@@ -4,6 +4,17 @@ local remote=rs:WaitForChild('TestDrive')
 local action=rs:WaitForChild('CityAction')
 remote.OnClientInvoke=function(kind,data)
  if kind=='RuntimeErrors' then return runtimeErrors end
+ if kind=='ObserveRest' then
+  local other=game.Players:GetPlayerByUserId(data.UserId)
+  local deadline=os.clock()+3
+  repeat
+   local c=other and other.Character
+   local torso=c and c:FindFirstChild('UpperTorso')
+   if torso and c:GetAttribute('Resting') and math.abs(torso.CFrame.UpVector.Y)<.18 and torso.CFrame.LookVector.Y>.85 then return true end
+   task.wait(.1)
+  until os.clock()>deadline
+  return false
+ end
  if kind=='Prompt' then
   local prompt=data:WaitForChild('ProximityPrompt',5)
   assert(prompt,'Interaction prompt missing')
@@ -31,7 +42,15 @@ remote.OnClientInvoke=function(kind,data)
   repeat task.wait(.05) until distance<=.8 or os.clock()>=deadline
   run:UnbindFromRenderStep('Walk furnished room')
   human:Move(Vector3.zero)
-  return distance<=1.15,tostring(root.Position)
+  local detail=tostring(root.Position)
+  if distance>1.15 then
+   local nearby={}
+   for _,part in workspace:GetPartBoundsInBox(root.CFrame,Vector3.new(5,7,5)) do
+    if part.CanCollide and not part:IsDescendantOf(p.Character) then table.insert(nearby,part:GetFullName()) end
+   end
+   detail..=' state='..human:GetState().Name..' blockers='..table.concat(nearby,',')
+  end
+  return distance<=1.15,detail
  end
  if kind=='PreloadFurniture' then
   local parts,names={},{}
@@ -149,6 +168,6 @@ task.spawn(function()
  action:FireServer('SelectFile',{Index=1})
  if script:GetAttribute('CreateFixture') then
   while p:GetAttribute('NeedsCharacter')~=true do task.wait(.05) end
-  action:FireServer('CreateResident',{Name='',Height='Tall',Build='Broad',Hair='Twists',Tone='Copper'})
+  action:FireServer('CreateResident',{Name='',Height='Tall',Build='Broad',Hair='High puff',Tone='Copper'})
  end
 end)

@@ -255,6 +255,8 @@ local client=Instance.new('LocalScript'); client.Name='CityClient'; client.Sourc
 local drive=Instance.new('RemoteEvent'); drive.Name='DriveCar'; drive.Parent=rs
 local traffic=Instance.new('Script'); traffic.Name='TrafficServer'; traffic.Source=fs.readFile('src/Traffic.server.luau'); traffic.Parent=server.Parent
 local input=Instance.new('LocalScript'); input.Name='TrafficClient'; input.Source=fs.readFile('src/Traffic.client.luau'); input.Parent=client.Parent
+local restClient=Instance.new('LocalScript');restClient.Name='RestClient';restClient.Source=fs.readFile('src/Rest.client.luau');restClient.Parent=client.Parent
+local restServer=Instance.new('ModuleScript');restServer.Name='HomeRest';restServer.Source=fs.readFile('src/HomeRest.luau');restServer.Parent=server.Parent
 local route=Instance.new('RemoteFunction'); route.Name='WalkingRoute'; route.Parent=rs
 local trail=Instance.new('ModuleScript'); trail.Name='StreetTrail'; trail.Source=fs.readFile('src/StreetTrail.luau'); trail.Parent=rs
 local staff=Instance.new('ModuleScript');staff.Name='ShopStaff';staff.Source=fs.readFile('src/ShopStaff.luau');staff.Parent=server.Parent

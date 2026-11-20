@@ -26,6 +26,12 @@ for _,building in city:GetDescendants() do
    if kind then
     actions[kind]=(actions[kind] or 0)+1
     if kind=='SitHome' or kind=='RestHome' then assert(item:IsA('Seat') and not item.CanTouch,'Seat must be intentional') end
+    if kind=='RestHome' then
+     local surface,exit=item:GetAttribute('RestSurface'),item:GetAttribute('RestExit')
+     assert(typeof(surface)=='CFrame' and typeof(exit)=='CFrame','Bed has no lying pose or safe get-up position')
+     assert((surface.Position-exit.Position).Magnitude>4,'Get-up position remains on the mattress')
+     assert(math.abs(exit.UpVector.Y-1)<.001,'Getting up must restore an upright orientation')
+    end
    end
   end
   if room:GetAttribute('HomeLayout')=='Flat' then assert(assets['Walnut sideboard'],'Missing hallway cabinet') end

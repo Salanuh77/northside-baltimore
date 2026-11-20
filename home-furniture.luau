@@ -64,6 +64,7 @@ local function seat(m,frame,kind,label)
  s.CanQuery=false
  s.Parent=m
  action(s,kind,label)
+ return s
 end
 local function couch(room,frame,width,variant)
  local m,s=furniture(room,'Living room sofa','sofa','Sofa upholstery',frame,width)
@@ -81,8 +82,10 @@ end
 local function bed(room,frame,width)
  local m,s=furniture(room,'Bed','bed','Quilted bed',frame,width)
  base(m,frame,width*.94,s.Y*.47,s.Z*.93)
- -- The seat is on the free, footward edge, so jumping returns the player to the aisle.
- seat(m,frame*cf.new(0,s.Y*.54,-s.Z*.36),'RestHome','Rest')
+ -- Prompt stays at the foot; the body rests across the mattress instead of sitting here.
+ local rest=seat(m,frame*cf.new(0,s.Y*.54,-s.Z*.36),'RestHome','Rest')
+ rest:SetAttribute('RestSurface',frame*cf.new(0,s.Y*.54,-.15))
+ rest:SetAttribute('RestExit',frame*cf.new(0,.12,-s.Z*.5-1.7))
 end
 local function appliance(room,frame,key,width)
  local sink=key=='sink'

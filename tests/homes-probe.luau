@@ -79,9 +79,29 @@ local ok,err=pcall(function()
  a.Character.Humanoid.Health=60
  call(a,'Prompt',bed)
  check(bed.Occupant==a.Character.Humanoid,'Bedroom reached on foot and bed occupied')
+ check(waitFor(function()
+  local torso=a.Character.UpperTorso
+  return math.abs(torso.CFrame.UpVector.Y)<.18 and torso.CFrame.LookVector.Y>.85
+ end,2),'Rest visibly lies the resident on their back, rather than sitting upright')
+ check(call(b,'ObserveRest',{UserId=a.UserId}),'A second player sees the same lying-down pose')
  check(waitFor(function() return a.Character.Humanoid.Health>=75 end,6),'Rest restores health')
  call(a,'StandUp')
  check(waitFor(function() return not bed.Occupant end,2),'Player leaves bed')
+ check(waitFor(function()
+  return not a.Character:GetAttribute('Resting') and a.Character.UpperTorso.CFrame.UpVector.Y>.9
+ end,2),'Getting up restores an upright character')
+ walk(a,origin,2,9)
+ a.Character.Humanoid.Health=50
+ call(a,'Prompt',bed)
+ call(a,'StandUp')
+ task.wait(4.2)
+ check(a.Character.Humanoid.Health<65,'Getting up early cancels the rest reward')
+ walk(a,origin,2,9)
+ call(a,'Prompt',bed)
+ a.Character.Humanoid.Health=40
+ task.wait(4.2)
+ check(a.Character.Humanoid.Health<55,'Incoming damage cancels rest healing')
+ call(a,'StandUp')
  -- Opposite door orientation and narrow clearance in the compact rowhouse.
  local cottage=assert(city:FindFirstChild('Hollins Row 1503',true))
  local front=cottage['Rowhouse door']

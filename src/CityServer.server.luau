@@ -3,6 +3,7 @@ local Players=game:GetService('Players')
 Players.CharacterAutoLoads=false
 local RS=game:GetService('ReplicatedStorage')
 local Files=require(script.Parent:WaitForChild('ResidentFiles'))
+local rest=require(script.Parent:WaitForChild('HomeRest'))
 local accounts={}
 local DSS=game:GetService('DataStoreService')
 local Run=game:GetService('RunService')
@@ -171,12 +172,12 @@ local custody=require(script.Parent:WaitForChild('Custody'))(city,event,profiles
  cancelBusy(p); workService.finish(p); offers[p]=nil
 end)
 local respond=require(script.Parent:WaitForChild('Responders'))(city,event,profiles,jobs,sync,tell,safe,near,sight,custody.arrest,heat)
-local function timed(p,marker,seconds,valid,done)
+local function timed(p,marker,seconds,valid,done,message)
  if busy[p] then return tell(p,'Finish your current action first.') end
  local _,h=alive(p); if not h then return end
  local health=h.Health; local b={marker=marker}; busy[p]=b
  if marker then marker:SetAttribute('InUse',true) end
- event:FireClient(p,'Progress',{Duration=seconds,Text='Stay nearby · action in progress'})
+ event:FireClient(p,'Progress',{Duration=seconds,Text=message or 'Stay nearby · action in progress'})
  task.spawn(function()
   local finish=os.clock()+seconds
   while os.clock()<finish do
@@ -210,12 +211,13 @@ local function interact(p,marker)
  elseif kind=='SitHome' or kind=='RestHome' then
   local _,human=alive(p)
   if not human or not marker:IsA('Seat') or marker.Occupant or human.SeatPart then return end
-  marker:Sit(human)
   if kind=='RestHome' then
+   if busy[p] or not rest.start(p,marker,human) then return end
    timed(p,marker,4,function() return marker.Occupant==human end,function()
     human.Health=math.min(human.MaxHealth,human.Health+15)
-    tell(p,'You feel rested. Jump to stand up.')
-   end)
+    tell(p,'You feel rested. Press jump or Get up to leave the bed.')
+   end,'Resting · jump or Get up to stand')
+  else marker:Sit(human)
   end
  elseif kind=='UseTap' then
   local water=marker.Parent:FindFirstChild('Running water')
@@ -434,6 +436,7 @@ event.OnServerEvent:Connect(function(p,kind,data)
  if not profiles[p] then return end
  local d=profiles[p]; data=typeof(data)=='table' and data or {}
  if kind=='Ready' then sync(p); return end
+ if kind=='StandFromBed' then rest.stand(p); return end
  if kind=='CreateResident' then
   local before=d.Look
   retail.handle(p,kind,data,approvedName)
