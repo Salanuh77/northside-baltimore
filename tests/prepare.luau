@@ -1,6 +1,10 @@
 local fs=require('@lune/fs')
 local client=fs.readFile('tests/client-probe.luau')
 local server=fs.readFile(require('@lune/process').args[1] or 'tests/server-probe.luau')
+-- Studio's process boundary reliably carries JSON strings, including failures.
+local changed
+server,changed=server:gsub('(:EndTest%()(%b{})(%))',function(before,result,after) return before..'game.HttpService:JSONEncode('..result..')'..after end)
+assert(changed==1,'Probe must publish exactly one structured completion result')
 local launch=string.format([====[
 workspace:SetAttribute('TestMinute',864)
 local clock=game.ServerScriptService.CityClock
@@ -18,6 +22,7 @@ local client=Instance.new('LocalScript'); client.Name='ClientProbe';client:SetAt
 local server=Instance.new('Script'); server.Name='ServerProbe'; server.Source=%q; server.Parent=game:GetService('ServerScriptService')
 task.wait(4)
 local result=game:GetService('StudioTestService'):ExecuteMultiplayerTestAsync(2,{name='Squishy gameplay validation'})
+if type(result)=='string' then result=game.HttpService:JSONDecode(result) end
 print('SQUISHY_TEST_RESULT',game:GetService('HttpService'):JSONEncode(result))
 ]====],tostring(not string.find(require('@lune/process').args[1] or '', 'retail',1,true)),client,server)
 fs.writeFile(require('@lune/process').args[2] or 'tests/launch.luau',fs.readFile('studio-smoke.luau')..'\n'..fs.readFile('tests/foundry-joints.luau')..'\n'..fs.readFile('tests/harbor-access.luau')..'\n'..launch)

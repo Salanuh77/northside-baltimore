@@ -33,7 +33,7 @@ local ok,err=pcall(function()
  task.wait(1)
  assert(p:GetAttribute('ResidentSlot')==2,'Active file switched during gameplay')
 end)
-game:GetService('StudioTestService'):EndTest({ok=ok,error=tostring(err)})
+game:GetService('StudioTestService'):EndTest(game.HttpService:JSONEncode({ok=ok,error=tostring(err)}))
 ]=];server.Parent=game.ServerScriptService
 local client=Instance.new('LocalScript');client.Source=[=[
 local p=game.Players.LocalPlayer
@@ -44,4 +44,5 @@ event:FireServer('SelectFile',{Index=2})
 ]=];client.Parent=game.StarterPlayer.StarterPlayerScripts
 task.wait(4)
 local result=game:GetService('StudioTestService'):ExecutePlayModeAsync({name='Restore an existing resident'})
+if type(result)=='string' then result=game.HttpService:JSONDecode(result) end
 print('SQUISHY_TEST_RESULT',game.HttpService:JSONEncode(result))

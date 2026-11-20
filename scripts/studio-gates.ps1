@@ -1,4 +1,6 @@
-param([Parameter(Mandatory)][string]$Place, [Parameter(Mandatory)][string]$LogDirectory)
+param([Parameter(Mandatory)][string]$Place, [Parameter(Mandatory)][string]$LogDirectory,
+    [ValidateSet('homes','server','ui','returning','retail','custody','life','encounters','access','handset')]
+    [string[]]$Suites = @('homes','server','ui','returning','retail','custody','life'))
 $ErrorActionPreference = 'Stop'
 Set-Location (Split-Path $PSScriptRoot)
 $candidate = (Resolve-Path $Place).Path
@@ -6,7 +8,9 @@ $lune = (Resolve-Path 'tools/lune.exe').Path
 $studio = Get-ChildItem "$env:LOCALAPPDATA/Roblox/Versions/*/RobloxStudioBeta.exe" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
 if (!$studio) { throw 'Roblox Studio installation required' }
 New-Item -ItemType Directory -Path $LogDirectory -Force | Out-Null
-foreach ($suite in 'homes','server','ui','returning','retail','custody','life') {
+$digest = (Get-FileHash -LiteralPath $candidate).Hash
+$results = @()
+foreach ($suite in $Suites) {
     $attempt = Join-Path $LogDirectory ($suite + '-' + [guid]::NewGuid())
     New-Item -ItemType Directory -Path $attempt | Out-Null
     $copy = Join-Path $attempt 'candidate.rbxl'
@@ -25,9 +29,13 @@ foreach ($suite in 'homes','server','ui','returning','retail','custody','life') 
     while (!$proc.HasExited -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 2 }
     if (!$proc.HasExited) { $proc.Kill(); throw "$suite timed out" }
     if ($proc.ExitCode -ne 0) { throw "$suite Studio exit $($proc.ExitCode)" }
+    if (!(Test-Path -LiteralPath $output)) { throw "$suite launched without a result log. Studio may have updated; retry with its installed version. $attempt" }
     $records = @(Get-Content -LiteralPath $output | Where-Object { $_ -match '^SQUISHY_TEST_RESULT\s+\{' })
     if ($records.Count -ne 1) { throw "$suite produced no unique test result. $output" }
     $result = ($records[0] -replace '^SQUISHY_TEST_RESULT\s+', '') | ConvertFrom-Json
     if ($result.ok -isnot [bool] -or !$result.ok) { throw "$suite failed. $($records[0])" }
+    if ((Get-FileHash -LiteralPath $copy).Hash -ne $digest) { throw "$suite modified its candidate file" }
+    $results += @{suite=$suite;ok=$true;log=$output;result=$result}
+    @{sha256=$digest;studioVersion=$studio.VersionInfo.FileVersion;suites=$results} | ConvertTo-Json -Depth 15 | Set-Content -LiteralPath (Join-Path $LogDirectory 'playtest.receipt.json')
     Write-Host "Passed $suite"
 }

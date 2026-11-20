@@ -26,10 +26,10 @@ game.ReplicatedStorage.UiProbeResult.OnServerEvent:Connect(function(player, resu
  local count = earlySpawns[player] or 0
  table.insert(result.checks, {name="no server spawn before selecting a file", ok=count==0, actual=tostring(count)})
  if count>0 then result.ok=false; result.error=result.error.." character spawned before file selection" end
- test:EndTest(result)
+ test:EndTest(game.HttpService:JSONEncode(result))
 end)
 task.delay(60, function()
- if not done then test:EndTest({ok=false, error="UI client deadline"}) end
+ if not done then test:EndTest(game.HttpService:JSONEncode({ok=false, error="UI client deadline"})) end
 end)
 ]==]
 server.Parent = game.ServerScriptService
@@ -331,6 +331,7 @@ for _, profile in {"default", "iphone_7"} do
  if profile == "default" then device:StopSimulationAsync() else device:SetDeviceAsync(profile) end
  client:SetAttribute("ExpectedDevice", profile)
  local result = studioTest:ExecutePlayModeAsync({name="Northside UI "..profile})
+ if type(result)=='string' then result=json:JSONDecode(result) end
  assert(type(result)=="table" and type(result.ok)=="boolean", "Missing UI result for "..profile)
  if profile=="iphone_7" and (not result.touch or not result.viewport or not result.viewport:match("^66[67], 37[45]$")) then
   result.ok = false
