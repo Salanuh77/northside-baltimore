@@ -3,6 +3,7 @@ local rs=game:GetService('ReplicatedStorage')
 local remote=rs:WaitForChild('TestDrive')
 local action=rs:WaitForChild('CityAction')
 remote.OnClientInvoke=function(kind,data)
+ if kind=='RuntimeErrors' then return runtimeErrors end
  if kind=='Prompt' then
   local prompt=data:WaitForChild('ProximityPrompt',5)
   assert(prompt,'Interaction prompt missing')

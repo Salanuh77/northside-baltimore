@@ -1,9 +1,23 @@
 local fs=require('@lune/fs')
-local client=fs.readFile('tests/client-probe.luau')
+local monitor='local runtimeErrors=(function()\n'..fs.readFile('tests/runtime-errors.luau')..'\nend)()()\n'
+local client=monitor..fs.readFile('tests/client-probe.luau')
 local server=fs.readFile(require('@lune/process').args[1] or 'tests/server-probe.luau')
+server=monitor..[==[
+local function finishProbe(result)
+ if result.ok then
+  for _,player in game.Players:GetPlayers() do
+   local ok,errors=pcall(function() return game.ReplicatedStorage.TestDrive:InvokeClient(player,'RuntimeErrors',{}) end)
+   if not ok or type(errors)~='table' then table.insert(runtimeErrors,'Missing runtime report for '..player.Name)
+   else for _,message in errors do table.insert(runtimeErrors,player.Name..' / '..message) end end
+  end
+  if #runtimeErrors>0 then result.ok=false;result.error=table.concat(runtimeErrors,' | ') end
+ end
+ return game.HttpService:JSONEncode(result)
+end
+]==]..server
 -- Studio's process boundary reliably carries JSON strings, including failures.
 local changed
-server,changed=server:gsub('(:EndTest%()(%b{})(%))',function(before,result,after) return before..'game.HttpService:JSONEncode('..result..')'..after end)
+server,changed=server:gsub('(:EndTest%()(%b{})(%))',function(before,result,after) return before..'finishProbe('..result..')'..after end)
 assert(changed==1,'Probe must publish exactly one structured completion result')
 local launch=string.format([====[
 workspace:SetAttribute('TestMinute',864)
