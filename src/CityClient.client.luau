@@ -16,6 +16,8 @@ end)
 local mouse=p:GetMouse()
 local openPhone,showGuide,handset
 local catalog=require(game:GetService('ReplicatedStorage'):WaitForChild('WorkCatalog'))
+local itemCards=require(game.ReplicatedStorage:WaitForChild('ItemCard'))
+local itemCatalog=require(game.ReplicatedStorage:WaitForChild('ItemCatalog'))
 local gui=Instance.new('ScreenGui'); gui.Name='NorthsideHUD'; gui.DisplayOrder=12; gui.ResetOnSpawn=false; gui.IgnoreGuiInset=false; gui.Parent=p:WaitForChild('PlayerGui')
 gui.Enabled=p.Character~=nil
 p.CharacterAdded:Connect(function() gui.Enabled=true end)
@@ -167,8 +169,10 @@ event.OnClientEvent:Connect(function(kind,data)
  elseif kind=='Market' then
   clear('BACKROOM EXCHANGE')
   paragraph('Cash only. Sell stolen goods at the salvage counter. Owned equipment returns after respawn; consumed medkits must be replaced.')
-  row('Ammo box · 12 rounds / $30',function() event:FireServer('BuyAmmo') end)
-  for _,item in {{'Knife',55},{'Crowbar',90},{'Medkit',70}} do row(item[1]..'  /  $'..item[2],function() event:FireServer('Buy',{Item=item[1]}) end) end
+  for _,key in {'Ammo','Knife','Crowbar','Medkit'} do
+   local entry=itemCatalog[key]
+   itemCards.decorate(row('',function() if key=='Ammo' then event:FireServer('BuyAmmo') else event:FireServer('Buy',{Item=key}) end end),entry.Icon,entry.Name,entry.Description,'$'..entry.Price)
+  end
  elseif kind=='Bank' then
   clear('CHARM CITY CREDIT')
   paragraph('Banked money is protected from player robberies. Stay next to the ATM to make a transaction.')
