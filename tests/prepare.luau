@@ -24,6 +24,11 @@ workspace:SetAttribute('TestMinute',864)
 local clock=game.ServerScriptService.CityClock
 clock.Source=clock.Source:gsub('local total=math.floor%%(workspace:GetServerTimeNow%%(%%)%%)',"local total=workspace:GetAttribute('TestMinute') or 864")
 local cityServer=game.ServerScriptService.CityServer
+-- CharacterAdded/root existence precedes completion of LoadCharacterAsync.
+-- The isolated encounter must not teleport or strip protection mid-spawn.
+local marked
+cityServer.Source,marked=cityServer.Source:gsub('d%%.Spawning=false','d.Spawning=false; p:SetAttribute("ProbeSpawnFinished",ok and p.Character~=nil)',1)
+assert(marked==1,'Missing initial spawn completion hook')
 cityServer.Source..=[==[
 local probe=Instance.new('BindableFunction');probe.Name='TestReceipt';probe.Parent=game.ServerStorage
 probe.OnInvoke=function(p,info)

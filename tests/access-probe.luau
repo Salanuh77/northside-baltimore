@@ -17,7 +17,7 @@ end
 local ok,err=pcall(function()
  check(waitFor(function()
   if #players:GetPlayers()~=2 then return false end
-  for _,p in players:GetPlayers() do if not p.Character or not p.Character:FindFirstChild('HumanoidRootPart') or p:GetAttribute('Cash')==nil then return false end end
+  for _,p in players:GetPlayers() do if not p.Character or not p.Character:FindFirstChild('HumanoidRootPart') or p:GetAttribute('Cash')==nil or not p:GetAttribute('ProbeSpawnFinished') then return false end end
   return true
  end,70),'Two residents ready')
  local a,b=table.unpack(players:GetPlayers())
@@ -27,7 +27,7 @@ local ok,err=pcall(function()
  local closed=door.CFrame
  local residence=door.Residence.Value
  position(a,closed*CFrame.new(0,-1,-5));position(b,closed*CFrame.new(9,-1,-5))
- call(a,'Lease');check(residence:GetAttribute('Tenant')==a.UserId,'Intercom reserves the correct flat')
+ call(a,'Lease');check(residence:GetAttribute('Tenant')==a.UserId,'Intercom reserves the correct flat (tenant='..tostring(residence:GetAttribute('Tenant'))..', player='..tostring(a.Character.HumanoidRootPart.Position)..', intercom='..tostring(residence.Position)..')')
  position(a,closed*CFrame.new(9,-1,-5));position(b,closed*CFrame.new(0,-1,-5))
  call(b,'Prompt',door);check(not door:GetAttribute('Open'),'Stranger cannot open a rented flat')
  local crossed=call(b,'WalkTo',closed:PointToWorldSpace(Vector3.new(0,-1,5)))

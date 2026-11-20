@@ -18,7 +18,7 @@ end
 local ok,err=pcall(function()
  check(waitFor(function()
   if #players:GetPlayers()~=2 then return false end
-  for _,p in players:GetPlayers() do if not p.Character or not p.Character:FindFirstChild('HumanoidRootPart') or p:GetAttribute('Cash')==nil then return false end end
+  for _,p in players:GetPlayers() do if not p.Character or not p.Character:FindFirstChild('HumanoidRootPart') or p:GetAttribute('Cash')==nil or not p:GetAttribute('ProbeSpawnFinished') then return false end end
   return true
  end,65),'Two live residents ready')
  local a,b=table.unpack(players:GetPlayers())
@@ -42,7 +42,12 @@ local ok,err=pcall(function()
  local pistol=a.Backpack:WaitForChild('Pistol',5);human:EquipTool(pistol);task.wait(.5)
  local health=human.Health
  call(a,'Shoot',{Position=cop.UpperTorso.Position})
- check(waitFor(function() return a:GetAttribute('Heat')>=1 and cop:GetAttribute('Activity')=='Engaging' end,5),'Officer reacts to a witnessed real weapon attack')
+ check(waitFor(function() return pistol:GetAttribute('Ammo')==11 end,3),'Server accepts the first live weapon shot after spawn completion')
+ local reacted=waitFor(function() return a:GetAttribute('Heat')>=1 and cop:GetAttribute('Activity')=='Engaging' end,5)
+ check(reacted,string.format('Officer reacts to a witnessed real weapon attack (heat=%s, activity=%s, ammo=%s, equipped=%s, protected=%s, player=%s, officer=%s)',
+  tostring(a:GetAttribute('Heat')),tostring(cop:GetAttribute('Activity')),tostring(pistol:GetAttribute('Ammo')),
+  tostring(pistol.Parent==a.Character),tostring(a.Character:FindFirstChildOfClass('ForceField')~=nil),
+  tostring(a.Character.HumanoidRootPart.Position),tostring(cop.HumanoidRootPart.Position)))
  check(waitFor(function() return human.Health<health and (cop:GetAttribute('Magazine') or 12)<12 end,6),'Officer fire consumes ammunition and hits the attacking resident')
  check(medic:GetAttribute('Activity')=='Waiting for a safe scene','Paramedic holds off during the exchange of fire')
  local emptied,reloaded=false,false
