@@ -238,9 +238,9 @@ local ok, message = pcall(function()
  check('lip fullness changes the mouth',rig().Head:FindFirstChild('Resident mouth',true).Size.Y>lipHeight)
  local eyeMaterial=rig().Head:FindFirstChild('Resident face',true):FindFirstChildOfClass('SurfaceAppearance')
  check('face artwork uses cutout alpha',eyeMaterial and eyeMaterial.AlphaMode==Enum.AlphaMode.Transparency)
- local baseEyes=eyeMaterial.ColorMap
+ local baseEyes=eyeMaterial.Name
  click(findButton(studio,"Mouth next"))
- check("eye and mouth selectors render separately",rig().Head:FindFirstChild("Resident face",true):FindFirstChildOfClass('SurfaceAppearance').ColorMap==baseEyes and rig().Head:FindFirstChild("Resident mouth",true):FindFirstChildOfClass('SurfaceAppearance').ColorMap:find(game.ReplicatedStorage.StreetStyle:GetAttribute("lips-smile"),1,true)~=nil)
+ check("eye and mouth selectors render separately",rig().Head:FindFirstChild("Resident face",true):FindFirstChildOfClass('SurfaceAppearance').Name==baseEyes and rig().Head:FindFirstChild("Resident mouth",true):FindFirstChildOfClass('SurfaceAppearance').Name=='lips-smile')
  click(findButton(studio, "Enter city"))
  local character = waitUntil(function()
   local c = player.Character
