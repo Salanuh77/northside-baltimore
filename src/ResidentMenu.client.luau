@@ -312,6 +312,13 @@ draw=function()
    swatch.Position=UDim2.new((index-1)%4/4,3,0,190+math.floor((index-1)/4)*50)
    swatch.Size=UDim2.new(1/4,-8,0,44);swatches[color]=swatch
   end
+  local cutTitle=label(pane,'ALL HAIRCUTS',11,paper);at(cutTitle,3,350,220,24)
+  for i,cut in style.Hair do
+   local pick=button(pane,cut,function() draft.Hair=cut;closeup=true;rebuild();draw() end)
+   pick.Name='Choose haircut '..cut;pick.TextSize=12
+   pick.Size=UDim2.new(.5,-5,0,44);pick.Position=UDim2.new((i-1)%2/2,0,0,382+math.floor((i-1)/2)*49)
+   if draft.Hair==cut then pick.BackgroundColor3=cream;pick.TextColor3=ink end
+  end
  elseif category=='Outfit' then
   hint(pane,'STARTER LOOKS')
   for i,set in style.Sets do
