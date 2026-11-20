@@ -25,7 +25,10 @@ local function label(parent,value,size,color)
 end
 local function button(parent,value,callback)
  local b=make('TextButton',{Name=value,Text=value,TextColor3=cream,TextSize=14,Font=Enum.Font.GothamMedium,BackgroundColor3=slate,BorderSizePixel=0},parent)
+ b.Selectable=true
  b.Activated:Connect(callback)
+ b.SelectionGained:Connect(function() b.BackgroundTransparency=.18 end)
+ b.SelectionLost:Connect(function() b.BackgroundTransparency=0 end)
  b.MouseEnter:Connect(function() b.BackgroundTransparency=.16 end)
  b.MouseLeave:Connect(function() b.BackgroundTransparency=0 end)
  return b
@@ -140,7 +143,7 @@ local function send()
  local request=table.clone(draft);request.Index=slot
  event:FireServer('CreateResident',request)
 end
-enter=button(actionBar,'Continue',function()
+local function advance()
  if waiting then return end
  if selectedFile and not slot then
   waitForResident('Loading '..draft.Name..'…');event:FireServer('SelectFile',{Index=selectedFile});return
@@ -152,7 +155,8 @@ enter=button(actionBar,'Continue',function()
   end
   tab='Appearance';category='Hair';closeup=true;draw()
  else send() end
-end)
+end
+enter=button(actionBar,'Continue',advance)
 enter.BackgroundColor3=gold;enter.TextColor3=ink
 local back=button(actionBar,'Back',function()
  if waiting then return end
@@ -332,6 +336,16 @@ draw=function()
   controls(pane,{{'Starter','Top',style.Starters},{'Pants','Trousers',style.Pants},{'Shoes','Shoes',style.Shoes}},178)
  end
 end
+input.InputBegan:Connect(function(key,processed)
+ if not screen.Enabled or input:GetFocusedTextBox() or processed then return end
+ if key.KeyCode==Enum.KeyCode.Left then turn(-math.pi/6)
+ elseif key.KeyCode==Enum.KeyCode.Right then turn(math.pi/6)
+ elseif key.KeyCode==Enum.KeyCode.Return and enter.Visible then advance()
+ elseif key.KeyCode==Enum.KeyCode.ButtonSelect then
+  local first=pane:FindFirstChildWhichIsA('GuiButton',true)
+  if first then game:GetService('GuiService').SelectedObject=first end
+ end
+end)
 local function files()
  local encoded=player:GetAttribute('ResidentFiles')
  if encoded then
