@@ -287,7 +287,13 @@ draw=function()
   b.BackgroundColor3=selected and cream or slate;b.TextColor3=selected and ink or paper
  end
  if category=='Face' then
-  controls(pane,{{'FaceShape','Head shape',style.FaceShapes},{'FaceWidth','Face width',style.FaceWidths},{'Expression','Eyes',style.Expressions},{'EyeSpacing','Eye spacing',style.EyeSpacings},{'Eye','Eye color',style.Eyes},{'Mouth','Mouth',style.Mouths},{'LipFullness','Lip fullness',style.LipFullness},{'Detail','Facial hair & details',style.Details}})
+  for i,name in style.FaceShapes do
+   local preset=button(pane,name,function() draft.FaceShape=name;closeup=true;rebuild();draw() end)
+   preset.Name='Face preset '..name;preset.TextSize=12
+   preset.Size=UDim2.new(1/3,-5,0,40);preset.Position=UDim2.new((i-1)%3/3,0,0,math.floor((i-1)/3)*45)
+   if draft.FaceShape==name then preset.BackgroundColor3=cream;preset.TextColor3=ink end
+  end
+  controls(pane,{{'FaceShape','Head shape',style.FaceShapes},{'FaceWidth','Face width',style.FaceWidths},{'Expression','Eyes',style.Expressions},{'EyeSpacing','Eye spacing',style.EyeSpacings},{'Eye','Eye color',style.Eyes},{'Mouth','Mouth',style.Mouths},{'LipFullness','Lip fullness',style.LipFullness},{'Detail','Facial hair & details',style.Details}},100)
  elseif category=='Body' then
   controls(pane,{{'Tone','Skin tone',style.Tones},{'Height','Height',style.Heights},{'Build','Body width',style.Builds},{'Depth','Body depth',style.Depths}})
  elseif category=='Hair' then
