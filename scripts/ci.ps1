@@ -9,6 +9,10 @@ if (!(Test-Path $lune)) {
     Remove-Item -LiteralPath $zip
 }
 if ((Get-FileHash $lune).Hash -ne '95F4A457317237516C347745BF363AA63DD30C97105C9595E6B8914B29267FDB') { throw 'Lune binary checksum mismatch' }
+foreach ($suite in 'tests/hair-materials','tests/appearance-migration','tests/creator-layout','tests/item-images') {
+    & $lune run $suite
+    if ($LASTEXITCODE -ne 0) { throw "$suite failed" }
+}
 foreach ($suite in 'tests/runtime-errors-unit','tests/save-files','tests/resident-names','tests/resident-models','tests/portrait-visibility','tests/server-directory','tests/retail-unit','tests/custody-unit','tests/home-access','tests/responder-brain','tests/npc-navigation','tests/npc-combat','tests/npc-awareness','build','validate','tests/work-contracts','tests/job-navigation','tests/station-access','tests/map-placement','tests/residential-windows','tests/home-security','tests/home-furnishings','tests/shop-fittings','tests/retail-merchandising','tests/handling','tests/traffic-phases','tests/map-compass','tests/heritage') {
     & $lune run $suite
     if ($LASTEXITCODE -ne 0) { throw "$suite failed" }
