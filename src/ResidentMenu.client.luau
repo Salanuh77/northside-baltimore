@@ -59,6 +59,8 @@ caption.TextTransparency=.2
 local actionBar=frame(canvas,ink);actionBar.Name='Actions'
 local footer=label(actionBar,'Loading your files…',14,cream);footer.TextWrapped=true
 local slot,tab,waiting=nil,'Identity',false
+local enter
+local requestSerial=0
 local selectedFile
 local closeup=false
 local mirror=false
@@ -109,6 +111,17 @@ input.InputChanged:Connect(function(key)
 end)
 input.InputEnded:Connect(function(key) if key==drag then drag=nil end end)
 local draw
+local function waitForResident(message)
+ requestSerial+=1;local request=requestSerial
+ waiting=true;footer.Text=message
+ if enter then enter.Text='Loading…' end
+ task.delay(18,function()
+  if requestSerial==request and waiting and screen.Enabled then
+   waiting=false;footer.Text='Taking longer than expected. Try Enter city again.'
+   if enter then enter.Text='Enter city' end
+  end
+ end)
+end
 local function chooseFile(index)
  if waiting then return end
  local record=rows[index]
@@ -122,15 +135,18 @@ local function chooseFile(index)
 end
 local function send()
  if waiting or not slot then return end
- if mirror then waiting=true;footer.Text='Updating face…';event:FireServer('MirrorLook',draft);return end
- waiting=true;footer.Text='Saving resident…'
+ if mirror then waitForResident('Updating face…');event:FireServer('MirrorLook',draft);return end
+ if player:GetAttribute('ResidentSlot')==slot and player:GetAttribute('NeedsCharacter')==false then
+  waitForResident('Loading saved resident…');event:FireServer('SelectFile',{Index=slot});return
+ end
+ waitForResident('Saving resident…')
  local request=table.clone(draft);request.Index=slot
  event:FireServer('CreateResident',request)
 end
-local enter=button(actionBar,'Continue',function()
+enter=button(actionBar,'Continue',function()
  if waiting then return end
  if selectedFile and not slot then
-  waiting=true;footer.Text='Loading '..draft.Name..'…';event:FireServer('SelectFile',{Index=selectedFile});return
+  waitForResident('Loading '..draft.Name..'…');event:FireServer('SelectFile',{Index=selectedFile});return
  end
  if tab=='Identity' then
   for _,value in {draft.FirstName,draft.LastName} do
@@ -315,7 +331,7 @@ event.OnClientEvent:Connect(function(kind,data)
   closeup=true;yaw=.22;waiting=false;screen.Enabled=true;rebuild();draw()
  elseif kind=='MirrorDone' and mirror then close()
  elseif screen.Enabled and kind=='Notice' and waiting then
-  footer.Text=tostring(data);waiting=false
+  footer.Text=tostring(data);waiting=false;requestSerial+=1;enter.Text=mirror and 'Save face' or 'Enter city'
  end
 end)
 player.CharacterAdded:Connect(close)
