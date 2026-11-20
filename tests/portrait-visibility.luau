@@ -19,7 +19,9 @@ for _,shape in Portrait.Shapes do
    Portrait.draw(head,{FaceShape=shape,EyeSpacing=spacing,LipFullness=lip},art,rb.Color3.fromRGB(165,115,86),rb.Color3.new(0,0,0),rb.Color3.new(0,0,0))
    for _,name in {'Resident face','Resident mouth'} do
     local feature=head:FindFirstChild(name,true)
-    assert(feature.TextureID:match('^rbxassetid://%d+$'),name..' has no artwork')
+    local material=feature:FindFirstChildOfClass('SurfaceAppearance')
+    assert(material and material.AlphaMode==rb.Enum.AlphaMode.Transparency,name..' renders an opaque black panel instead of cutout facial artwork')
+    assert(material.ColorMap:match('^rbxassetid://%d+$'),name..' has no artwork')
     assert(feature.Transparency==0 and feature.MeshContent.Uri~='',name..' has no visible conforming surface')
    end
    count+=1
