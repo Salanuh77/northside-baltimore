@@ -71,6 +71,10 @@ Downtown has a clock-tower sightline, attached commercial frontages and crown si
 
 Claim a home at its intercom and use **PHONE → Home & parties** to host, invite guests or accept an invitation. Parties have a local music source and lighting. Meridian Social Club has a dance floor and DJ tempo controls. Three fuel marts sell food, bandages and a reusable flashlight. Use supplies from **PHONE → My bag**. Pumps refill a parked car for $1 per five units of missing fuel.
 
+Renting a home locks its door controls to the tenant and accepted party guests. Ending the party revokes guest entry; visitors already inside can still leave. Leases are per server and release when the tenant leaves. A deliberately open door remains a physical opening. All 243 home doors now have solid jambs and thresholds, and all 227 rentable entrances link to their own intercom.
+
+The crime RP direction prioritizes readable police pursuits and consequences. NPC officers use limited vision, heard incidents and shared last-known positions; hidden players are searched for rather than tracked live. Armed aggressors trigger a reaction delay, inaccurate three-shot bursts, twelve-round magazines and reloads. Officers seek nearby cover while reloading or wounded. Surrender stops firing immediately; arrest requires contact at close range. Paramedics wait out nearby gunfire before a timed treatment, and shop staff react to witnessed incidents. The HUD distinguishes Spotted from Searching. These new behaviors require a Studio multiplayer playtest before the next place release; automated tests cover their policy, navigation and damage boundaries.
+
 Two NPC officers and two NPC paramedics patrol and respond. Use **PHONE → Emergency dispatch** for help. Police officers can settle a surrendered wanted character's citation. Paramedics treat injured players. Players can apply to either service and start a paid shift. Additional in-person dispatch payments are capped by a per-recipient cooldown.
 
 ## Interiors
@@ -84,6 +88,8 @@ Follow the open galleries and end stairs at the housing courts to reach the flat
 ## Published place
 
 Baltimore Hood RP uses place `131234846449292` and universe `10755218391`. The current Roblox revision and publication status are recorded in `publish-receipt.json` and `published-place.json`.
+
+`lune run update-listing` updates and verifies only the game description from `release-metadata.json`, retaining the current place revision and saving an ignored local receipt. Listing updates do not deploy gameplay changes.
 
 Open **City servers** from the resident files or city phone to see public instances and available seats. Choosing **Join** checkpoints your file before Roblox starts the transfer. Studio lists the local session. Live transfers require the Roblox player.
 
