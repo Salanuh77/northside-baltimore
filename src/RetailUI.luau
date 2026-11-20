@@ -3,13 +3,19 @@ local Market=game:GetService('MarketplaceService')
 local Style=require(game.ReplicatedStorage:WaitForChild('StreetStyle'))
 local p=Players.LocalPlayer
 local products=require(game.ReplicatedStorage:WaitForChild('ShopProducts'))
+local cards=require(game.ReplicatedStorage:WaitForChild('ItemCard'))
+local catalog=require(game.ReplicatedStorage:WaitForChild('ItemCatalog'))
 return function(event,modal,content,clear,row,paragraph,input,state)
+ local function item(key,fn,price)
+  local entry=catalog[key]
+  return cards.decorate(row('',fn),entry.Icon,entry.Name,entry.Description,price or '$'..entry.Price)
+ end
  local function premium(key)
   local product=products[key]
-  local b=row(product.Title..' · Robux',function() event:FireServer('Premium',{Item=key}) end)
+  local card=item(key=='Sidearm' and 'Pistol' or key,function() event:FireServer('Premium',{Item=key}) end,'Check Robux price')
   task.spawn(function()
    local ok,info=pcall(function() return Market:GetProductInfoAsync(product.Id,Enum.InfoType.Product) end)
-   if ok and b.Parent and info.PriceInRobux then b.Text=product.Title..' · '..info.PriceInRobux..' Robux' end
+   if ok and card.button.Parent and info.PriceInRobux then card.price.Text=info.PriceInRobux..' Robux' end
   end)
  end
  local function bag()
@@ -28,19 +34,20 @@ return function(event,modal,content,clear,row,paragraph,input,state)
   elseif kind=='GunStore' then
    clear('EASTERN OUTFITTERS');premium('Sidearm')
    paragraph('For a city-cash purchase, use the player trade menu to buy a sidearm from another eligible player.')
-   row('Box of 12 rounds · $30',function() event:FireServer('BuyAmmo') end)
+   item('Ammo',function() event:FireServer('BuyAmmo') end)
    if (state().Items or {}).Pistol then
     for _,name in {'Slate compact','Silver service','Field carbine'} do
      row(name..' · Included appearance',function() event:FireServer('ArmoryFinish',{Finish=name});modal.Visible=false end)
     end
    end
   elseif kind=='Sporting' then
-   clear('UNION ATHLETICS');row('Wood baseball bat · $80',function() event:FireServer('Buy',{Item='Bat'}) end)
+   clear('UNION ATHLETICS');item('Bat',function() event:FireServer('Buy',{Item='Bat'}) end)
   elseif kind=='Clothing' then
    clear('SHOP CLOTHING')
-   for _,v in Style.Outfits do
+   local colors={{37,48,58},{113,40,47},{77,87,66},{47,78,120},{173,109,55},{115,84,61}}
+   for index,v in Style.Outfits do
     local owned=(state().Wardrobe or {})[v.Id]
-    row(v.Name..(owned and ' · Wear' or ' · $'..v.Price),function() event:FireServer('Outfit',{Item=v.Id});modal.Visible=false end)
+    cards.decorate(row('',function() event:FireServer('Outfit',{Item=v.Id});modal.Visible=false end),'Clothing',v.Name,owned and 'In your wardrobe. Select to wear.' or 'Add this outfit to your wardrobe.',owned and 'OWNED · Wear' or '$'..v.Price,{color=colors[index]})
    end
   elseif kind=='Barber' then
    local function chooseDye(cut)
