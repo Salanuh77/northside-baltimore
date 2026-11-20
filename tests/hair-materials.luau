@@ -1,6 +1,7 @@
 local rb=require('@lune/roblox');local fs=require('@lune/fs');local luau=require('@lune/luau')
 local serde=require('@lune/serde')
 local grooms=rb.deserializeModel(fs.readFile('art/resident-grooms.rbxm'))[1]
+require('../groom-materials')(rb,grooms)
 for name,box in serde.decode('json',fs.readFile('art/groom-bounds.json')) do
  grooms:FindFirstChild(name,true):SetAttribute('GroomCenter',rb.Vector3.new(table.unpack(box.center)))
 end

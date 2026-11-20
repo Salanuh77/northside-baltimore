@@ -243,6 +243,7 @@ local function singleMesh(file,name,parent)
 end
 local fringe=singleMesh('short-fringe','Cropped fringe',grooms)
 fringe.Size=Vector3.new(1.07,.56,1.04);fringe:SetAttribute('GroomCenter',Vector3.new(0,.325,.016))
+require('./groom-materials')(rb,grooms)
 singleMesh('service-cap','ServiceCap',rs)
 local starterRig=rig:Clone();starterRig.Name='StarterCharacter';starterRig.Parent=starter
 local menu=Instance.new('LocalScript');menu.Name='ResidentMenu';menu.Source=fs.readFile('src/ResidentMenu.client.luau');menu.Parent=starter:FindFirstChildOfClass('StarterPlayerScripts')
