@@ -35,8 +35,10 @@ function Portrait.draw(head,look,art,tone,dye,iris)
   local source=game.ReplicatedStorage.ResidentFeatures:FindFirstChild((look.FaceShape or 'Oval')..' '..kind..' '..variant,true)
   local surface=source:Clone();surface.Name=name;surface.CastShadow=false
   surface.Size=source.Size*scale;surface.Color=color
-  local material=surface:FindFirstChildOfClass('SurfaceAppearance');if material then material:Destroy() end
-  surface.TextureID='rbxassetid://'..art:GetAttribute(key)
+  local previousMaterial=surface:FindFirstChildOfClass('SurfaceAppearance');if previousMaterial then previousMaterial:Destroy() end
+  surface.TextureID=''
+  local material=game.ReplicatedStorage.ResidentFaceMaterials:FindFirstChild(key):Clone()
+  material.Color=color;material.Parent=surface
   -- Each overlay follows this specific sculpt, including cheeks and chin in profile.
   fit(surface,head,folder,source:GetAttribute('FeatureCenter')*scale,CFrame.Angles(0,math.pi,0))
  end
