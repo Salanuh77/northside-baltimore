@@ -49,9 +49,17 @@ local function click(button)
 end
 local deadline=os.clock()+10
 repeat task.wait(.1) until gui:FindFirstChild('River',true) or os.clock()>deadline
+repeat task.wait(.1) until game.GuiService:GetGuiInset().Y>0 or os.clock()>deadline
+task.wait(1)
 click(assert(gui:FindFirstChild('River',true),'Saved resident card is missing'))
 assert(not p.Character,'Clicking a save must preview it before entering')
-local preview=gui:FindFirstChild('ResidentRig',true)
+local preview
+deadline=os.clock()+5
+repeat
+ preview=gui:FindFirstChild('ResidentRig',true)
+ if preview and preview.Humanoid.DisplayName=='River' then break end
+ task.wait(.05)
+until os.clock()>deadline
 assert(preview and preview.Head:FindFirstChild('Head sculpt',true).MeshId==game.ReplicatedStorage.ResidentProfiles:FindFirstChild('Heart',true).MeshId,'Selected save preview is wrong')
 local enter
 for _,v in gui:GetDescendants() do if v:IsA('TextButton') and v.Text=='Enter city' then enter=v;break end end
