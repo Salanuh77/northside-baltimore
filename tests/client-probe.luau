@@ -3,6 +3,26 @@ local rs=game:GetService('ReplicatedStorage')
 local remote=rs:WaitForChild('TestDrive')
 local action=rs:WaitForChild('CityAction')
 remote.OnClientInvoke=function(kind,data)
+ if kind=='CreateResident' and not p:GetAttribute('ResidentSlot') then data=table.clone(data);data.Index=1 end
+ if kind=='ItemCard' then
+  local gui=p.PlayerGui:WaitForChild('NorthsideHUD')
+  local deadline=os.clock()+6;local card
+  repeat card=gui:FindFirstChild('Item '..data.Key,true);if card then break end;task.wait(.1) until os.clock()>deadline
+  assert(card,'Missing product card '..data.Key)
+  local view=card:FindFirstChildWhichIsA('ViewportFrame',true)
+  assert(view and view.CurrentCamera and #view:FindFirstChildOfClass('WorldModel'):GetDescendants()>4,'Product image has no visible geometry')
+  assert(card.Price.Text==data.Price,'Wrong displayed item price: '..card.Price.Text)
+  if data.Buy then
+   local scroll=card:FindFirstAncestorOfClass('ScrollingFrame')
+   scroll.CanvasPosition=Vector2.new(0,math.max(0,scroll.CanvasPosition.Y+card.AbsolutePosition.Y-scroll.AbsolutePosition.Y))
+   task.wait(.2)
+   local input=game.UserInputService:CreateVirtualInput()
+   local point=card.AbsolutePosition+card.AbsoluteSize/2+game.GuiService:GetGuiInset()
+   input:SendMousePosition(point);input:SendMouseButton(point,Enum.UserInputType.MouseButton1,true,0)
+   task.wait(.1);input:SendMouseButton(point,Enum.UserInputType.MouseButton1,false,0);task.wait(.5)
+  end
+  return true
+ end
  if kind=='RuntimeErrors' then return runtimeErrors end
  if kind=='ObserveRest' then
   local other=game.Players:GetPlayerByUserId(data.UserId)
@@ -165,9 +185,7 @@ p:SetAttribute('ProbeReady',true)
 -- Gameplay suites join through the real file-selection and creation remotes.
 task.spawn(function()
  while not p:GetAttribute('ResidentFiles') do task.wait(.05) end
- action:FireServer('SelectFile',{Index=1})
  if script:GetAttribute('CreateFixture') then
-  while p:GetAttribute('NeedsCharacter')~=true do task.wait(.05) end
-  action:FireServer('CreateResident',{Name='',Height='Tall',Build='Broad',Hair='High puff',Tone='Copper'})
+  action:FireServer('CreateResident',{Index=1,Name='',Height='Tall',Build='Broad',Hair='High puff',Tone='Copper'})
  end
 end)
