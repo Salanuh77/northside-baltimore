@@ -13,7 +13,11 @@ Use the same articulated template and dressing routine for the file preview, liv
 
 Try the smallest GT and the Foundry V8 with a tall resident and a high-volume haircut. Measure the top of the visible hair relative to the cabin roof, then drive and exit. Check a phone viewport with the file picker and face close-up as well as the desktop layout.
 
-Use the two-stage fitting room when creating a new save. Put curated first and last names on opposite sides with the selected name visible before continuing. Keep the resident centered in a lit room as players step through hair, independent eye and mouth shapes, shirt, trousers, shoes, and body dimensions. Frame the whole outfit by default and provide a face close-up and rotation. Use natural eyelids, understated brows and plain garments with visible collars, cuffs, seams and pockets. Check a saved name, the combined pants and shoe choice, and separate mouth and eye decals on the live character.
+Use an original GTA Online-inspired editor: a compact charcoal sidebar, clear white selection rows, restrained mint accents and a large unobstructed character preview. Keep name entry and appearance as separate steps. Group appearance under Face, Hair, Body and Outfit; focus the camera on the head for face/hair and show the full body for outfit/body. Preserve free-text fictional names, curated suggestions, save-file selection, rotation and barber reuse. On narrow portrait screens, stack the preview above the editor; on landscape mobile, keep both usable without overlapping. Check every tab and the actual controls at the smallest supported viewport.
+
+Facial artwork needs to follow the head surface in three-quarter view. Flat cards can look acceptable head-on while floating beyond the cheeks in profile. Use the per-sculpt conforming eye and lip meshes, keep those parts noncolliding and shadow-free, and verify every spacing/fullness choice. Compare source-space front/profile renders and in-engine asset loading separately; a source render is not a gameplay screenshot. Preserve the same face and groom routine for creator, barber and live characters.
+
+Puffs need a gathered base and a distinct lifted crown; low puffs belong at the nape. Two-strand twists need individual lifted ropes and hanging tips rather than tracks pressed against the scalp. Check every selectable haircut, including shaved and the imported Meshy fringe, and retain natural dye options.
 
 ## Characters in the gallery
 

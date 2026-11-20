@@ -1,3 +1,11 @@
+# Resident and rest follow-up, November 19
+
+The former bed implementation failed the new Studio assertion: the occupant remained upright. The replacement passes horizontal, face-up torso checks, healing, standing upright, early cancellation, shared sofa seating, kitchen use and walking through both tested homes. Static checks cover rest and get-up frames in all 243 furnished residences. A first rerun was blocked on the later Hollins entrance route; the subsequent complete run passed. Failure diagnostics now report nearby colliders for that route.
+
+The creator's new sidebar/category layout passed 52 checks each at desktop and iPhone 7 sizes, including preview/editor separation, independent facial controls, outfits, naming, saved appearance on entry and phone navigation. The mobile run initially exposed a phone app overlapping the touch controls; the HUD now renders above them. Later release runs additionally cycle and load all 17 hair choices. The face regression suite checks all 54 head/eye-spacing/lip-fullness combinations and three headings. Source-space front and profile renders prompted replacement of the floating flat eye/lip cards with conforming geometry; those renders are not in-engine screenshots.
+
+All 28 unit/build suites pass. The final release still requires all nine Studio suites on the exact hosted CI artifact, with game-script errors monitored on both clients and the server. The prior upload was rejected for an ongoing Team Create session, so that upload did not change live revision 19.
+
 # November 19 Alpha regression pass
 
 The Windows unit/build pipeline runs 28 suites, including deterministic responder policy, navigation, damage, housing permissions, purchases, saved residents, map geometry, vehicle handling and traffic timing. The candidate gameplay binary has SHA256 `E0D633BE76E223C403E9AE02095FE63C634876BAACAD3383EAA6B8E526098206`.

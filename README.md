@@ -93,4 +93,8 @@ Baltimore Hood RP uses place `131234846449292` and universe `10755218391`. The c
 
 Open **City servers** from the resident files or city phone to see public instances and available seats. Choosing **Join** checkpoints your file before Roblox starts the transfer. Studio lists the local session. Live transfers require the Roblox player.
 
-Residents use the city?s articulated R15 body. Players can change their build, skin, twelve haircuts, hair color, expression, eyes, facial hair and starter outfit. The camera moves in for face and hair edits. Use X, controller B or **Exit car** on touch to leave the driver seat.
+Residents use the city's articulated R15 body. The creator groups changes into **Face**, **Hair**, **Body** and **Outfit**, beside a large rotatable preview. Choose a roleplay name, six head shapes, independent eye and lip options, 17 hairstyles, 12 hair colors and three starter looks. Face and hair tabs open a close-up. Curved facial artwork follows each sculpt in profile and carries over to the barber and saved resident.
+
+Use **F**, **X**, controller **B** or **Exit vehicle** to leave a car. Beds now place residents on their backs across the mattress. Rest for four seconds to recover 15 health; use **Space**, controller **B** or **Get up** on touch to stand in the aisle. Getting up early or taking damage cancels the healing reward.
+
+For art-only source-space renders, install `art/requirements.txt` and run `python art/preview_residents.py`. These previews are not Roblox screenshots. `scripts/publish-resident-art.luau` imports reviewed meshes, records a per-content receipt and grants the experience access before the normal release tests.
