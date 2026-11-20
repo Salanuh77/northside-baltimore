@@ -56,6 +56,7 @@ local caption=label(set,'DRAG TO ROTATE',10,cream)
 caption.TextTransparency=.2
 local footer=label(panel,'Loading your files…',14,cream);footer.TextWrapped=true
 local slot,tab,waiting=nil,'Identity',false
+local selectedFile
 local closeup=false
 local mirror=false
 local wornOutfit
@@ -110,9 +111,11 @@ local function chooseFile(index)
  local record=rows[index]
  if not record then return end
  if record.Name then
-  waiting=true;footer.Text='Loading '..record.Name..'…';event:FireServer('SelectFile',{Index=index})
+  selectedFile=index;slot=nil;draft=fresh()
+  for key,value in record.Look or {} do draft[key]=value end
+  wornOutfit=record.Outfit;footer.Text=record.Name;closeup=false;rebuild();draw()
  else
-  slot=index;tab='Identity';draft=fresh();yaw=.22;footer.Text='';rebuild();draw()
+  selectedFile=nil;wornOutfit=nil;slot=index;tab='Identity';draft=fresh();yaw=.22;footer.Text='';rebuild();draw()
  end
 end
 local function send()
@@ -124,6 +127,9 @@ local function send()
 end
 local enter=button(panel,'Continue',function()
  if waiting then return end
+ if selectedFile and not slot then
+  waiting=true;footer.Text='Loading '..draft.Name..'…';event:FireServer('SelectFile',{Index=selectedFile});return
+ end
  if tab=='Identity' then
   for _,value in {draft.FirstName,draft.LastName} do
    local length=utf8.len(value:match('^%s*(.-)%s*$'))
@@ -182,9 +188,9 @@ draw=function()
  pane.CanvasPosition=Vector2.zero;sidePane.CanvasPosition=Vector2.zero
  title.Text=not slot and 'CHOOSE YOUR RESIDENT' or tab=='Identity' and 'CREATE YOUR IDENTITY' or 'APPEARANCE'
  servers.Visible=slot==nil;east.Visible=slot~=nil
- back.Visible=slot~=nil;enter.Visible=slot~=nil
+ back.Visible=slot~=nil;enter.Visible=slot~=nil or selectedFile~=nil
  zoom.Visible=slot~=nil and tab=='Appearance';zoom.Text=closeup and 'Full body' or 'Face view'
- enter.Text=tab=='Identity' and 'Continue' or 'Enter city'
+ enter.Text=not slot and 'Enter city' or tab=='Identity' and 'Continue' or 'Enter city'
  if mirror then title.Text='BARBER MIRROR';enter.Text='Save face';footer.Text=draft.Name
  elseif slot then chosenName() end
  layout()
@@ -199,6 +205,8 @@ draw=function()
    b.Position=UDim2.fromOffset(0,32+(i-1)*68);b.Size=UDim2.new(1,-4,0,60)
    b.TextXAlignment=Enum.TextXAlignment.Left;b.TextSize=14;b.TextWrapped=true
    make('UIPadding',{PaddingLeft=UDim.new(0,12)},b)
+   b:SetAttribute('SlotIndex',i)
+   if selectedFile==i then b.BackgroundColor3=cream;b.TextColor3=ink end
   end
   return
  end
