@@ -51,8 +51,10 @@ remote.OnClientInvoke=function(kind,data)
  end
  if kind=='ExitCar' then
   local human=p.Character.Humanoid
-  assert(human.SeatPart,'Driver must be seated before jumping')
-  human.Jump=true
+  assert(human.SeatPart,'Driver must be seated before using exit control')
+  assert(p.PlayerGui.VehicleControls.ExitVehicle.Visible,'Driver exit button is missing')
+  local input=assert(game:GetService('UserInputService'):CreateVirtualInput())
+  input:SendKey(true,Enum.KeyCode.F,false);task.wait(.1);input:SendKey(false,Enum.KeyCode.F,false)
   return true
  end
  if kind=='DriveInput' then
@@ -61,7 +63,11 @@ remote.OnClientInvoke=function(kind,data)
   local function moveSeat() seat.ThrottleFloat=data.gas; seat.SteerFloat=data.steer end
   run:BindToRenderStep('ProbeDrive',Enum.RenderPriority.Last.Value,moveSeat)
   local sim=run.PreSimulation:Connect(moveSeat)
-  task.wait(data.duration or 1.2); sim:Disconnect(); run:UnbindFromRenderStep('ProbeDrive'); return true
+  local input=data.brake and assert(game:GetService('UserInputService'):CreateVirtualInput())
+  if input then input:SendKey(true,Enum.KeyCode.Space,false) end
+  task.wait(data.duration or 1.2)
+  if input then input:SendKey(false,Enum.KeyCode.Space,false) end
+  sim:Disconnect();run:UnbindFromRenderStep('ProbeDrive');return true
  end
  if kind=='RouteState' then
   local directions=workspace:WaitForChild('Local street directions',5)

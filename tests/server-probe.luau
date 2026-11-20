@@ -48,8 +48,10 @@ local ok,err=pcall(function()
  local body=car.Chassis.CFrame.LookVector
  check(facing:Dot(body)<.97,'Vehicle steering changes heading')
  check(thrust.Magnitude>1 and thrust.Unit:Dot(Vector2.new(body.X,body.Z).Unit)>.96,'Thrust follows actual chassis heading')
- a.Character.Humanoid.Sit=false; task.wait(.5)
- check(car.Driver.Occupant==nil,'Driver can exit')
+ call(a,'DriveInput',{gas=1,steer=0,brake=true,duration=.9})
+ check(car.Chassis.LinearVelocity.PlaneVelocity.Magnitude<1 and car.Driver.Occupant==a.Character.Humanoid,'Space brake stops propulsion while throttle remains held and keeps the driver seated')
+ call(a,'ExitCar');task.wait(.6)
+ check(car.Driver.Occupant==nil,'F exit control releases the driver')
  local reverseCar
  for _,model in city['Motor pool']:GetChildren() do if model:GetAttribute('FleetNumber')==3 then reverseCar=model end end
  move(a,reverseCar.Driver.Position+Vector3.new(-5,1,0)); a.Character.HumanoidRootPart.Anchored=false
