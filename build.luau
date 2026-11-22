@@ -188,6 +188,7 @@ require('./districts')(part,group,label,action,city)
 require('./fleet')(part,group,city)
 require('./prison')(part,group,label,action,city)
 require('./retail-interiors')(city)
+require('./public-interiors')(city)
 local radar={}
 for _,part in city:GetDescendants() do
  if part:IsA('BasePart') and table.find({'Carriageway','Worn asphalt','Side street connection','Service alley'},part.Name) then
@@ -248,7 +249,7 @@ singleMesh('service-cap','ServiceCap',rs)
 local starterRig=rig:Clone();starterRig.Name='StarterCharacter';starterRig.Parent=starter
 local appearance=Instance.new('ModuleScript');appearance.Name='ResidentAppearance';appearance.Source=fs.readFile('src/ResidentAppearance.luau');appearance.Parent=rs
 local theme=Instance.new('ModuleScript');theme.Name='UITheme';theme.Source=fs.readFile('src/UITheme.luau');theme.Parent=rs
-for _,name in {'ItemThumbnail','ItemCatalog','ItemCard'} do
+for _,name in {'ItemThumbnail','ItemCatalog','ItemCard','BrandIdentity'} do
  local module=Instance.new('ModuleScript');module.Name=name;module.Source=fs.readFile('src/'..name..'.luau');module.Parent=rs
 end
 local itemModels=Instance.new('Folder');itemModels.Name='ItemModels';itemModels.Parent=rs
@@ -261,6 +262,7 @@ local portrait=Instance.new('ModuleScript'); portrait.Name='ResidentPortrait'; p
 local names=Instance.new('ModuleScript'); names.Name='ResidentNames'; names.Source=fs.readFile('src/ResidentNames.luau'); names.Parent=rs
 local style=Instance.new('ModuleScript'); style.Name='StreetStyle'; style.Source=fs.readFile('src/StreetStyle.luau'); style.Parent=rs
 local art=require('@lune/serde').decode('json',fs.readFile('art/assets.json'))
+for _,key in {'store-emblems-a','store-emblems-b'} do rs.BrandIdentity:SetAttribute(key,assert(art[key])) end
 require('./face-materials')(rb,rs,art)
 for _,key in {'fleet-track','foundry-work','pier-varsity','indigo-denim','harbor-warmup','clay-workshirt','olive-overshirt','street-denim','washed-denim','canvas-trousers','street-denim-black','washed-denim-black','canvas-trousers-black','resident-calm','resident-smile','resident-focused','mouth-level','mouth-smile','mouth-set','ash-pullover','dock-denim','field-liner','haste-markdown','forever-tuesday','last-season','portrait-calm','portrait-smile','portrait-focused','lips-level','lips-smile','lips-set'} do style:SetAttribute(key,assert(art[key],key)) end
 local catalog=Instance.new('ModuleScript');catalog.Name='ShopProducts';catalog.Source=fs.readFile('src/ShopProducts.luau');catalog.Parent=rs

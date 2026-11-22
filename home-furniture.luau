@@ -2,6 +2,7 @@ local rb = require('@lune/roblox')
 local fs = require('@lune/fs')
 local cf, v3, rgb = rb.CFrame, rb.Vector3.new, rb.Color3.fromRGB
 local templates = {}
+local props=require('./interior-props')
 for _,key in {'sofa','bed','sink','stove','sideboard'} do
  local imported=rb.deserializeModel(fs.readFile('art/home-'..key..'.rbxm'))[1]
  templates[key]=assert(imported:FindFirstChildWhichIsA('MeshPart',true),key)
@@ -141,6 +142,9 @@ return function(building,origin,layout,index)
  local plan=assert(layouts[layout])
  local room=model(building,'Home furnishings '..tostring(index))
  room:SetAttribute('HomeLayout',layout)
+ local closets={Flat={-13.8,10.0,-90,5.6,0},Rowhome={10.3,-6,90,6,13.525},Hollins={-8.6,5,-90,5.3,0},Waterfront={-10,-9,180,5.6,0}}
+ local closet=closets[layout]
+ props.add(room,'home-wardrobe','Personal wardrobe',origin*cf.new(closet[1],closet[5],closet[2])*cf.Angles(0,math.rad(closet[3]),0),v3(closet[4],7.1,2.7),true)
  local function anchor(slot)
   return origin*cf.new(slot[1],slot[5] or 0,slot[2])*cf.Angles(0,math.rad(slot[3]),0)
  end

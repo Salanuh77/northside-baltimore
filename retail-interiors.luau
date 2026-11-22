@@ -2,6 +2,8 @@ local rb=require('@lune/roblox')
 local fs=require('@lune/fs')
 local serde=require('@lune/serde')
 local catalog=require('./retail-brands')
+local signage=require('./brand-signage')
+local props=require('./interior-props')
 local atlas='rbxassetid://'..assert(serde.decode('json',fs.readFile('art/assets.json'))['retail-aisles'])
 local packages=serde.decode('json',fs.readFile('art/retail-packages.json'))
 local E,CF,V,C,U=rb.Enum,rb.CFrame,rb.Vector3.new,rb.Color3,rb.UDim2
@@ -34,23 +36,8 @@ end
 local function branding(p,b)
  local bg,accent=C.fromHex(b[4]),C.fromHex(b[5])
  local g=surface(p,750,150,185)
- local badge=block(g,.027,.13,.155,.73,accent)
- if b[1]=='Goose & Griddle' then
-  for feather=0,2 do
-   local wing=block(badge,.15+feather*.15,.61-feather*.17,.41,.12,bg)
-   wing.Rotation=-24
-  end
- elseif b[1]=='Crown Roost' then
-  for point=0,2 do
-   local tip=block(badge,.20+point*.22,.31+math.abs(point-1)*.06,.19,.35,bg)
-   tip.Rotation=(point-1)*18
-  end
-  block(badge,.20,.63,.62,.10,bg)
- elseif b[1]=='Eight Till Late' then
-  words(badge,'8',0,-.01,1,.96,bg)
- else
-  words(badge,b[1]:sub(1,1),0,0,1,.96,bg,'serif')
- end
+ local badge=block(g,.015,.035,.18,.93,bg);badge.BackgroundTransparency=1
+ signage.image(badge,b.Key)
  words(g,string.upper(b[1]),.208,.13,.765,.45,cream)
  block(g,.21,.65,.73,.025,accent)
  words(g,b[6],.21,.70,.73,.18,accent,'medium')
@@ -90,8 +77,44 @@ local function stockTier(rack,frame,width,tier,line)
 end
 local function bay(stock,frame,width,profile,offset)
  local rack=model(stock,'Shelf bay')
+ rack:SetAttribute('RackFrame',frame);rack:SetAttribute('RackWidth',width)
  local enamel=C.fromHex(profile[4]);local accent=C.fromHex(profile[5])
  local lines=catalog.lines[profile[3]];local height=6.1
+ local kind=profile[3]
+ local key=({grocery='stocked-gondola',variety='stocked-gondola',produce='stocked-gondola',fuel='stocked-gondola',
+  coffee='stocked-gondola',bakery='stocked-gondola',deli='stocked-gondola',cinema='stocked-gondola',club='stocked-gondola',arcade='stocked-gondola',
+  books='bookcase',news='bookcase',records='bookcase',art='bookcase',camera='bookcase',print='bookcase',bank='bookcase',
+  fashion='clothing-rail',sneakers='shoe-wall',sports='shoe-wall',outdoor='clothing-rail',hardware='bookcase'})[kind]
+ if key then
+  local depth=key=='bookcase' and 1.65 or 2.4
+  local placed=frame*CF.new(0,0,-depth/2+.10)
+  local item,size=props.add(rack,key,'Stocked display',placed,V(width,6.1,depth),true)
+  if key=='bookcase' then
+   -- Two low library cases make a full-height wall run without stretching the mesh.
+   for _,p in item:GetDescendants() do if p:IsA('BasePart') then p:Destroy() end end
+   item:Destroy()
+   local _,lower=props.add(rack,key,'Lower editions',placed,V(width,2.9,depth),true)
+   props.add(rack,key,'Upper editions',placed*CF.new(0,lower.Y,0),V(width,2.9,depth),true)
+  elseif key=='stocked-gondola' then
+   -- Meshy's center bays are open. Fill them with category-specific packages at each shelf.
+   for tier=0,2 do
+    local line=lines[(offset+tier)%#lines+1]
+    local pack=packages[line]
+    for j=-1,1 do
+     local p=piece(rack,'Shelf merchandise',placed,j*size.X*.105,size.Y*(.16+tier*.255),-size.Z*.16,
+      size.X*.085,size.Y*.17,size.Z*.54,C.fromHex(pack.colors[(j+2)%3+1]),E.Material.SmoothPlastic)
+     if roundPack[pack.shape] then p.Shape=E.PartType.Cylinder;p.Size=V(size.Y*.17,size.X*.085,size.X*.085);p.CFrame*=CF.Angles(0,0,math.pi/2) end
+    end
+   end
+  end
+  local strip=piece(rack,'Stock guide',frame,0,6.32,-depth+.06,width,.60,.08,enamel)
+  local art=surface(strip,600,56,55)
+  for tier=0,2 do
+   local line=lines[(offset+tier)%#lines+1];printRow(art,tier,line)
+   local img=art:GetChildren()[tier+1];img.Position=U.fromScale(tier/3,0);img.Size=U.fromScale(1/3,1)
+  end
+  return
+ end
  piece(rack,'Enamel back',frame,0,height/2,0,width,height,.23,enamel)
  -- The case is solid from the floor up; shelf lips and printed stock share one collision volume.
  local carcass=piece(rack,'Shelf footprint',frame,0,height/2,-.78,width,height,1.80,iron)
@@ -344,6 +367,8 @@ local function fit(site,b)
  local frame=floor.CFrame*CF.new(0,floor.Size.Y/2,0)
  local stock=model(site,'Retail merchandising')
  site:SetAttribute('RetailBrand',b[1]);site:SetAttribute('RetailReference',b[2]);site:SetAttribute('RetailDepartment',b[3])
+ site:SetAttribute('RetailBrandKey',b.Key)
+ signage.blade(stock,frame,width,depth,b)
  local fuel=b[3]=='fuel'
  local old=site:FindFirstChild('Enamel station wordmark') or site:FindFirstChild('Painted lettering')
  local plate
@@ -387,6 +412,7 @@ local function fit(site,b)
    fitLargeSalesFloor(site,stock,frame,width,depth,b)
   end
  end
+ require('./retail-meshes')(site,stock,frame,width,depth,b)
 end
 return function(city)
  for _,site in city:GetDescendants() do

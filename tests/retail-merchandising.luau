@@ -21,9 +21,10 @@ for _,site in city:GetDescendants() do
    for _,pack in part:GetChildren() do
     if pack.Name=='Shelf merchandise' and pack:IsA('BasePart') and not pack.CanCollide then physical+=1 end
    end
-   assert(physical>=12,brand..' needs merchandise visible from either end of the rack')
+   local imported=part:FindFirstChildWhichIsA('MeshPart',true)
+   assert(imported or physical>=12,brand..' needs stocked geometry visible from either end of the rack')
   end
-  if part:IsA('ImageLabel') then
+  if part:IsA('ImageLabel') and part:GetAttribute('StockLine') then
    assert(part.ImageContent.Uri:match('^rbxassetid://%d+$') and part.ImageRectSize.X==256 and part.ImageRectSize.Y==128)
    local line=assert(part:GetAttribute('StockLine'));lines[line]=true; families[line]=true;rows+=1
   end
