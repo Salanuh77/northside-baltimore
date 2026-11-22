@@ -25,7 +25,9 @@
         "wear",
         "shoes"
       ],
-      "sha256": "1b9ddad3c39d07c0c08a69aa3a372ba6c5fe285a703cd00eba7091302852fa77"
+      "sha256": "1b9ddad3c39d07c0c08a69aa3a372ba6c5fe285a703cd00eba7091302852fa77",
+      "deliveredWidth": 1023,
+      "deliveredHeight": 1012
     },
     {
       "file": "store-emblems-b.png",
@@ -49,7 +51,9 @@
         "housing",
         "dock"
       ],
-      "sha256": "bdc4ad95a74736def68a6dffb322064bab8bee1f0360152bf44c6892d64e70b3"
+      "sha256": "bdc4ad95a74736def68a6dffb322064bab8bee1f0360152bf44c6892d64e70b3",
+      "deliveredWidth": 1023,
+      "deliveredHeight": 1012
     }
   ]
 }

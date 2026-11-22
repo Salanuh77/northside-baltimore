@@ -5,9 +5,10 @@ function BrandIdentity.cell(key)
  local index=table.find(order,key);if not index then return nil end
  local atlas=index<=16 and 'store-emblems-a' or 'store-emblems-b'
  local slot=(index-1)%16;local x,y=slot%4,math.floor(slot/4)
- -- The generated sheets are 1261 x 1247, not a power-of-two atlas.
- local left,top=math.floor(x*1261/4),math.floor(y*1247/4)
- return {atlas=atlas,x=left,y=top,w=math.floor((x+1)*1261/4)-left,h=math.floor((y+1)*1247/4)-top}
+ -- Asset delivery resizes the 1261 x 1247 sources to 1023 x 1012.
+ -- ImageRect coordinates must address the delivered texture, not the source PNG.
+ local left,top=math.floor(x*1023/4),math.floor(y*1012/4)
+ return {atlas=atlas,x=left,y=top,w=math.floor((x+1)*1023/4)-left,h=math.floor((y+1)*1012/4)-top}
 end
 function BrandIdentity.image(parent,key,assets)
  local cell=assert(BrandIdentity.cell(key),'Unknown business emblem '..tostring(key))
