@@ -2,7 +2,17 @@ local p=game:GetService('Players').LocalPlayer
 local rs=game:GetService('ReplicatedStorage')
 local remote=rs:WaitForChild('TestDrive')
 local action=rs:WaitForChild('CityAction')
+local lastNotice=''
+action.OnClientEvent:Connect(function(kind,message) if kind=='Notice' then lastNotice=tostring(message) end end)
 remote.OnClientInvoke=function(kind,data)
+ if kind=='LastNotice' then return lastNotice end
+ if kind=='InteriorView' then
+  for _,gui in p.PlayerGui:GetChildren() do if gui:IsA('ScreenGui') then gui.Enabled=false end end
+  game:GetService('StarterGui'):SetCoreGuiEnabled(Enum.CoreGuiType.All,false)
+  local camera=workspace.CurrentCamera
+  camera.CameraType=Enum.CameraType.Scriptable;camera.FieldOfView=70;camera.CFrame=data.Frame;camera.Focus=data.Focus
+  return true
+ end
  if kind=='Equip' then
   local tool=p.Backpack:WaitForChild(data.Name,5)
   assert(tool,'Owned tool missing: '..data.Name)
@@ -30,6 +40,24 @@ remote.OnClientInvoke=function(kind,data)
   return true
  end
  if kind=='RuntimeErrors' then return runtimeErrors end
+ if kind=='ShopIdentity' then
+  local gui=p.PlayerGui:WaitForChild('NorthsideHUD')
+  local panel=gui:FindFirstChild('Shop identity',true)
+  assert(panel and panel.AbsoluteSize.Y>=64,'Missing shop identity header')
+  local emblem=panel:FindFirstChild('Business emblem')
+  assert(emblem and emblem:GetAttribute('BrandEmblem')==data,'Wrong operator logo in shop menu')
+  game:GetService('ContentProvider'):PreloadAsync({emblem})
+  assert(emblem.IsLoaded,'Shop emblem did not load')
+  return true
+ end
+ if kind=='InteriorArt' then
+  local fixtures=rs:WaitForChild('InteriorTestFixtures',10)
+  local failures={}
+  game:GetService('ContentProvider'):PreloadAsync(fixtures:GetChildren(),function(id,status)
+   if status~=Enum.AssetFetchStatus.Success then table.insert(failures,id..' '..status.Name) end
+  end)
+  return #failures==0,table.concat(failures,', ')
+ end
  if kind=='ObserveRest' then
   local other=game.Players:GetPlayerByUserId(data.UserId)
   local deadline=os.clock()+3

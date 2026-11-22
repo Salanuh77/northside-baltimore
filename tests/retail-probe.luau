@@ -18,6 +18,17 @@ end
 local ok,err=pcall(function()
  check(waitFor(function() return #players:GetPlayers()==2 and players:GetPlayers()[2]:GetAttribute('ResidentFiles') and players:GetPlayers()[1]:GetAttribute('ResidentFiles') end,90),'Two account file lists loaded')
  local a,b=table.unpack(players:GetPlayers())
+ local library=Instance.new('Folder');library.Name='InteriorTestFixtures';library.Parent=game.ReplicatedStorage
+ local models={}
+ for _,v in city:GetDescendants() do
+  local key=v:GetAttribute('MeshyPropKey')
+  if key and not models[key] then models[key]=true;v:Clone().Parent=library end
+ end
+ for _,key in {'stocked-gondola','store-chiller','checkout-counter','clothing-rail','shoe-wall','bookcase','laundry-machines','barber-vanity','diner-booth','clinic-exam','office-desk','home-wardrobe'} do
+  check(models[key],'Imported fixture shipped: '..key)
+ end
+ local artLoaded,artDetails=call(a,'InteriorArt');check(artLoaded,'Client loaded imported furniture and PBR textures '..tostring(artDetails))
+ library:Destroy()
  for _,p in {a,b} do
   check(call(p,'HUD') and not p.Character and not p:GetAttribute('ResidentSlot'),'First-spawn creation')
   call(p,'CreateResident',{Name='',Height='Tall',Build='Broad',Hair='Twists',Tone='Copper'})
@@ -63,6 +74,7 @@ local ok,err=pcall(function()
  call(a,'Outfit',{Item='pier-varsity'});call(a,'Outfit',{Item='pier-varsity'})
  check(a:GetAttribute('Cash')==375 and a.Character:FindFirstChildOfClass('Shirt').ShirtTemplate:find(game.ReplicatedStorage.StreetStyle:GetAttribute('pier-varsity'),1,true)~=nil,'Original varsity outfit bought once and equipped')
  approach(a,marker('Sporting'));call(a,'Prompt',marker('Sporting'))
+ check(call(a,'ShopIdentity','sports'),'Athletics shop shows the illustrated operator emblem')
  check(call(a,'ItemCard',{Key='Bat',Price='$80',Buy=true}),'Athletics picture card completes a real purchase')
  check(a.Backpack:FindFirstChild('Bat') and a:GetAttribute('Cash')==295,'Athletics sells cash bats')
  approach(a,marker('Market'));call(a,'Buy',{Item='Knife'});call(a,'Buy',{Item='Pistol'})
@@ -82,6 +94,10 @@ local ok,err=pcall(function()
  check(receipt(a,3732068679,'studio-sampler')=='PurchaseGranted','Sampler grants on the resident file')
  for _,item in {'Bubbles','Streamers'} do call(a,'PartyItem',{Item=item});check(a.Character.HumanoidRootPart:FindFirstChild(item),'Purchased party effect: '..item) end
  local images,seen={},{}
+ for _,key in {'store-emblems-a','store-emblems-b'} do
+  local loaded,detail=call(a,'PreloadArt',{'rbxassetid://'..game.ReplicatedStorage.BrandIdentity:GetAttribute(key)})
+  check(loaded,'Transparent business logo atlas loaded '..key..' '..tostring(detail))
+ end
  for _,v in city:GetDescendants() do
   if v.Name=='Alley paint' then
    local id=v:FindFirstChildWhichIsA('ImageLabel',true).Image
@@ -93,6 +109,21 @@ local ok,err=pcall(function()
  end
  check(#images==23,'Mural sheets, streetwear and face textures present')
  local loaded,details=call(a,'PreloadArt',images);check(loaded,'Client loaded transparent paint and clothing textures '..tostring(details))
+ local cafe=assert(city:FindFirstChild('Harbor Roasters',true))
+ local booth=assert(cafe:FindFirstChild('Upholstered diner booth',true))
+ local seat=assert(booth:FindFirstChildWhichIsA('Seat'))
+ local boothFrame=booth:GetAttribute('FurnitureFrame')
+ local boothSize=booth:GetAttribute('FurnitureSize')
+ local seatOffset=boothFrame:PointToObjectSpace(seat.Position)
+ local entry=boothFrame:PointToWorldSpace(Vector3.new(seatOffset.X,3,-boothSize.Z/2-1.5))
+ a:RequestStreamAroundAsync(entry,5)
+ a.Character.HumanoidRootPart.Anchored=false
+ a.Character:PivotTo(CFrame.new(entry));task.wait(.5)
+ call(a,'Prompt',seat)
+ check(waitFor(function() return seat.Occupant==a.Character.Humanoid end,3),'New diner booth accepts a seated resident')
+ call(a,'StandUp')
+ check(waitFor(function() return not seat.Occupant and not a.Character.Humanoid.SeatPart end,3),'Resident stands out of the diner booth')
+ check(call(a,'WalkTo',entry),'Resident can walk away from the diner booth')
  workspace:SetAttribute('TestMinute',1200);task.wait(1.4)
  check(city:GetAttribute('CityMinute')==1200 and math.abs(game.Lighting.ClockTime-20)<.03,'Night lighting and city time')
 end)
