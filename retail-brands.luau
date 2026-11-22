@@ -30,6 +30,7 @@ local brands = {
  roost={'Crown Roost','Royal Farms','fuel','335E4A','E4C486','CHICKEN & FUEL'},
  late={'Eight Till Late','7-Eleven','fuel','2C5664','FFAE68','MART & FUEL'},
 }
+for key,brand in brands do brand.Key=key end
 local exact={
  ['North Avenue Fuel']='goose',['Franklin Fuel']='roost',['Eastside Fuel']='late',
  ['MONUMENT MARKET']='discount',['Wharf Produce']='fresh',['Boiler House Market']='discount',
@@ -72,4 +73,4 @@ local lineNames={'Bay chips','Fruit chews','Pop cans','Motor oil','Deli wraps','
  'Orchard crate','Pantry tins','Bay spices','Bound books','Periodicals','Vinyl sleeves','Film cartons','Color inks',
  'Hair care','Laundry soap','Counter care','Court shoes','Folded denim','Folded fleece','League balls','Field kits',
  'Workshop tools','Art editions','Ticket booklets','Arcade boxes','Paper goods','Sparkling drinks','Hand care','Hot sauce'}
-return {forSite=brandFor,lines=assortment,names=lineNames}
+return {forSite=brandFor,lines=assortment,names=lineNames,brands=brands}

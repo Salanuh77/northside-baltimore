@@ -58,10 +58,32 @@ closeButton.Name='Close'
 handset=require(game.ReplicatedStorage:WaitForChild('Handset'))(gui,modal,title,content,closeButton,make,text,button,function() openPhone() end)
 if UIS.TouchEnabled then handset.launcher.Position=UDim2.new(1,-54,0,106) end
 local order=0
+local identityModule=game.ReplicatedStorage:WaitForChild('BrandIdentity')
+local identities=require(identityModule)
+local brandAssets={['store-emblems-a']=identityModule:GetAttribute('store-emblems-a'),['store-emblems-b']=identityModule:GetAttribute('store-emblems-b')}
+local storeScreens={['FUEL MART']=true,['EASTERN OUTFITTERS']=true,['UNION ATHLETICS']=true,['SHOP CLOTHING']=true,
+ ['BARBER CHAIR']=true,['CUT & COLOR']=true,['CHARM CITY CREDIT']=true,['BACKROOM EXCHANGE']=true}
+local function shopHeading()
+ local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart');if not root then return end
+ local nearest,distance=nil,65
+ for _,site in city:GetDescendants() do
+  if site:IsA('Model') and site:GetAttribute('RetailBrandKey') then
+   local floor=site:FindFirstChild('Shop floor') or site:FindFirstChild('Floor') or site:FindFirstChild('Hall floor') or site:FindFirstChild('Terrazzo floor') or site:FindFirstChild('Tile floor')
+   if floor then local d=(root.Position-floor.Position).Magnitude;if d<distance then nearest=site;distance=d end end
+  end
+ end
+ if not nearest then return end
+ local panel=make('Frame',{Name='Shop identity',Size=UDim2.new(1,-6,0,70),BackgroundColor3=theme.Surface,BorderSizePixel=0,LayoutOrder=0},content)
+ local emblem=identities.image(panel,nearest:GetAttribute('RetailBrandKey'),brandAssets)
+ emblem.Size=UDim2.fromOffset(64,64);emblem.Position=UDim2.fromOffset(3,3)
+ local wordmark=text(panel,nearest:GetAttribute('RetailBrand'),UDim2.new(1,-83,1,-10),UDim2.fromOffset(76,5),17,cream)
+ wordmark.Font=theme.TitleFont
+end
 local function clear(name)
  if not modal.Visible or title.Text~=name then content.CanvasPosition=Vector2.zero end
  for _,v in content:GetChildren() do if not v:IsA('UIListLayout') then v:Destroy() end end
  title.Text=name; modal.Visible=true; order=0
+ if storeScreens[name] then shopHeading() end
 end
 local function row(s,fn)
  order+=1; local b=button(content,s,UDim2.new(1,-6,0,44),UDim2.new(),fn); b.LayoutOrder=order
