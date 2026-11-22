@@ -1,0 +1,55 @@
+{
+  "generator": "OpenAI image generation",
+  "purpose": "Original illustrated business emblems for storefront signage and shop purchase menus",
+  "designBrief": "Hand-painted vintage American neighborhood shop emblems; transparent background, isolated pictorial symbols, cream/red/teal/ochre palette, no letters or existing brand marks; four by four cells with clear margins. Distinct silhouettes per business category.",
+  "sheets": [
+    {
+      "file": "store-emblems-a.png",
+      "width": 1261,
+      "height": 1247,
+      "cells": [
+        "roast",
+        "donut",
+        "bagel",
+        "diner",
+        "market",
+        "discount",
+        "fresh",
+        "pharmacy",
+        "books",
+        "record",
+        "camera",
+        "print",
+        "gallery",
+        "press",
+        "wear",
+        "shoes"
+      ],
+      "sha256": "1b9ddad3c39d07c0c08a69aa3a372ba6c5fe285a703cd00eba7091302852fa77"
+    },
+    {
+      "file": "store-emblems-b.png",
+      "width": 1261,
+      "height": 1247,
+      "cells": [
+        "sports",
+        "outdoors",
+        "hardware",
+        "wash",
+        "barber",
+        "club",
+        "arcade",
+        "cinema",
+        "bank",
+        "clinic",
+        "goose",
+        "roost",
+        "late",
+        "police",
+        "housing",
+        "dock"
+      ],
+      "sha256": "bdc4ad95a74736def68a6dffb322064bab8bee1f0360152bf44c6892d64e70b3"
+    }
+  ]
+}

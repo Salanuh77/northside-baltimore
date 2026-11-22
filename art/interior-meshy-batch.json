@@ -1,0 +1,131 @@
+{
+  "approvedCredits": 180,
+  "created": "2026-11-22",
+  "assets": [
+    {
+      "key": "stocked-gondola",
+      "prompt": "Game-ready freestanding neighborhood convenience store merchandise shelving, one-sided gondola unit, three fully stocked shelves with neatly grouped snack bags, cereal cartons, canned food and small detergent bottles, metal back panel, slender perforated uprights, realistic price ticket rails, a few varied facings. Rectangular footprint, low shelf height to see over, broad 2.4 metre width, 1.6 metre height, 0.65 metre depth. Credible worn urban American store fixture, believable product shapes, no brand logos, no readable text, isolated single asset, no room or floor. Front faces negative Z. Clean silhouette, detailed casework.",
+      "previewTaskId": "01a20234-1e61-770f-8f9f-9273a6bc7624",
+      "refineTaskId": "01a2023b-6536-7064-a1b5-873c0d5e4f42",
+      "aiModel": "meshy-t2.5",
+      "targetPolycount": 5000,
+      "triangles": 4688,
+      "sha256": "7f7f1619cdb3a89f7e78619406c351a9aa151d1714c03ecc59f6759e12d27f7b"
+    },
+    {
+      "key": "store-chiller",
+      "prompt": "Game-ready compact commercial two-door refrigerated drinks display, realistic metal frame and compressor base, glass doors with long handles, filled with rows of colorful bottles and cans, white interior shelves, subtle wear, no readable text or real brand logos. Proportions width 1.5m height 2.0m depth .7m. Standalone single object, flat bottom, no surrounding room or floor, front toward negative Z. Clearly visible contents and recessed door frames.",
+      "previewTaskId": "01a20234-14c9-74ff-87bd-f4497c34d40b",
+      "refineTaskId": "01a2023b-6eb5-70ff-9e06-f3a8c0aa9c2d",
+      "aiModel": "meshy-t2.5",
+      "targetPolycount": 5000,
+      "triangles": 872,
+      "sha256": "747b7e7c7db758c07f45aa6c2d3fd67103ff3a74b695e9b96f52f42977306ffa"
+    },
+    {
+      "key": "checkout-counter",
+      "prompt": "Game-ready neighborhood shop checkout counter, long compact rectangular wood laminate sales desk with a stepped cashier side, worn cream countertop, realistic black cash register with display and keys, barcode scanner, paper receipt roll, a small candy tray and paper shopping bags. Width 2.4m height 1.25m depth .9m. Customer side faces negative Z, cashier side rear. Separate readable forms, original unbranded American corner-store appearance. Single isolated furniture asset, no floor, no people, no text.",
+      "previewTaskId": "01a20234-0287-73b3-ac92-72efa468bd0c",
+      "refineTaskId": "01a2023b-783b-7497-873b-f8f71b8cdaaf",
+      "aiModel": "meshy-t2.5",
+      "targetPolycount": 5000,
+      "triangles": 4162,
+      "sha256": "b0e4d516ef29cac1cbf27035abe8eb506c5c9c6f7f9d201d150378beca325ffa"
+    },
+    {
+      "key": "clothing-rail",
+      "prompt": "Game-ready freestanding retail clothing rail with two sturdy black metal feet, narrow uprights and a horizontal bar, densely hung thrift streetwear jackets, hoodies and T-shirts on individual wooden hangers. A low shelf holds folded denim and a few shoeboxes. Realistic cloth silhouettes and seams, varied muted charcoal olive burgundy and faded blue, no logos or readable text. Width2.2m height1.7m depth.65m. Isolated single clothing rack, no room or floor, front negative Z.",
+      "previewTaskId": "01a20234-0cc3-73aa-a8a8-c04a4c83f084",
+      "refineTaskId": "01a2023b-814f-7083-ae69-134bf2839b75",
+      "aiModel": "meshy-t2.5",
+      "targetPolycount": 5000,
+      "triangles": 4790,
+      "sha256": "473a149b4917f54eb7a3771785be31e7d8880d692599677e33b4cfac65071c68"
+    },
+    {
+      "key": "shoe-wall",
+      "prompt": "Game-ready wall-mounted sneaker shop display fixture: a shallow oak slatwall cabinet with six staggered small shelves, each showing a distinct pair of unbranded street sneakers, stacked shoe boxes in open lower cubbies, black mounting brackets and price card holders without text. Realistic soles, laces and footwear silhouettes. Warm worn oak and matte black, varied cream navy red shoes. Width2.3m height2m depth.45m. Single isolated cabinet, flat back, no surrounding wall or floor, front negative Z.",
+      "previewTaskId": "01a20234-5d70-735e-bde9-9d57e6453b25",
+      "refineTaskId": "01a2023b-8b75-70c8-b0ea-8a18db388dd7",
+      "aiModel": "meshy-t2.5",
+      "targetPolycount": 5000,
+      "triangles": 4980,
+      "sha256": "60eb14a12fb8200d28af75e5b56f73aa7c9002831c2f5de0abee8d7b1c42dd5d"
+    },
+    {
+      "key": "bookcase",
+      "prompt": "Game-ready full neighborhood bookshop bookcase, aged walnut framed shelves, dense varied rows of colorful book spines, a few face-out illustrated covers and horizontal stacked books on five shelves, restrained paper labels without readable text. Solid back, plinth base, realistic shelf thickness, not miniature. Width1.8m height2m depth.35m. Believable second-hand bookshop appearance, no real logos, no words, isolated standalone piece no room or floor, front negative Z.",
+      "previewTaskId": "01a20234-54a5-70f6-983f-1deeff1dd70c",
+      "refineTaskId": "01a2023b-98b0-726d-b52e-66f441c26638",
+      "aiModel": "meshy-t2.5",
+      "targetPolycount": 5000,
+      "triangles": 4384,
+      "sha256": "0bab2cd3a77cdf11aa4b291a1f63449cc3ea190175e744e521880119444cf61b"
+    },
+    {
+      "key": "laundry-machines",
+      "prompt": "Game-ready commercial laundromat double stacked front-loading washer dryer tower, two circular glass windows with deep black rubber gaskets and stainless drums visible, coin slots and button panel, detergent drawer, white enamel and brushed steel with subtle scuffs. Realistic separate door rims and handles. Width.85m height1.9m depth.8m. Single isolated appliance with flat base, no room or people or floor, no readable brands or text, front negative Z.",
+      "previewTaskId": "01a20234-8e59-74c8-8bcc-6751a67d1f77",
+      "refineTaskId": "01a2023b-a0c5-75ba-95c1-3153b11ead38",
+      "aiModel": "meshy-t2.5",
+      "targetPolycount": 5000,
+      "triangles": 4866,
+      "sha256": "12ad2e6eb53dc69b8a632d4ab90f84b89b150b15bc28350af605c1701b4160c3"
+    },
+    {
+      "key": "barber-vanity",
+      "prompt": "Game-ready vintage neighborhood barbershop station, broad framed rectangular mirror above a narrow dark walnut vanity counter with drawers, detailed clippers on charging stands, spray bottles, combs in jars, a folded towel and small trimmer, metal drawer pulls, a foot-level open shelf. Realistic barber working station. Width1.7m height2m depth.45m. Muted teal trim and walnut, no chair, no person, no room or floor, no readable text, front negative Z.",
+      "previewTaskId": "01a20234-6669-7581-add1-32c9d427ff71",
+      "refineTaskId": "01a2023b-a94a-7619-a5e9-08a52dfccfce",
+      "aiModel": "meshy-t2.5",
+      "targetPolycount": 5000,
+      "triangles": 5069,
+      "sha256": "f7cf39b62862dbd8a72810d44e7bec0231ee2f4580d6f560d8fe05b76c8edb84"
+    },
+    {
+      "key": "diner-booth",
+      "prompt": "Game-ready American diner booth furniture set: two opposing worn burgundy vinyl benches with upholstered backs, separated by a cream laminate rectangular table on a metal pedestal, stainless edge, sugar dispenser, napkin holder and two mugs. Open entrances at both ends of the table; realistic adult scale, no people. Overall width1.6m depth2.0m height1.1m, seat height.45m. Clean separated furniture silhouettes as one isolated asset, no walls or floor, no readable text.",
+      "previewTaskId": "01a20234-8285-75d3-817f-32a1e34af9b0",
+      "refineTaskId": "01a2023e-87b9-7082-abd0-2f1edf4de79e",
+      "aiModel": "meshy-t2.5",
+      "targetPolycount": 5000,
+      "triangles": 5090,
+      "sha256": "93a851f465c342364e6bfb8e7ef2f60bcf9284a5c921992e242031b67ce44f28"
+    },
+    {
+      "key": "clinic-exam",
+      "prompt": "Game-ready compact walk-in clinic examination couch, adjustable padded teal examination bed with segmented backrest and white paper roll at head, off-white metal drawer pedestal, realistic handles, pull-out footstep, folded sheet and small medical tray mounted beside the head end. Credible clinic furniture with clean gently worn materials. Width.85m length1.9m height1.1m. Isolated standalone furniture no people, room or floor, no logos or text.",
+      "previewTaskId": "01a20234-6ead-702d-b1b9-6c47dfb6a905",
+      "refineTaskId": "01a2023e-9076-76a4-b7f0-e3b8e05065f3",
+      "aiModel": "meshy-t2.5",
+      "targetPolycount": 5000,
+      "triangles": 5047,
+      "sha256": "b3f8df911f73edebe3afabd136876db5a61c746d1987db047be55cce24bc9432"
+    },
+    {
+      "key": "office-desk",
+      "prompt": "Game-ready lived-in public service office workstation: worn wooden rectangular desk with black monitor and keyboard, landline phone, desk lamp, file trays, papers and pen cup, a short filing pedestal beneath one end. Modest city police desk or office, credible uncluttered silhouette with detailed small equipment. Width1.7m height1.25m depth.75m. Customer/front side negative Z, worker side rear. No chair, no person, no surrounding room or floor, no readable text or logos.",
+      "previewTaskId": "01a20234-78db-726c-98df-3ed3ebc7b862",
+      "refineTaskId": "01a2023e-9843-715e-a759-fbc4a74f5818",
+      "aiModel": "meshy-t2.5",
+      "targetPolycount": 5000,
+      "triangles": 4544,
+      "sha256": "ec343a06c4bceb99406e5d82832d3dd730ba2e1cc0bdf29839a7f953b127538f"
+    },
+    {
+      "key": "home-wardrobe",
+      "prompt": "Game-ready modest apartment storage wardrobe, worn honey oak two-door wardrobe with one door ajar revealing folded clothes on shelves and a few hanging coats, adjoining narrow three-drawer chest with a small laundry basket and folded towel on top. Realistic inexpensive lived-in furniture, restrained scuffs, detailed handles and hinges, solid simple footprint. Width1.8m height2m depth.55m. One isolated furniture asset no person, room or floor, no text or logos, front negative Z.",
+      "previewTaskId": "01a20234-97e0-71ad-a11d-2d5d789b6b76",
+      "refineTaskId": "01a2023e-a577-750d-b072-80e4d238fca7",
+      "aiModel": "meshy-t2.5",
+      "targetPolycount": 5000,
+      "triangles": 4888,
+      "sha256": "7c121f62ad283d9c70cd684ec1cfa3d46e3e00a77c5c9ac4ab73b5ac8b19628b"
+    }
+  ],
+  "spentCredits": 180,
+  "pricePerAsset": {
+    "preview": 5,
+    "texture": 10
+  }
+}

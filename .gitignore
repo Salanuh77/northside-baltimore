@@ -15,3 +15,6 @@ tests/*.log
 /publish-receipt.json
 /published-place.json
 /release-hash.json
+
+# Embedded GLB textures are the source of truth; Meshy also exports redundant sidecars.
+/art/interior-*_textures/
