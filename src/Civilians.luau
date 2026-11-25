@@ -17,16 +17,8 @@ local function visible(model,character,range)
  local hit=workspace:Raycast(origin,delta,ray)
  return not hit or hit.Instance:IsDescendantOf(character)
 end
-local function say(model,text,now)
- if now<(model:GetAttribute('SpeechReady') or 0) then return end
- model:SetAttribute('SpeechReady',now+4)
- local old=model.Head:FindFirstChild('Citizen speech');if old then old:Destroy() end
- local gui=Instance.new('BillboardGui');gui.Name='Citizen speech';gui.Size=UDim2.fromOffset(230,64);gui.StudsOffset=Vector3.new(0,2.2,0);gui.MaxDistance=42;gui.Parent=model.Head
- local label=Instance.new('TextLabel');label.Size=UDim2.fromScale(1,1);label.BackgroundColor3=Color3.fromRGB(24,28,31);label.BackgroundTransparency=.15
- label.TextColor3=Color3.fromRGB(244,240,227);label.Font=Enum.Font.GothamMedium;label.TextSize=14;label.TextWrapped=true;label.Text=text;label.Parent=gui
- local corner=Instance.new('UICorner');corner.CornerRadius=UDim.new(0,8);corner.Parent=label
- game:GetService('Debris'):AddItem(gui,4)
-end
+local Dialogue=require(script.Parent.NpcDialogue)
+local say=Dialogue.say
 function Civilians.start(city,combat,report)
  local field=Instance.new('Folder');field.Name='City civilians';field.Parent=workspace
  local strips={};local agents={};local slots={};local count=0;local spawnAt=0;local birth=0;local rng=Random.new()
@@ -37,7 +29,7 @@ function Civilians.start(city,combat,report)
   end
  end
  local graph=Routes.build(strips);local routes=graph.nodes
- local self={agents=agents,field=field};local signals=streets:FindFirstChild('Traffic signals')
+ local self={agents=agents,field=field,graph=graph};local signals=streets:FindFirstChild('Traffic signals')
  local function random() return rng:NextNumber() end
  local function pick(list) return list[rng:NextInteger(1,#list)] end
  local function nextDestination(s,now)
@@ -45,6 +37,14 @@ function Civilians.start(city,combat,report)
   s.edge=Routes.next(graph,s.node,s.previous,s.recent,random,blocked)
   s.enteredCrossing=false;s.routeStarted=now;s.progressAt=now;s.progress=s.model.HumanoidRootPart.Position
   if s.edge then s.model:SetAttribute('Destination',routes[s.edge.to].position) end
+ end
+ function self.resumeRoute(s,now)
+  local closest,best=s.node,math.huge
+  for id,node in routes do
+   local distance=(node.position-s.model.HumanoidRootPart.Position).Magnitude
+   if #node.edges>0 and distance<best then closest=id;best=distance end
+  end
+  s.node=closest;s.previous=nil;nextDestination(s,now)
  end
  local function crossingOpen(s,at)
   if not s.edge or not s.edge.crossing or s.enteredCrossing then return true end
@@ -78,17 +78,17 @@ function Civilians.start(city,combat,report)
   model.HumanoidRootPart:SetNetworkOwner(nil);Ragdoll.watch(model);Tags:AddTag(model,'CombatActor');Tags:AddTag(model,'Civilian')
   model:SetAttribute('Personality',personality);model:SetAttribute('CivilianId',birth)
   local state={model=model,brain=Brain.new(personality,os.clock()),nav=Navigation.new(model),node=index,index=index,pauseUntil=0,unseen=0,nextGoal=0,
-   born=os.clock(),speed=rng:NextNumber(9,12.5),recent={},history={},blocked={},stops=0,trip=0,stepsUntilPause=rng:NextInteger(3,7)}
+   dialogue={},met={},born=os.clock(),speed=rng:NextNumber(9,12.5),recent={},history={},blocked={},stops=0,trip=0,stepsUntilPause=rng:NextInteger(3,7)}
   nextDestination(state,os.clock())
   agents[model]=state;slots[index]=state;count+=1
   local prompt=Instance.new('ProximityPrompt');prompt.Name='Talk';prompt.ActionText='Talk';prompt.ObjectText='Neighbor';prompt.MaxActivationDistance=7;prompt.HoldDuration=.2;prompt.RequiresLineOfSight=true;prompt.Parent=model.Head
   state.prompt=prompt
   prompt.Triggered:Connect(function(p)
    local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
-   if not root or h.Health<=0 or (root.Position-model.HumanoidRootPart.Position).Magnitude>8 or not visible(model,p.Character,9) or state.brain.threat or model:GetAttribute('Ragdolled') then return end
+   if not root or h.Health<=0 or (root.Position-model.HumanoidRootPart.Position).Magnitude>8 or not visible(model,p.Character,9) or state.brain.threat or state.scene or model:GetAttribute('Ragdolled') then return end
    local now=os.clock();if now<(state.talkReady or 0) then return end;state.talkReady=now+6;state.talk=true;state.guest=p
-   local replies={'You good? Keep an eye out at the crossings.','Need work? The job desk can set you up with a shift.','The fuel mart is open. Keep the doorway clear.','I am heading home soon. Stay safe out here.'}
-   say(model,replies[(index+math.floor(now/20))%#replies+1],now)
+   local familiar=state.met[p.UserId]~=nil;state.met[p.UserId]=now
+   say(model,Dialogue.choose(state.dialogue,{hour=game.Lighting.ClockTime,routine=model:GetAttribute('Routine'),familiar=familiar},random),now)
   end)
   task.spawn(function()
    local animation=Instance.new('Animation');animation.AnimationId='rbxassetid://507777826'
@@ -101,6 +101,21 @@ function Civilians.start(city,combat,report)
   end)
   return state
  end
+ function self.npcIncident(attacker,victim)
+  if not attacker.Parent then return end
+  local origin=attacker.HumanoidRootPart.Position;local witnessed=false
+  for model,s in agents do
+   if model~=attacker and model.Humanoid.Health>0 and (model==victim or visible(model,attacker,45)) then
+    Brain.notice(s.brain,os.clock(),{kind='assault',position=origin,seen=false,victim=model==victim})
+    s.npcThreat=attacker
+    if model==victim then
+     local link=model:FindFirstChild('AmbientOpponent') or Instance.new('ObjectValue');link.Name='AmbientOpponent';link.Value=attacker;link.Parent=model
+    end
+    s.nextGoal=0;witnessed=true
+   end
+  end
+  return witnessed
+ end
  function self.alert(player,origin,kind,victim,hearing)
   local now=os.clock()
   for model,s in agents do
@@ -108,6 +123,7 @@ function Civilians.start(city,combat,report)
    local seen=player and visible(model,player.Character,55)
    if model==victim or seen or kind=='gunfire' and (model.HumanoidRootPart.Position-origin).Magnitude<(hearing or 90) then
     Brain.notice(s.brain,now,{kind=kind,position=origin,suspect=player and player.UserId,seen=seen or model==victim,victim=model==victim})
+    s.npcThreat=nil
     s.nextGoal=0
    end
   end
@@ -154,10 +170,15 @@ function Civilians.start(city,combat,report)
     if dist>240 then s.unseen+=.25 else s.unseen=0 end
     local inView=false
     for _,v in people do local delta=at-v.root.Position;if delta.Magnitude<150 and v.root.CFrame.LookVector:Dot(delta.Unit)>.1 then inView=true;break end end
-    if s.unseen>12 or Routes.canRetire(dist,now-s.born,inView,s.brain.threat~=nil or now<s.brain.talkUntil) or human.Health<=0 and now>(s.deadAt or math.huge) then s.nav:stop();combat:cancel(model);model:Destroy();continue end
+    if s.unseen>12 or Routes.canRetire(dist,now-s.born,inView,s.brain.threat~=nil or now<s.brain.talkUntil or s.scene~=nil) or human.Health<=0 and now>(s.deadAt or math.huge) then s.nav:stop();combat:cancel(model);model:Destroy();continue end
     if human.Health<=0 then s.deadAt=s.deadAt or now+12 end
     local threat=s.brain.threat;local suspect=threat and threat.suspect and Players:GetPlayerByUserId(threat.suspect)
-    local seen=suspect and visible(model,suspect.Character,45);local target=seen and suspect.Character.HumanoidRootPart
+    if not threat and s.npcThreat then
+     s.npcThreat=nil
+     if not s.scene then local link=model:FindFirstChild('AmbientOpponent');if link then link:Destroy() end end
+    end
+    local suspectCharacter=suspect and suspect.Character or s.npcThreat and s.npcThreat.Parent and s.npcThreat
+    local seen=suspectCharacter and visible(model,suspectCharacter,45);local target=seen and suspectCharacter.HumanoidRootPart
     local weapon=suspect and suspect.Character and (suspect.Character:FindFirstChild('Pistol') or suspect.Character:FindFirstChild('Knife') or suspect.Character:FindFirstChild('Bat'))
     if not threat and closest and closest.armed and dist<20 and visible(model,closest.p.Character,20) then
      Brain.notice(s.brain,now,{kind='weapon',position=closest.root.Position,suspect=closest.p.UserId,seen=true});threat=s.brain.threat;target=closest.root;seen=true;weapon=true
@@ -176,15 +197,20 @@ function Civilians.start(city,combat,report)
     local arrived=now<s.pauseUntil or not s.edge or crossing
     local mode=Brain.step(s.brain,now,{health=human.Health,ragdoll=model:GetAttribute('Ragdolled'),visibleThreat=seen,distance=target and (target.Position-at).Magnitude,
      armed=weapon~=nil and weapon~=false,safeDistance=threat and (at-threat.position).Magnitude>34 and not seen,talk=s.talk,crowded=clearance<4,arrived=arrived})
-    s.talk=nil;model:SetAttribute('Activity',mode.mode);s.prompt.Enabled=not s.brain.threat and human.Health>0 and not model:GetAttribute('Ragdolled')
+    s.talk=nil;model:SetAttribute('Activity',mode.mode);s.prompt.Enabled=not s.brain.threat and not s.scene and human.Health>0 and not model:GetAttribute('Ragdolled')
     model:SetAttribute('KnownSuspect',s.brain.threat and s.brain.threat.suspect)
     model:SetAttribute('IncidentPosition',s.brain.threat and s.brain.threat.position)
     if mode.mode~=s.lastMode then
-     if mode.mode=='Warning' then say(model,'Give me some room, please.',now)
-     elseif mode.mode=='Fleeing' then say(model,'I am getting out of here!',now)
-     elseif mode.mode=='Defending' then say(model,'Back off!',now)
-     elseif mode.mode=='Reporting' then say(model,'I need police at this corner.',now) end
+     if mode.mode=='Walking' and s.lastMode=='Recovering' then self.resumeRoute(s,now);goal=s.edge and routes[s.edge.to].position or at end
+     if mode.mode=='Warning' then say(model,Dialogue.choose(s.dialogue,{event='warning'},random),now)
+     elseif mode.mode=='Fleeing' then say(model,Dialogue.choose(s.dialogue,{event='fleeing'},random),now)
+     elseif mode.mode=='Defending' then say(model,Dialogue.choose(s.dialogue,{event='defending'},random),now)
+     elseif mode.mode=='Reporting' then say(model,Dialogue.choose(s.dialogue,{event='reporting'},random),now) end
      s.lastMode=mode.mode
+    end
+    if not s.brain.threat and mode.mode~='Talking' and human.Health>0 and not model:GetAttribute('Ragdolled') then
+     if model:GetAttribute('CombatState')=='Stunned' then s.nav:stop();continue end
+     if self.routine and self.routine(s,now) then continue end
     end
     if mode.report then local p=Players:GetPlayerByUserId(mode.report.suspect);if p then report(p,mode.report.position) end end
     if mode.mode=='Defending' and target then

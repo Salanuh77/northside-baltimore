@@ -81,7 +81,13 @@ Nearby blocks populate with 18 civilians for one player, scaling to a shared ser
 
 Every resident receives free **Fists**. Press **G / D-pad right** to raise or lower them; use **click / Punch / RT** to attack and hold **F / Block / LT** to guard. Timed jab–cross–hook combinations consume stamina. Frontal guard reduces damage, rear attacks bypass it, and depleted guard breaks. Clean finishers produce temporary physical ragdolls; dead characters retain a physical pose until cleanup. Server checks reject wall hits, distant targets, spam, safe-zone attacks and attacks while incapacitated. The shoulder camera restores its previous settings when fists are lowered or a menu opens.
 
-The deterministic `street-combat`, `civilian-brain`, `civilian-routes`, `civilian-map`, `weapon-inventory` and `combat-pose` suites run in CI. Disposable two-player `combat`, `civilians` and `weapons` Studio probes supplement the existing nine release suites. Their assertions cover actual movement, conversations, hidden-shooter memory, directional guard, three-hit damage, replicated physical joints and get-up. See `skills/roblox-npc-behavior` for the behavioral reference and evidence boundaries.
+The deterministic combat, civilian, weapon, society and animation suites run in CI. Thirteen disposable two-player Studio release suites cover actual movement, conversations, hidden-shooter memory, directional guard, three-hit damage, replicated animation tracks, physical joints and get-up. See `skills/roblox-npc-behavior` for the behavioral reference and evidence boundaries.
+
+Eight original published R15 clips provide a fighting stance, jab, cross, hook, guard, two impact reactions and hands-up surrender. Server Animator tracks blend with locomotion and use the same contact/recovery times as the damage rules. Animation assets and editable key poses are retained under `art/combat-*`.
+
+Residents make shop visits, meet neighbors, take breaks and head home at night. Occasional shoplifting, muggings and street fights interrupt ordinary life; at most two ambient incidents run at once. Nearby witnesses can bring police to the scene. Four district officers patrol connected streets, pursue NPC suspects, accept surrender and escort them. Bribing an eligible corrupt officer costs $150 in city cash and removes one nonviolent wanted level. Honest officers refuse and report the offer. Armed or violent suspects cannot buy their way out, and repeated prompts cannot charge twice.
+
+NPC speech varies with the incident, errand, time and previous conversation. It uses local contextual dialogue; no live Ollama service is connected.
 
 ## Interiors
 

@@ -48,7 +48,10 @@ local ok,err=pcall(function()
  a.Character.Humanoid.Health=50;call(a,'UseSupply',{Item='Coffee'})
  check(a.Character.Humanoid.Health>=63 and a:GetAttribute('BagCoffee')==0,'Coffee restores health and consumes the serving')
  local dj=find('Club'); approach(a,dj); call(a,'ClubMix'); check(dj.Afterhours.PlaybackSpeed>1,'Club DJ changes the music tempo')
- local bots=workspace:WaitForChild('Emergency responders'); check(#bots:GetChildren()==4,'Police and paramedic bots spawn')
+ local bots=workspace:WaitForChild('Emergency responders')
+ local officers,medics=0,0
+ for _,bot in bots:GetChildren() do if bot:GetAttribute('Service')=='police' then officers+=1 elseif bot:GetAttribute('Service')=='medic' then medics+=1 end end
+ check(officers==4 and medics==2,'Four district officers and two paramedics spawn')
  move(a,Vector3.new(-520,5,-321)); move(b,Vector3.new(-515,5,-321))
  call(a,'ApplyJob',{Role='medic'}); call(a,'StartShift'); b.Character.Humanoid.Health=48
  local start=a:GetAttribute('Cash'); call(a,'Assist',{Target=b.UserId})

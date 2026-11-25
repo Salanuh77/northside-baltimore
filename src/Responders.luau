@@ -52,6 +52,10 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
  local field=Instance.new('Folder');field.Name='Emergency responders';field.Parent=workspace
  local calls={police={},medic={}};local cooldown={};local reports={};local units={}
  local random=Random.new()
+ local ambientStep,patrolGraph
+ local Dialogue=require(script.Parent.NpcDialogue)
+ local SocietyRules=require(script.Parent.SocietyRules)
+ local Routes=require(script.Parent.CivilianRoutes)
  local function valid(role,p)
   local h=p.Character and p.Character:FindFirstChildOfClass('Humanoid')
   if not h or h.Health<=0 or not profiles[p] or (p:GetAttribute('CustodyUntil') or 0)>0 then return false end
@@ -164,7 +168,7 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
  local function bot(role,home,name)
   local model=rig(name,home,role=='medic',field);model:SetAttribute('Service',role)
   require(script.Parent.Ragdoll).watch(model);game:GetService('CollectionService'):AddTag(model,'CombatActor')
-  local unit={model=model,role=role,brain=Brain.new(),memory={},patrol=1,patrolAt=os.clock(),nextCover=0,side=math.floor(#units/2)%2==0 and 1 or -1,sector=#units}
+  local unit={model=model,role=role,home=home,dialogue={},corrupt=role=='police' and name=='Westside officer',ignored={},brain=Brain.new(),memory={},patrol=1,patrolAt=os.clock(),nextCover=0,side=math.floor(#units/2)%2==0 and 1 or -1,sector=#units}
   unit.nav=Navigation.new(model);table.insert(units,unit)
   local health=model.Humanoid
   local facingAnchor=Instance.new('Attachment');facingAnchor.Name='Responder facing';facingAnchor.Parent=model.HumanoidRootPart
@@ -179,6 +183,29 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
    local handle=Instance.new('Part');handle.Name='Handle';handle.CanCollide=false;handle.Massless=true;handle.Parent=tool
    require(script.Parent.PistolVisual)(tool,'Slate compact')
    health:EquipTool(tool);unit.weapon=tool
+  end
+  if role=='police' then
+   local prompt=Instance.new('ProximityPrompt');prompt.Name='Offer bribe';prompt.ActionText='Offer $150 (may be refused)';prompt.ObjectText=name
+   prompt.MaxActivationDistance=6;prompt.RequiresLineOfSight=true;prompt.HoldDuration=1.2;prompt.Parent=model.Head
+   local ready={}
+   prompt.Triggered:Connect(function(p)
+    local d=profiles[p];local c=p.Character;local root=c and c:FindFirstChild('HumanoidRootPart');local h=c and c:FindFirstChildOfClass('Humanoid')
+    if not d or not root or not h or not model.Parent or health.Health<=0 then return end
+    local now=os.clock();local report=reports[p]
+    local outcome,cost=SocietyRules.bribe({now=now,ready=ready[p.UserId] or 0,distance=(root.Position-model.HumanoidRootPart.Position).Magnitude,
+     visible=visible(model,c,8,true),health=h.Health,custody=(p:GetAttribute('CustodyUntil') or 0)>0,heat=d.Heat,
+     corrupt=unit.corrupt,cash=d.Cash,armed=c:FindFirstChild('Pistol')~=nil or c:FindFirstChild('Knife')~=nil or c:FindFirstChild('Bat')~=nil,
+     violent=report and (report.violentUntil or 0)>now})
+    if outcome=='unavailable' then return end
+    ready[p.UserId]=now+30
+    if outcome=='accepted' then
+     d.Cash-=cost;d.Heat=math.max(0,d.Heat-1);unit.ignored[p]=now+45
+     if d.Heat==0 then reports[p]=nil end;sync(p);tell(p,'The officer took $150. One wanted level removed; other officers still investigate.')
+    elseif outcome=='refused' then
+     if addHeat then addHeat(p,1) end;tell(p,'The officer refused the offer and reported it. No cash was taken.')
+    else tell(p,'You need $150 in cash.');return end
+    Dialogue.say(model,Dialogue.choose(unit.dialogue,{event=outcome=='accepted' and 'corrupt' or 'refused'},function() return random:NextNumber() end),now)
+   end)
   end
   health.HealthChanged:Connect(function(current)
    if current>0 or not model.Parent then return end
@@ -195,7 +222,7 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
     local now=os.clock();local at=model.HumanoidRootPart.Position
     local target,best,goal,direct=nil,math.huge,nil,false
     for _,p in Players:GetPlayers() do
-     if valid(role,p) then
+     if valid(role,p) and now>=(unit.ignored[p] or 0) then
       local broadcast=reports[p]
       local seen=visible(model,p.Character,70,unit.target==p or (broadcast and now-broadcast.time<12))
       if seen then
@@ -217,8 +244,28 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
      unit.footworkAt=0;unit.footworkThreat=nil;unit.searchCenter=nil;unit.searchStep=0;unit.nextCover=0;unit.cover=nil
     end
     unit.target=target
-    local action={mode='Patrolling',goal=home+route[unit.patrol]}
-    if not target and unit.sound and now<unit.sound.expires then action={mode='Investigating',goal=unit.sound.position} end
+    local patrolGoal=home+route[unit.patrol]
+    if role=='police' and patrolGraph then
+     if not unit.patrolNode then
+      local best=math.huge
+      for id,node in patrolGraph.nodes do local distance=(node.position-at).Magnitude;if distance<best then unit.patrolNode=id;best=distance end end
+      unit.patrolRecent={};unit.patrolHistory={}
+     end
+     patrolGoal=patrolGraph.nodes[unit.patrolNode].position
+     if not target and ((at-patrolGoal).Magnitude<3.7 or now-unit.patrolAt>25) then
+      local edge=Routes.next(patrolGraph,unit.patrolNode,unit.patrolPrevious,unit.patrolRecent,function() return random:NextNumber() end)
+      if edge then
+       unit.patrolPrevious,unit.patrolNode=unit.patrolNode,edge.to
+       table.insert(unit.patrolHistory,edge.to);unit.patrolRecent[edge.to]=true
+       if #unit.patrolHistory>8 then unit.patrolRecent[table.remove(unit.patrolHistory,1)]=nil end
+       unit.patrolAt=now;patrolGoal=patrolGraph.nodes[unit.patrolNode].position
+      end
+     end
+    end
+    local action={mode='Patrolling',goal=patrolGoal}
+    local ambientAction=not target and role=='police' and ambientStep and ambientStep(unit,now,at,visible)
+    if ambientAction then action=ambientAction end
+    if not target and not ambientAction and unit.sound and now<unit.sound.expires then action={mode='Investigating',goal=unit.sound.position} end
     if role=='police' and target then
      local human=target.Character.Humanoid;local root=target.Character.HumanoidRootPart
      local report=reports[target]
@@ -251,6 +298,8 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
       if unit.weapon and unit.weapon.Parent~=model then health:EquipTool(unit.weapon) end
      end
      if action.mode=='Requesting surrender' and direct and now>=(unit.spokeAt or 0) then unit.spokeAt=now+12;tell(target,'Police: put your hands up to surrender, or break line of sight to lose the search.') end
+    elseif ambientAction then
+     Brain.step(unit.brain,now,{valid=false})
     elseif role=='medic' and unit.danger and now<unit.danger.untilTime then
      if now>=(unit.fleeAt or 0) then
       unit.fleeAt=now+1.6;unit.fleeGoal=Ground.choose(model,Tactics.flee(at,unit.danger.position),true)
@@ -297,13 +346,15 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
      model:SetAttribute('NavigationGoal',action.goal)
     end
     model:SetAttribute('Activity',action.mode);model:SetAttribute('Magazine',unit.brain.ammo)
-    if action.goal then unit.nav:step(action.goal,now,aiming and 9 or target and role=='police' and 16 or unit.danger and now<unit.danger.untilTime and 15 or 11) else unit.nav:stop() end
+    if action.goal then unit.nav:step(action.goal,now,aiming and 9 or (target or ambientAction) and role=='police' and 16 or unit.danger and now<unit.danger.untilTime and 15 or 11) else unit.nav:stop() end
     task.wait(.2)
    end
    unit.nav:stop()
   end)
  end
  bot('police',Vector3.new(-26,3.8,87),'District officer');bot('medic',Vector3.new(26,3.8,135),'City paramedic')
+ bot('police',Vector3.new(-21.5,3.8,510),'Midtown officer')
+ bot('police',Vector3.new(421.5,3.8,710),'Harbor officer')
  bot('police',Vector3.new(-426,3.8,740),'Westside officer');bot('medic',Vector3.new(217,3.8,838),'Downtown paramedic')
  task.spawn(function()
   while field.Parent do
@@ -319,7 +370,7 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
  end)
  Players.PlayerRemoving:Connect(function(p)
   calls.police[p]=nil;calls.medic[p]=nil;cooldown[p]=nil;reports[p]=nil
-  for _,unit in units do unit.memory[p]=nil end
+  for _,unit in units do unit.memory[p]=nil;unit.ignored[p]=nil end
  end)
  local function handle(p,kind,data)
   if kind=='CallResponder' then return request(p,data.Role) end
@@ -345,5 +396,5 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
   reports[p]={position=position,time=os.clock(),violentUntil=0}
   if addHeat and profiles[p].Heat<1 then addHeat(p,1) end
  end
- return {handle=handle,alert=alert,witness=witness}
+ return {handle=handle,alert=alert,witness=witness,units=units,setAmbient=function(fn) ambientStep=fn end,setPatrolGraph=function(graph) patrolGraph=graph end}
 end

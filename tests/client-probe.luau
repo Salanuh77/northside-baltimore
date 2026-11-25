@@ -37,13 +37,25 @@ remote.OnClientInvoke=function(kind,data)
   return false
  end
  if kind=='ObservePunch' then
-  local model=data.Model;local due=os.clock()+1;local maximum=0;local found=false
+  local model=data.Model;local due=os.clock()+1.2;local maximum=0;local playing=false
+  local root=model:WaitForChild('HumanoidRootPart');local hand=model:WaitForChild('LeftHand')
+  local initial=root.CFrame:PointToObjectSpace(hand.Position)
   repeat
-   local joint=model and model:FindFirstChild('LeftShoulder',true)
-   if joint then found=true;maximum=math.max(maximum,math.abs(select(1,joint.C0:ToOrientation())));if maximum>.6 then return true end end
-   task.wait(.03)
+   local position=root.CFrame:PointToObjectSpace(hand.Position);maximum=math.max(maximum,(position-initial).Magnitude)
+   local animator=model.Humanoid:FindFirstChildOfClass('Animator')
+   if animator then for _,track in animator:GetPlayingAnimationTracks() do
+    if track.Animation.AnimationId==game.ReplicatedStorage.CombatAnimations.Jab.AnimationId and track.Length>0 and track.IsPlaying then playing=true end
+   end end
+   if playing and maximum>.3 then return true end
+   task.wait(.015)
   until os.clock()>due
-  return false,string.format('shoulder=%s angle=%.2f tagged=%s state=%s',tostring(found),maximum,tostring(game:GetService('CollectionService'):HasTag(model,'CombatActor')),tostring(model:GetAttribute('CombatState')))
+  return false,string.format('replicated Jab track=%s hand travel=%.2f state=%s',tostring(playing),maximum,tostring(model:GetAttribute('CombatState')))
+ end
+ if kind=='CombatClips' then
+  local failed={};game:GetService('ContentProvider'):PreloadAsync(game.ReplicatedStorage.CombatAnimations:GetChildren(),function(id,status)
+   if status~=Enum.AssetFetchStatus.Success then table.insert(failed,id..' '..status.Name) end
+  end)
+  return #failed==0,table.concat(failed,',')
  end
  if kind=='LastNotice' then return lastNotice end
  if kind=='InteriorView' then

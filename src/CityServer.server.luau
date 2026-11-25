@@ -179,7 +179,8 @@ end
 local custody=require(script.Parent:WaitForChild('Custody'))(city,event,profiles,sync,tell,closest,function(p)
  cancelBusy(p); workService.finish(p); offers[p]=nil
 end)
-local respond,civilians
+require(script.Parent.CombatAnimation).start()
+local respond,civilians,society
 local function protectedModel(model)
  local player=Players:GetPlayerFromCharacter(model)
  if player then return safe(player) or (player:GetAttribute('CustodyUntil') or 0)>0 end
@@ -201,7 +202,9 @@ local combat=require(script.Parent.StreetCombat).new(event,{
  end,
  canDamage=function(attacker,target)
   if not damageable(target) or protectedModel(target) or protectedModel(attacker) then return false end
-  if not Players:GetPlayerFromCharacter(attacker) and not Players:GetPlayerFromCharacter(target) then return false end
+  if not Players:GetPlayerFromCharacter(attacker) and not Players:GetPlayerFromCharacter(target) then
+   local opponent=attacker:FindFirstChild('AmbientOpponent');return opponent~=nil and opponent.Value==target and not target:GetAttribute('Surrendered')
+  end
   local player=Players:GetPlayerFromCharacter(target)
   return not (player and player:GetAttribute('Surrendered') and not Players:GetPlayerFromCharacter(attacker))
  end,
@@ -211,11 +214,15 @@ local combat=require(script.Parent.StreetCombat).new(event,{
    respond.alert(p,attacker.HumanoidRootPart.Position,'assault',target)
    if civilians then civilians.alert(p,attacker.HumanoidRootPart.Position,'assault',target) end
    heat(p,1)
+  elseif society then
+   society.hit(attacker,target)
   end
  end,
 })
 respond=require(script.Parent:WaitForChild('Responders'))(city,event,profiles,jobs,sync,tell,safe,near,sight,custody.arrest,heat,combat)
 civilians=require(script.Parent.Civilians).start(city,combat,respond.witness)
+respond.setPatrolGraph(civilians.graph)
+society=require(script.Parent.CitySociety).start(city,civilians,respond,combat,protectedModel)
 local function timed(p,marker,seconds,valid,done,message)
  if busy[p] then return tell(p,'Finish your current action first.') end
  local _,h=alive(p); if not h then return end
@@ -248,8 +255,7 @@ local function interact(p,marker)
   local now=os.clock(); if now<(marker:GetAttribute('DoorNext') or 0) then return end; marker:SetAttribute('DoorNext',now+0.8)
   local open=not marker:GetAttribute('Open'); marker:SetAttribute('Open',open); local closed=marker:GetAttribute('ClosedFrame') or marker.CFrame
   marker:SetAttribute('ClosedFrame',closed)
-  local hinge=marker.Size.X/2
-  local opened=closed*CFrame.new(-hinge,0,0)*CFrame.Angles(0,-math.pi/2,0)*CFrame.new(hinge,0,0)
+  local opened=require(script.Parent.HomeDoor).opened(closed,marker.Size.X,marker:GetAttribute('ExteriorSign'))
   marker.CanCollide=true
   game:GetService('TweenService'):Create(marker,TweenInfo.new(.28),{CFrame=open and opened or closed}):Play()
  elseif kind=='SitHome' or kind=='RestHome' then

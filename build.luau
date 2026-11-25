@@ -275,11 +275,13 @@ local drive=Instance.new('RemoteEvent'); drive.Name='DriveCar'; drive.Parent=rs
 local traffic=Instance.new('Script'); traffic.Name='TrafficServer'; traffic.Source=fs.readFile('src/Traffic.server.luau'); traffic.Parent=server.Parent
 local input=Instance.new('LocalScript'); input.Name='TrafficClient'; input.Source=fs.readFile('src/Traffic.client.luau'); input.Parent=client.Parent
 local restClient=Instance.new('LocalScript');restClient.Name='RestClient';restClient.Source=fs.readFile('src/Rest.client.luau');restClient.Parent=client.Parent
+require('./combat-animations')(rs)
 local restServer=Instance.new('ModuleScript');restServer.Name='HomeRest';restServer.Source=fs.readFile('src/HomeRest.luau');restServer.Parent=server.Parent
+local doorServer=Instance.new('ModuleScript');doorServer.Name='HomeDoor';doorServer.Source=fs.readFile('src/HomeDoor.luau');doorServer.Parent=server.Parent
 local route=Instance.new('RemoteFunction'); route.Name='WalkingRoute'; route.Parent=rs
 local trail=Instance.new('ModuleScript'); trail.Name='StreetTrail'; trail.Source=fs.readFile('src/StreetTrail.luau'); trail.Parent=rs
 local staff=Instance.new('ModuleScript');staff.Name='ShopStaff';staff.Source=fs.readFile('src/ShopStaff.luau');staff.Parent=server.Parent
-for _,name in {'ResponderBrain','NpcNavigation','PistolVisual','NpcCombat','NpcAwareness','NpcTactics','NpcGround','NpcReactions','NpcSight','StreetCombatRules','StreetCombat','Ragdoll','CivilianBrain','CivilianRoutes','Civilians','WeaponInventory','WeaponVisual'} do
+for _,name in {'ResponderBrain','NpcNavigation','PistolVisual','NpcCombat','NpcAwareness','NpcTactics','NpcGround','NpcReactions','NpcSight','NpcDialogue','SocietyRules','CitySociety','CombatAnimation','StreetCombatRules','StreetCombat','Ragdoll','CivilianBrain','CivilianRoutes','Civilians','WeaponInventory','WeaponVisual'} do
  local module=Instance.new('ModuleScript');module.Name=name;module.Source=fs.readFile('src/'..name..'.luau');module.Parent=server.Parent
 end
 local routes=Instance.new('ModuleScript'); routes.Name='WalkingRoutes'; routes.Source=fs.readFile('src/WalkingRoutes.luau'); routes.Parent=server.Parent

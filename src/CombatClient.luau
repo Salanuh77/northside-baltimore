@@ -64,7 +64,7 @@ return function(gui,menuOpen)
    if not root then continue end
    local mode=model:GetAttribute('CombatState') or 'Idle'
    if mode=='Idle' and model:FindFirstChild('Fists') then mode='Ready' end
-   local targets=not model:GetAttribute('Ragdolled') and not model:GetAttribute('Resting') and Pose.sample(mode,model:GetAttribute('CombatCombo') or 1,now-(model:GetAttribute('CombatStarted') or now),model:GetAttribute('Activity')) or {}
+   local targets=not model:GetAttribute('Ragdolled') and not model:GetAttribute('Resting') and mode=='Idle' and Pose.sample('Idle',1,0,model:GetAttribute('Activity')) or {}
    local posing=next(targets)~=nil
    -- Idle combat presentation must not overwrite the responder's gun-aim joints.
    if not posing and not state.posed then continue end

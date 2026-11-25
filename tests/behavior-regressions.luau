@@ -2,6 +2,7 @@
 local Rules=require('../src/StreetCombatRules')
 local Brain=require('../src/CivilianBrain')
 local Pose=require('../src/CombatPose')
+local Motion=require('../art/combat-motion')
 local passed=0
 local function case(name,run)
  local ok,err=pcall(run);assert(ok,name..': '..tostring(err));passed+=1
@@ -243,12 +244,12 @@ case('Recovery pose releases every combat joint',function()
  assert(next(Pose.sample('Idle',3,10))==nil)
 end)
 case('Ready stance keeps both hands raised',function()
- local p=Pose.sample('Ready',1,0);assert(p.LeftElbow[1]>.5 and p.RightElbow[1]>.5)
+ local p=Motion.Ready.frames[1][2];assert(p.LeftElbow[1]>45 and p.RightElbow[1]>45)
 end)
 case('Punch windup never extends the elbow early',function()
- local p=Pose.sample('Attacking',1,0);assert(p.LeftElbow[1]>1)
+ local p=Motion.Jab.frames[1][2];assert(p.LeftElbow[1]>90)
 end)
 case('All punch samples remain finite across recovery',function()
- for combo=1,3 do for _,t in {-.1,0,.1,.2,.4,.7,1,3} do for _,angles in Pose.sample('Attacking',combo,t) do for _,angle in angles do assert(angle==angle and math.abs(angle)<3) end end end end
+ for _,name in {'Jab','Cross','Hook'} do for _,frame in Motion[name].frames do for _,angles in frame[2] do for _,angle in angles do assert(angle==angle and math.abs(angle)<180) end end end end
 end)
 print('PASS behavior boundary regressions:',passed)

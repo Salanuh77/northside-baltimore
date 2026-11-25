@@ -12,6 +12,7 @@ end
 local ok,err=pcall(function()
  check(waitFor(function() if #Players:GetPlayers()~=2 then return false end;for _,p in Players:GetPlayers() do if not p:GetAttribute('ProbeSpawnFinished') then return false end end;return true end,65),'Two residents loaded')
  local a,b=table.unpack(Players:GetPlayers())
+ local loaded,detail=call(a,'CombatClips');check(loaded,'All eight combat animation assets load: '..tostring(detail))
  local floor=Instance.new('Part');floor.Name='Combat test floor';floor.Size=Vector3.new(100,1,100);floor.Position=Vector3.new(1900,40,1900);floor.Anchored=true;floor.Parent=workspace
  for _,p in {a,b} do
   p:RequestStreamAroundAsync(floor.Position,5);local ff=p.Character:FindFirstChildOfClass('ForceField');if ff then ff:Destroy() end

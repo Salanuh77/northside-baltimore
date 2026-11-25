@@ -32,10 +32,14 @@ assert(marked==1,'Missing initial spawn completion hook')
 cityServer.Source..=[==[
 local probe=Instance.new('BindableFunction');probe.Name='TestReceipt';probe.Parent=game.ServerStorage
 local profileProbe=Instance.new('BindableFunction');profileProbe.Name='TestProfile';profileProbe.Parent=game.ServerStorage
-profileProbe.OnInvoke=function(p,cash)
+profileProbe.OnInvoke=function(p,cash,heatLevel)
  if cash then profiles[p].Cash=cash;sync(p) end
+ if heatLevel then profiles[p].Heat=heatLevel;sync(p) end
  return payload(profiles[p])
 end
+-- Test-only shared references: BindableFunction tables are copied, so they cannot
+-- expose the changing live population or pause its scheduler for isolated probes.
+shared.BaltimoreTestSociety={society=society,civilians=civilians,respond=respond}
 probe.OnInvoke=function(p,info)
  for _,d in profiles do d.PaidTrading=true end
  return retail.receipt(info).Name

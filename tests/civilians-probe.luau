@@ -11,6 +11,8 @@ end
 local ok,err=pcall(function()
  check(waitFor(function() if #Players:GetPlayers()~=2 then return false end;for _,p in Players:GetPlayers() do if not p:GetAttribute('ProbeSpawnFinished') then return false end end;return true end,65),'Two live residents ready')
  local a,b=table.unpack(Players:GetPlayers())
+ -- Isolate route/reaction assertions; the society suite exercises errands and crime.
+ shared.BaltimoreTestSociety.society.paused=true
  for _,p in {a,b} do local ff=p.Character:FindFirstChildOfClass('ForceField');if ff then ff:Destroy() end end
  park(a.Character,Vector3.new(23,4,80));park(b.Character,Vector3.new(-23,4,70))
  a:RequestStreamAroundAsync(Vector3.new(0,4,100),5)

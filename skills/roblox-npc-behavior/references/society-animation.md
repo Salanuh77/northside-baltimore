@@ -1,0 +1,17 @@
+# Civilian society and authored motion
+
+Balance ordinary errands with bounded incidents. CitySociety selects shopping, social stops, breaks and nighttime journeys; a destination must have real floor, body clearance and a reachable path. Countertops can pass a downward ground ray. Keep customer goals on the civilian's walking level and test actual displacement through an aisle. A completed shopping label alone proves nothing.
+
+Limit concurrent ambient crimes, give participants cooldowns, and interrupt optional activities for danger. NPC mugging can transfer only NPC wallet funds after a confirmed server hit. Explicit AmbientOpponent references authorize NPC-on-NPC melee; clear them afterward and reject surrendered targets. Do not grant arbitrary damage permission to all civilians.
+
+Police respond to a witnessed incident location, update it only when the suspect is visible, and expire searches. They approach surrender, hold to cuff, then escort toward a duty point. Release a scene assignment when an officer dies or responds to a player incident so another unit can take over. Routine patrols follow the connected street graph instead of a short repeated line.
+
+Corruption is a bounded gameplay trait. The visible offer states its city-cash cost and refusal risk. Acceptance requires an eligible nonviolent, unarmed, nearby wanted player, sight, sufficient funds and a cooldown; remove one wanted level, not every consequence. Other officers continue their own work. Honest refusal takes no cash. Verify these rules with real ProximityPrompt input and server balance assertions.
+
+NpcDialogue selects original lines using the current event, errand, city hour and prior contact. Avoid repeated tutorial instructions or invented evidence. This implementation is local contextual dialogue, not a live LLM. Ollama was unavailable on the development machine during this iteration. If adding it later, use an explicitly configured server-side endpoint with deadlines, filtering, a bounded queue and local fallback; never depend on a developer's localhost from a public Roblox server or let generated text control damage, money or arrests.
+
+Combat clips are original R15 KeyframeSequence assets built from art/combat-motion.luau and published by scripts/publish-combat-animations.luau. Retain anticipation, contact, follow-through and recovery keyframes. Contact times and duration must match StreetCombatRules. Use hierarchy-correct Pose names and zero weights for unanimated joints so upper-body stances can blend with locomotion. Server Animator playback replicates tracks; do not fight it by rewriting combat Motor6D C0 every frame. Stop tracks during rest, death and ragdoll.
+
+Use the official [KeyframeSequence documentation](https://create.roblox.com/docs/reference/engine/classes/KeyframeSequence) and [asset upload guide](https://create.roblox.com/docs/cloud/guides/usage-assets). A temporary Studio animation ID is not a production asset. Verify published clip loading and actual hand displacement on another client, not just CombatAnimation attributes.
+
+The society probe isolates random scheduling while exercising real movement, melee, witnessed dispatch, escort and bribe prompts. Test-only shared server references must be injected into disposable candidates; BindableFunction-returned tables are copies and do not provide live agent state. Keep those fixtures out of the shipped place.
