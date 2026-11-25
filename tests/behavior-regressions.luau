@@ -248,4 +248,7 @@ end)
 case('Punch windup never extends the elbow early',function()
  local p=Pose.sample('Attacking',1,0);assert(p.LeftElbow[1]>1)
 end)
+case('All punch samples remain finite across recovery',function()
+ for combo=1,3 do for _,t in {-.1,0,.1,.2,.4,.7,1,3} do for _,angles in Pose.sample('Attacking',combo,t) do for _,angle in angles do assert(angle==angle and math.abs(angle)<3) end end end end
+end)
 print('PASS behavior boundary regressions:',passed)
