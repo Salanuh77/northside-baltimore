@@ -65,12 +65,19 @@ return function(gui,menuOpen)
    local mode=model:GetAttribute('CombatState') or 'Idle'
    if mode=='Idle' and model:FindFirstChild('Fists') then mode='Ready' end
    local targets=not model:GetAttribute('Ragdolled') and not model:GetAttribute('Resting') and Pose.sample(mode,model:GetAttribute('CombatCombo') or 1,now-(model:GetAttribute('CombatStarted') or now),model:GetAttribute('Activity')) or {}
+   local posing=next(targets)~=nil
+   -- Idle combat presentation must not overwrite the responder's gun-aim joints.
+   if not posing and not state.posed then continue end
    for name,j in state.joints do
     if j.joint.Parent then
      local q=targets[name];local goal=j.rest*(q and CFrame.Angles(q[1],q[2],q[3]) or CFrame.identity)
      j.joint.C0=j.joint.C0:Lerp(goal,math.min(1,dt*22))
     end
    end
+   if not posing then
+    for _,j in state.joints do if j.joint.Parent then j.joint.C0=j.rest end end
+   end
+   state.posed=posing
   end
  end)
  Run.RenderStepped:Connect(function(dt)
