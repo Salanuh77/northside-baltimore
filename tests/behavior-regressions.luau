@@ -14,4 +14,7 @@ local function near(a,b) return math.abs(a-b)<.00001 end
 case('Combatants own independent stamina',function()
  local a,b=Rules.new(0),Rules.new(0);Rules.attack(a,0);assert(b.stamina==100 and b.combo==0)
 end)
+case('Recovery accepts the exact first-punch boundary',function()
+ local s=Rules.new(0);Rules.attack(s,0);assert(Rules.attack(s,.55).combo==2)
+end)
 print('PASS behavior boundary regressions:',passed)
