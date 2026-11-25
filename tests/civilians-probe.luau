@@ -76,5 +76,16 @@ local ok,err=pcall(function()
   for _,m in field:GetChildren() do if not oldIds[m:GetAttribute('CivilianId')] then return true end end
  end,20),'New residents populate another block as players travel')
  check(waitFor(function() return not npc.Parent end,20),'Distant residents retire and free population slots')
+ -- Destruction can happen between the director's quarter-second ticks and an
+ -- incoming weapon/assault event. Stale registry entries cannot break witnesses.
+ check(waitFor(function() return #field:GetChildren()>=2 end,10),'Population has replacement residents')
+ local expired,observer=table.unpack(field:GetChildren())
+ expired:Destroy()
+ local retiredOk,retiredError=pcall(function()
+  local director=shared.BaltimoreTestSociety.civilians
+  director.alert(nil,Vector3.new(9000,40,9000),'gunfire')
+  director.npcIncident(observer,nil)
+ end)
+ check(retiredOk,'Events skip retired NPCs before the next registry sweep: '..tostring(retiredError))
 end)
 game:GetService('StudioTestService'):EndTest({ok=ok,error=tostring(err)})

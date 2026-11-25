@@ -11,8 +11,10 @@ local Phases=require(script.Parent.TrafficPhases)
 local Civilians={}
 local function visible(model,character,range)
  local root=character and character:FindFirstChild('HumanoidRootPart');if not root then return false end
- local origin=model.Head.Position;local delta=root.Position+Vector3.yAxis-origin
- if delta.Magnitude>range or (delta.Magnitude>9 and model.HumanoidRootPart.CFrame.LookVector:Dot(delta.Unit)<-.1) then return false end
+ local head=model:FindFirstChild('Head');local observer=model:FindFirstChild('HumanoidRootPart')
+ if not model.Parent or not head or not observer then return false end
+ local origin=head.Position;local delta=root.Position+Vector3.yAxis-origin
+ if delta.Magnitude>range or (delta.Magnitude>9 and observer.CFrame.LookVector:Dot(delta.Unit)<-.1) then return false end
  local ray=RaycastParams.new();ray.FilterType=Enum.RaycastFilterType.Exclude;ray.FilterDescendantsInstances={model};ray.RespectCanCollide=true
  local hit=workspace:Raycast(origin,delta,ray)
  return not hit or hit.Instance:IsDescendantOf(character)
@@ -102,10 +104,12 @@ function Civilians.start(city,combat,report)
   return state
  end
  function self.npcIncident(attacker,victim)
-  if not attacker.Parent then return end
-  local origin=attacker.HumanoidRootPart.Position;local witnessed=false
+  local source=attacker:FindFirstChild('HumanoidRootPart')
+  if not attacker.Parent or not source then return end
+  local origin=source.Position;local witnessed=false
   for model,s in agents do
-   if model~=attacker and model.Humanoid.Health>0 and (model==victim or visible(model,attacker,45)) then
+   local human=model:FindFirstChildOfClass('Humanoid')
+   if model.Parent and model~=attacker and human and human.Health>0 and (model==victim or visible(model,attacker,45)) then
     Brain.notice(s.brain,os.clock(),{kind='assault',position=origin,seen=false,victim=model==victim})
     s.npcThreat=attacker
     if model==victim then
@@ -119,9 +123,10 @@ function Civilians.start(city,combat,report)
  function self.alert(player,origin,kind,victim,hearing)
   local now=os.clock()
   for model,s in agents do
-   if model.Humanoid.Health<=0 then continue end
+   local human=model:FindFirstChildOfClass('Humanoid');local root=model:FindFirstChild('HumanoidRootPart')
+   if not model.Parent or not human or not root or human.Health<=0 then continue end
    local seen=player and visible(model,player.Character,55)
-   if model==victim or seen or kind=='gunfire' and (model.HumanoidRootPart.Position-origin).Magnitude<(hearing or 90) then
+   if model==victim or seen or kind=='gunfire' and (root.Position-origin).Magnitude<(hearing or 90) then
     Brain.notice(s.brain,now,{kind=kind,position=origin,suspect=player and player.UserId,seen=seen or model==victim,victim=model==victim})
     s.npcThreat=nil
     s.nextGoal=0
