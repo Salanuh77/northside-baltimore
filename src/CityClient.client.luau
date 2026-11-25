@@ -47,6 +47,7 @@ local ammo=text(gui,'',UDim2.fromOffset(200,40),UDim2.new(1,-220,1,-110),22,gold
 local progress=make('Frame',{Size=UDim2.fromOffset(300,5),Position=UDim2.new(0.5,-150,0.73,0),BackgroundColor3=gold,BorderSizePixel=0,Visible=false},gui)
 local progressTween
 local modal=make('Frame',{Size=UDim2.new(1,-32,1,-82),Position=UDim2.fromOffset(16,64),BackgroundColor3=dark,Visible=false,BorderSizePixel=0},gui)
+require(game.ReplicatedStorage:WaitForChild('CombatClient'))(gui,function() return modal.Visible or not gui.Enabled end)
 modal.ZIndex=20
 make('UISizeConstraint',{MaxSize=Vector2.new(350,460)},modal)
 make('UICorner',{CornerRadius=UDim.new(0,4)},modal)
@@ -232,7 +233,7 @@ end
 local function fire()
  if modal.Visible then return end
  local t=weapon(); if not t then return end
- if t.Name=='Phone' and openPhone then openPhone() elseif t.Name=='Pistol' then event:FireServer('Shoot',{Position=mouse.Hit.Position}) elseif t.Name=='Bat' or t.Name=='Knife' then event:FireServer('Swing',{Position=mouse.Hit.Position}) elseif t.Name=='Medkit' then event:FireServer('Use') end
+ if t.Name=='Fists' then event:FireServer('Punch') elseif t.Name=='Phone' and openPhone then openPhone() elseif t.Name=='Pistol' then event:FireServer('Shoot',{Position=mouse.Hit.Position}) elseif t.Name=='Bat' or t.Name=='Knife' then event:FireServer('Swing',{Position=mouse.Hit.Position}) elseif t.Name=='Medkit' then event:FireServer('Use') end
 end
 local connectedTools=setmetatable({},{__mode='k'})
 local function connectTool(v)
@@ -391,6 +392,8 @@ showGuide=function()
  paragraph('A Baltimore-inspired neighborhood RP. Start with $500. Community center and credit union are safe zones. This is fictional, non-graphic gameplay.')
  paragraph('On the waterfront, visit Seven Foot Knoll Lighthouse. Board USS Constellation from the eastern timber pier. Find the Douglass and Marshall mural inside Pier 8 Maritime Gallery.')
  paragraph('E / tap prompt: interact. H: surrender. T: nearby players and transactions. Equip pistol and click/tap to fire; R reloads. Hold E on marked registers or lockboxes to start a timed robbery.')
+ paragraph('G / controller D-pad right: raise or lower fists. Click, tap Punch or RT: throw a punch. Time three punches for a jab, cross and hook. Hold F, Block or LT to guard the front. Guard uses stamina; attacks from behind bypass it. A clean hook knocks an opponent down briefly.')
+ paragraph('Neighbors walk the blocks, make conversation and give you space. Crowding them draws a warning. Some defend themselves if attacked; others flee and call police after reaching safety. Gunfire interrupts their routines.')
  paragraph('Freight Expectations, south of Harbor Way: black market and stolen-goods buyer. Knife $55, crowbar $90, medkit $70. River Pro Outfitters sells sidearms for Robux. Bench Authority sells bats for $80. A crowbar is required for house lockboxes.')
  paragraph('Community center: courier jobs ($90 each). Credit union: deposit and withdraw. Clinic: treatment $50. Death costs up to $75 and loses stolen goods.')
  paragraph('Wanted level fades over time. Player robbery takes 8 seconds and at most 25% of cash, capped at $200. The same player is protected from another robbery for 5 minutes.')
