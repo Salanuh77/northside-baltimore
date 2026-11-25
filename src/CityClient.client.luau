@@ -48,6 +48,7 @@ local progress=make('Frame',{Size=UDim2.fromOffset(300,5),Position=UDim2.new(0.5
 local progressTween
 local modal=make('Frame',{Size=UDim2.new(1,-32,1,-82),Position=UDim2.fromOffset(16,64),BackgroundColor3=dark,Visible=false,BorderSizePixel=0},gui)
 require(game.ReplicatedStorage:WaitForChild('CombatClient'))(gui,function() return modal.Visible or not gui.Enabled end)
+local gunClient=require(game.ReplicatedStorage:WaitForChild('GunClient'))(gui,function() return modal.Visible or not gui.Enabled end)
 modal.ZIndex=20
 make('UISizeConstraint',{MaxSize=Vector2.new(350,460)},modal)
 make('UICorner',{CornerRadius=UDim.new(0,4)},modal)
@@ -211,9 +212,12 @@ event.OnClientEvent:Connect(function(kind,data)
   row('Accept and pay $'..data.Price,function() event:FireServer('Accept'); modal.Visible=false end)
   row('Decline',function() event:FireServer('Decline'); modal.Visible=false end)
  elseif kind=='Shot' then
-  local distance=(data.To-data.From).Magnitude
-  local beam=make('Part',{Name='ShotTracer',Anchored=true,CanCollide=false,CanQuery=false,CanTouch=false,Material=Enum.Material.Neon,Color=gold,Size=Vector3.new(0.045,0.045,distance),CFrame=CFrame.lookAt((data.From+data.To)/2,data.To)},workspace)
-  Debris:AddItem(beam,0.07)
+  gunClient.effect(data)
+  if not data.Suppressed then for _,endpoint in data.Ends or {data.To} do
+   local distance=(endpoint-data.From).Magnitude
+   local beam=make('Part',{Name='ShotTracer',Anchored=true,CanCollide=false,CanQuery=false,CanTouch=false,Material=Enum.Material.Neon,Color=gold,Size=Vector3.new(.035,.035,distance),CFrame=CFrame.lookAt((data.From+endpoint)/2,endpoint)},workspace)
+   Debris:AddItem(beam,.06)
+  end end
  elseif kind=='Job' then
   if jobMarker then jobMarker:Destroy(); jobMarker=nil end
   if data then
@@ -233,12 +237,12 @@ end
 local function fire()
  if modal.Visible then return end
  local t=weapon(); if not t then return end
- if t.Name=='Fists' then event:FireServer('Punch') elseif t.Name=='Phone' and openPhone then openPhone() elseif t.Name=='Pistol' then event:FireServer('Shoot',{Position=mouse.Hit.Position}) elseif t.Name=='Bat' or t.Name=='Knife' then event:FireServer('Swing',{Position=mouse.Hit.Position}) elseif t.Name=='Medkit' then event:FireServer('Use') end
+ if t.Name=='Fists' then event:FireServer('Punch') elseif t.Name=='Phone' and openPhone then openPhone() elseif t.Name=='Pistol' then gunClient.trigger() elseif t.Name=='Bat' or t.Name=='Knife' then event:FireServer('Swing',{Position=mouse.Hit.Position}) elseif t.Name=='Medkit' then event:FireServer('Use') end
 end
 local connectedTools=setmetatable({},{__mode='k'})
 local function connectTool(v)
  if v.Name=='Phone' and openPhone then task.defer(function() if v.Parent==p.Character then openPhone() end end) end
- if v:IsA('Tool') and not connectedTools[v] then connectedTools[v]=v.Activated:Connect(fire) end
+ if v:IsA('Tool') and not connectedTools[v] then connectedTools[v]=v.Activated:Connect(fire);v.Deactivated:Connect(gunClient.stop);v.Unequipped:Connect(gunClient.stop) end
 end
 local function character(c)
  c.ChildAdded:Connect(connectTool)
@@ -394,7 +398,8 @@ showGuide=function()
  paragraph('E / tap prompt: interact. H: surrender. T: nearby players and transactions. Equip pistol and click/tap to fire; R reloads. Hold E on marked registers or lockboxes to start a timed robbery.')
  paragraph('G / controller D-pad right: raise or lower fists. Click, tap Punch or RT: throw a punch. Time three punches for a jab, cross and hook. Hold F, Block or LT to guard the front. Guard uses stamina; attacks from behind bypass it. A clean hook knocks an opponent down briefly.')
  paragraph('Neighbors walk the blocks, make conversation and give you space. Crowding them draws a warning. Some defend themselves if attacked; others flee and call police after reaching safety. Gunfire interrupts their routines.')
- paragraph('Freight Expectations, south of Harbor Way: black market and stolen-goods buyer. Knife $55, crowbar $90, medkit $70. River Pro Outfitters sells sidearms for Robux. Bench Authority sells bats for $80. A crowbar is required for house lockboxes.')
+ paragraph('River Pro Outfitters: sidearm $250, pump shotgun $650, PDW $750, optics $180 and suppressor $220. Patapsco Precision is a premium carbine. Right mouse / LT / Aim steadies your gun; an equipped optic zooms further. Suppressors reduce flash and hearing range, but nearby witnesses can still react.')
+ paragraph('Freight Expectations buys stolen goods and sells knife $55, crowbar $90, medkit $70. Bench Authority sells bats for $80. A crowbar is required for house lockboxes.')
  paragraph('Community center: courier jobs ($90 each). Credit union: deposit and withdraw. Clinic: treatment $50. Death costs up to $75 and loses stolen goods.')
  paragraph('Wanted level fades over time. Player robbery takes 8 seconds and at most 25% of cash, capped at $200. The same player is protected from another robbery for 5 minutes.')
  paragraph('Use Drive to enter. Steer with movement controls. Brake with Space, LT or the Brake button. Press F or X, controller B, or tap Exit vehicle to get out.')

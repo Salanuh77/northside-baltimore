@@ -96,31 +96,35 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
   end
   tell(p,'Dispatch received your location.')
  end
- local function warnClerks(origin,suspect)
+ local function warnClerks(origin,suspect,hearing)
   local witnessed=false
   for _,clerk in game:GetService('CollectionService'):GetTagged('RouteClerk') do
    local root=clerk:FindFirstChild('HumanoidRootPart')
    if not root then continue end
    local seen=suspect and visible(clerk,suspect.Character,45,false)
-   if seen or (root.Position-origin).Magnitude<85 then clerk:SetAttribute('AlarmUntil',os.clock()+9) end
+   if seen or (root.Position-origin).Magnitude<(hearing or 85) then clerk:SetAttribute('AlarmUntil',os.clock()+9) end
    witnessed=witnessed or seen==true
   end
   return witnessed
  end
  -- Only validated server attacks can call this; there is no client alert remote.
- local function alert(p,origin,kind,victim)
+ local function alert(p,origin,kind,victim,hearing)
   if not profiles[p] or safe(p) then return end
   local now=os.clock();local witnessed=false
   for _,unit in units do
    if unit.model.Parent and unit.model.Humanoid.Health>0 then
     local distance=(unit.model.HumanoidRootPart.Position-origin).Magnitude
-    if (kind=='gunfire' and distance<100) or (distance<55 and visible(unit.model,p.Character,55,false)) or victim==unit.model then
+    local seen=distance<55 and visible(unit.model,p.Character,55,false)
+    if (kind=='gunfire' and distance<(hearing or 100)) or seen or victim==unit.model then
      unit.danger={position=origin,untilTime=now+7}
-     if unit.role=='police' then witnessed=true end
+     if unit.role=='police' then
+      unit.sound={position=origin,expires=now+9}
+      if seen or victim==unit.model then witnessed=true end
+     end
     end
    end
   end
-  if kind=='gunfire' then witnessed=warnClerks(origin,p) or witnessed
+  if kind=='gunfire' then witnessed=warnClerks(origin,p,hearing) or witnessed
   else
    for _,clerk in game:GetService('CollectionService'):GetTagged('RouteClerk') do
     if clerk.Parent and visible(clerk,p.Character,45,false) then clerk:SetAttribute('AlarmUntil',now+9);witnessed=true end
@@ -214,6 +218,7 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
     end
     unit.target=target
     local action={mode='Patrolling',goal=home+route[unit.patrol]}
+    if not target and unit.sound and now<unit.sound.expires then action={mode='Investigating',goal=unit.sound.position} end
     if role=='police' and target then
      local human=target.Character.Humanoid;local root=target.Character.HumanoidRootPart
      local report=reports[target]

@@ -3,6 +3,7 @@ local images=require(game.ReplicatedStorage.ItemThumbnail)
 local Card={}
 function Card.decorate(button,key,name,description,price,options)
  button.Name='Item '..key;button.Text='';button:SetAttribute('ItemKey',key)
+ if options then button:SetAttribute('WeaponId',options.Weapon);button:SetAttribute('AttachmentId',options.Attachment) end
  button.Size=UDim2.new(1,-6,0,116);button.BackgroundColor3=theme.Surface
  for _,v in button:GetChildren() do if v:IsA('UIPadding') then v:Destroy() end end
  local frame=Instance.new('Frame');frame.Name='Product';frame.BackgroundColor3=theme.Raised

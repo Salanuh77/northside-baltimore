@@ -2,6 +2,8 @@
 local Players=game:GetService('Players')
 Players.CharacterAutoLoads=false
 local RS=game:GetService('ReplicatedStorage')
+local Weapons=require(RS:WaitForChild('WeaponCatalog'))
+local Armory=require(script.Parent.WeaponInventory)
 local Files=require(script.Parent:WaitForChild('ResidentFiles'))
 local rest=require(script.Parent:WaitForChild('HomeRest'))
 local accounts={}
@@ -50,7 +52,7 @@ local function sync(p)
  for _,item in {'Water','Coffee','Sandwich','Bandage','Flashlight'} do p:SetAttribute('Bag'..item,d.Supplies[item] or 0) end
  p:SetAttribute('ReserveAmmo',d.Reserve); p:SetAttribute('Employment',d.Employment); p:SetAttribute('Wages',d.Wages)
  local stats=p:FindFirstChild('leaderstats'); if stats then stats.Cash.Value=d.Cash end
- event:FireClient(p,'State',{Cash=d.Cash,Bank=d.Bank,Loot=d.Loot,Heat=d.Heat,Items=d.Items,Stock=d.Stock,Wardrobe=d.Wardrobe,Hair=d.Look and d.Look.Hair,HairColor=d.Look and d.Look.HairColor})
+ event:FireClient(p,'State',{Cash=d.Cash,Bank=d.Bank,Loot=d.Loot,Heat=d.Heat,Items=d.Items,Stock=d.Stock,Wardrobe=d.Wardrobe,Hair=d.Look and d.Look.Hair,HairColor=d.Look and d.Look.HairColor,Weapons=d.Guns,Weapon=d.Weapon,Attachments=d.Attachments,AttachmentEnabled=d.AttachmentEnabled})
 end
 
 local function givePhone(p)
@@ -87,8 +89,13 @@ local function tool(p,name)
   head.Parent=t;local weld=Instance.new('WeldConstraint');weld.Part0=handle;weld.Part1=head;weld.Parent=head
  end
  if name=='Pistol' then
+  local d=profiles[p];Armory.ensure(d)
+  local spec=Weapons.get(d.Weapon)
+  t:SetAttribute('WeaponId',d.Weapon);t:SetAttribute('Automatic',spec.Automatic);t:SetAttribute('Interval',spec.Interval)
+  t:SetAttribute('Scope',Armory.active(d,'Scope'));t:SetAttribute('Suppressed',Armory.active(d,'Suppressor'))
+  t.ToolTip=spec.Name..' · Aim / fire · R reload'
   t:SetAttribute('Ammo',profiles[p].Magazine); t:SetAttribute('Reloading',false)
-  require(script.Parent.PistolVisual)(t,(profiles[p].Look or {}).Armory or 'Slate compact')
+  require(script.Parent.WeaponVisual)(t,d.Weapon,Armory.active(d,'Scope'),Armory.active(d,'Suppressor'))
  end
  t.Parent=bag
 end
@@ -98,7 +105,8 @@ local function removeTool(p,name)
  end
 end
 local function payload(d)
- return {Cash=d.Cash,Bank=d.Bank,Loot=d.Loot,Items=table.clone(d.Items),Supplies=table.clone(d.Supplies),Magazine=d.Magazine,Reserve=d.Reserve,Employment=d.Employment,Wages=d.Wages,CustodyUntil=d.CustodyUntil,Bail=d.Bail,Look=d.Look and table.clone(d.Look),Outfit=d.Outfit,Wardrobe=table.clone(d.Wardrobe),Stock=table.clone(d.Stock),Receipts=table.clone(d.Receipts),PendingSale=d.PendingSale and table.clone(d.PendingSale),Trades=table.clone(d.Trades),Lock=session,Lease=os.time()+150}
+ Armory.capture(d)
+ return {Cash=d.Cash,Bank=d.Bank,Loot=d.Loot,Items=table.clone(d.Items),Supplies=table.clone(d.Supplies),Magazine=d.Magazine,Reserve=d.Reserve,Employment=d.Employment,Wages=d.Wages,CustodyUntil=d.CustodyUntil,Bail=d.Bail,Look=d.Look and table.clone(d.Look),Outfit=d.Outfit,Wardrobe=table.clone(d.Wardrobe),Stock=table.clone(d.Stock),Receipts=table.clone(d.Receipts),PendingSale=d.PendingSale and table.clone(d.PendingSale),Trades=table.clone(d.Trades),Weapon=d.Weapon,Guns=table.clone(d.Guns),GunMags=table.clone(d.GunMags),Attachments=table.clone(d.Attachments),AttachmentEnabled=table.clone(d.AttachmentEnabled),Lock=session,Lease=os.time()+150}
 end
 local function save(p,release)
  local account=accounts[p]
@@ -358,7 +366,7 @@ local function reconcileSale(seller)
  elseif Run:IsStudio() then decided=true end
  if decided and profiles[seller]==sd and not sd.Leaving and sd.PendingSale==sale then
   if paid then sd.Cash+=sale.Price; tell(seller,'Trade complete: +$'..sale.Price)
-  else sd.Stock.Sidearm=(sd.Stock.Sidearm or 0)+1; sd.Items.Pistol=true; sd.Magazine=math.max(sd.Magazine,sale.Ammo);tool(seller,'Pistol');tell(seller,'Uncompleted trade returned to your inventory.') end
+  else Armory.returnCopy(sd,sale.Weapon or 'Carbine',sale.Ammo);tool(seller,'Pistol');tell(seller,'Uncompleted trade returned to your inventory.') end
   sd.PendingSale=nil;sync(seller);saveConfirmed(seller,sd)
  end
  activeSales[seller]=nil
@@ -367,12 +375,12 @@ local function settleSidearm(seller,buyer,price)
  local sd,bd=profiles[seller],profiles[buyer]
  if sd.Trading or bd.Trading or sd.PendingSale or (sd.Stock.Sidearm or 0)<1 then return end
  sd.Trading=true;bd.Trading=true;activeSales[seller]=true
- local sale={Id=game:GetService('HttpService'):GenerateGUID(false),Buyer=buyer.UserId,Price=price,Ammo=sd.Magazine}
- sd.Stock.Sidearm-=1;sd.Items.Pistol=sd.Stock.Sidearm>0 or nil;sd.Magazine=sd.Items.Pistol and 12 or 0
+ local sale={Id=game:GetService('HttpService'):GenerateGUID(false),Buyer=buyer.UserId,Price=price,Ammo=sd.Magazine,Weapon=sd.Weapon}
+ Armory.remove(sd,sd.Weapon)
  sd.PendingSale=sale;removeTool(seller,'Pistol');if sd.Items.Pistol then tool(seller,'Pistol') end;sync(seller)
  local reserved=saveConfirmed(seller,sd)
  if reserved and profiles[buyer]==bd and not bd.Leaving and not bd.Items.Pistol and bd.Cash>=price then
-  bd.Cash-=price;bd.Items.Pistol=true;bd.Stock.Sidearm=(bd.Stock.Sidearm or 0)+1;bd.Magazine=sale.Ammo;bd.Trades[sale.Id]=true
+  bd.Cash-=price;Armory.add(bd,sale.Weapon,sale.Ammo);bd.Trades[sale.Id]=true
   if saveConfirmed(buyer,bd) then tool(buyer,'Pistol');tell(buyer,'Sidearm trade complete.') end
   sync(buyer)
  end
@@ -441,6 +449,7 @@ local function selectFile(p,index,creating)
    for _,item in {'Water','Coffee','Sandwich','Bandage','Flashlight'} do d.Supplies[item]=math.clamp(math.floor(tonumber(result.Supplies[item]) or 0),0,item=='Flashlight' and 1 or 10) end
   end
  end
+ Armory.restore(d,result)
  d.Receipts=table.clone(account.State.Receipts or {})
  profiles[p]=d; p:SetAttribute('ResidentSlot',index);retail.setup(p,d)
  if d.PendingSale then task.defer(reconcileSale,p) end
@@ -551,7 +560,7 @@ event.OnServerEvent:Connect(function(p,kind,data)
   if d.Cash<30 then return tell(p,'Ammo costs $30 per box.') end
   d.Cash-=30; d.Reserve+=12; sync(p); tell(p,'Added 12 reserve rounds.')
  elseif kind=='Buy' then
-  if data.Item=='Pistol' then return tell(p,'Sidearms are sold at River Pro Outfitters for Robux or traded by players for city cash.') end
+  if data.Item=='Pistol' then return tell(p,'River Pro Outfitters sells cash guns and a premium carbine.') end
   local retailType=data.Item=='Bat' and 'Sporting' or 'Market'
   if not items[data.Item] or not closest(p,retailType) then return end
   local item=items[data.Item]
@@ -573,11 +582,11 @@ event.OnServerEvent:Connect(function(p,kind,data)
    if d.Cash<data.Amount then return tell(p,'Not enough cash.') end
    d.Cash-=data.Amount; td.Cash+=data.Amount; sync(p); sync(target); tell(p,'Paid $'..data.Amount..' to @'..target.Name); tell(target,'Received $'..data.Amount..' from @'..p.Name)
   else
-   if data.Item=='Pistol' and (not d.PaidTrading or not td.PaidTrading or d.PendingSale) then return tell(p,'Paid-item trading is unavailable for this pair right now.') end
+   if data.Item=='Pistol' and (d.PendingSale or Weapons.get(d.Weapon).Premium and (not d.PaidTrading or not td.PaidTrading)) then return tell(p,'Paid-item trading is unavailable for this pair right now.') end
    if not items[data.Item] or not d.Items[data.Item] or td.Items[data.Item] then return tell(p,'Select an owned item the buyer does not own.') end
    if offers[target] then return tell(p,'That player already has an offer pending.') end
-   offers[target]={Seller=p,Item=data.Item,Price=data.Amount,Expires=os.clock()+20}
-   event:FireClient(target,'Offer',{Seller=p.Name,Item=data.Item,Price=data.Amount}); tell(p,'Offer sent. It expires in 20 seconds.')
+   offers[target]={Seller=p,Item=data.Item,Weapon=d.Weapon,Price=data.Amount,Expires=os.clock()+20}
+   event:FireClient(target,'Offer',{Seller=p.Name,Item=data.Item=='Pistol' and Weapons.get(d.Weapon).Name or data.Item,Price=data.Amount}); tell(p,'Offer sent. It expires in 20 seconds.')
   end
  elseif kind=='Accept' or kind=='Decline' then
   local o=offers[p]; offers[p]=nil
@@ -585,7 +594,7 @@ event.OnServerEvent:Connect(function(p,kind,data)
   local seller=o.Seller; local sd=profiles[seller]; local root=alive(seller)
   if not sd or sd.Trading or sd.Leaving or not root or not near(p,root.Position,14) or not sight(p,root.Position,seller.Character) or seller:GetAttribute('Surrendered') or not sd.Items[o.Item] or d.Items[o.Item] or d.Cash<o.Price then return tell(p,'Offer no longer valid.') end
   if o.Item=='Pistol' then
-   if not d.PaidTrading or not sd.PaidTrading or sd.PendingSale then return tell(p,'Sidearm trade unavailable.') end
+   if sd.Weapon~=o.Weapon or sd.PendingSale or Weapons.get(o.Weapon).Premium and (not d.PaidTrading or not sd.PaidTrading) then return tell(p,'Weapon trade unavailable.') end
    settleSidearm(seller,p,o.Price); return
   end
   -- No yielding between validation and settlement: item and funds move together.
@@ -608,13 +617,14 @@ event.OnServerEvent:Connect(function(p,kind,data)
   end)
  elseif kind=='Reload' then
   if not equipped(p,'Pistol') then return end
-  local t=p.Character.Pistol; if t:GetAttribute('Reloading') or t:GetAttribute('Ammo')>=12 then return end
+  local t=p.Character.Pistol;local spec=Weapons.get(d.Weapon)
+  if t:GetAttribute('Reloading') or t:GetAttribute('Ammo')>=spec.Capacity then return end
   if d.Reserve<=0 then return tell(p,'Out of reserve ammo. Freight Expectations sells 12 rounds for $30.') end
   t:SetAttribute('Reloading',true)
-  task.delay(2,function()
+  task.delay(spec.Reload,function()
    if not t.Parent then return end
    if profiles[p]==d and t.Parent==p.Character and d.Items.Pistol then
-    local amount=math.min(12-d.Magazine,d.Reserve)
+    local amount=math.min(spec.Capacity-d.Magazine,d.Reserve)
     d.Magazine+=amount; d.Reserve-=amount; t:SetAttribute('Ammo',d.Magazine); sync(p)
    end
    t:SetAttribute('Reloading',false)
@@ -642,18 +652,37 @@ event.OnServerEvent:Connect(function(p,kind,data)
   if now<(d.NextShot or 0) or t:GetAttribute('Reloading') or (t:GetAttribute('Ammo') or 0)<=0 then return end
   local head=p.Character:FindFirstChild('Head'); if not head then return end
   local origin=head.Position; local direction=pos-origin; if direction.Magnitude<0.1 then return end
-  d.NextShot=now+0.3; d.Magazine-=1; t:SetAttribute('Ammo',d.Magazine)
-  local ray=RaycastParams.new(); ray.FilterDescendantsInstances={p.Character}; ray.FilterType=Enum.RaycastFilterType.Exclude
-  local hit=workspace:Raycast(origin,direction.Unit*250,ray); local endPos=hit and hit.Position or origin+direction.Unit*250
-  event:FireAllClients('Shot',{From=origin,To=endPos})
-  respond.alert(p,origin,'gunfire',hit and hit.Instance:FindFirstAncestorOfClass('Model'))
-  civilians.alert(p,origin,'gunfire',hit and hit.Instance:FindFirstAncestorOfClass('Model'))
-  if hit then
-   local model=hit.Instance:FindFirstAncestorOfClass('Model'); local victim=model and Players:GetPlayerFromCharacter(model)
-   if victim and victim~=p and not safe(victim) then
-    local _,h=alive(victim); if h and (victim:GetAttribute('CustodyUntil') or 0)==0 then h:TakeDamage(24); heat(p,1) end
-   elseif model and damageable(model) and not protectedModel(model) then
-    local h=model:FindFirstChildOfClass('Humanoid'); if h and h.Health>0 then h:TakeDamage(24); heat(p,1) end
+  local spec=Weapons.get(d.Weapon);local quiet=Armory.active(d,'Suppressor')
+  d.NextShot=now+spec.Interval;d.Magazine-=1;t:SetAttribute('Ammo',d.Magazine)
+  local ray=RaycastParams.new();ray.FilterDescendantsInstances={p.Character};ray.FilterType=Enum.RaycastFilterType.Exclude
+  local forward=CFrame.lookAt(Vector3.zero,direction.Unit);local random=Random.new()
+  local spread=math.rad(data.Aiming==true and spec.AimSpread or spec.Spread)
+  local damages={};local endpoints={}
+  for pellet=1,spec.Pellets do
+   local yaw,pitch=random:NextNumber(-spread,spread),random:NextNumber(-spread,spread)
+   local vector=(forward*CFrame.Angles(pitch,yaw,0)).LookVector
+   local hit=workspace:Raycast(origin,vector*spec.Range,ray)
+   table.insert(endpoints,hit and hit.Position or origin+vector*spec.Range)
+   local model=hit and hit.Instance:FindFirstAncestorOfClass('Model')
+   if model and model~=p.Character and damageable(model) and not protectedModel(model) then
+    local human=model:FindFirstChildOfClass('Humanoid')
+    if human and human.Health>0 then
+     local falloff=math.clamp(1-(hit.Distance/spec.Range)*.45,.55,1)
+     damages[model]=(damages[model] or 0)+spec.Damage*(spec.Pellets>1 and falloff or 1)
+    end
+   end
+  end
+  local hearing=Weapons.hearing(quiet)
+  respond.alert(p,origin,'gunfire',nil,hearing);civilians.alert(p,origin,'gunfire',nil,hearing)
+  for model,damage in damages do
+   respond.alert(p,origin,'gunfire',model,hearing);civilians.alert(p,origin,'gunfire',model,hearing)
+   model.Humanoid:TakeDamage(damage);heat(p,1)
+  end
+  for _,listener in Players:GetPlayers() do
+   local listenerRoot=alive(listener)
+   -- Distant clients receive no suppressed muzzle coordinate or tracer.
+   if listener==p or listenerRoot and (listenerRoot.Position-origin).Magnitude<=(quiet and hearing or 250) then
+    event:FireClient(listener,'Shot',{From=origin,To=endpoints[1],Ends=endpoints,Suppressed=quiet,Shooter=p.UserId,SoundRange=hearing})
    end
   end
  end

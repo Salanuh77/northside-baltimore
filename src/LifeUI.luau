@@ -1,8 +1,10 @@
 local Players=game:GetService('Players')
 local cards=require(game.ReplicatedStorage:WaitForChild('ItemCard'))
 local catalog=require(game.ReplicatedStorage:WaitForChild('ItemCatalog'))
+local weapons=require(game.ReplicatedStorage:WaitForChild('WeaponCatalog'))
 return function(p,event,modal,title,clear,row,paragraph,notify)
  local pins={}
+ local loadout={}
  local function pin(key,data)
   if pins[key] then pins[key]:Destroy(); pins[key]=nil end
   if not data then return end
@@ -22,6 +24,12 @@ return function(p,event,modal,title,clear,row,paragraph,notify)
  end
  local function bag()
   clear('MY BAG')
+  for _,id in weapons.Order do
+   if ((loadout.Weapons or {})[id] or 0)>0 then
+    local spec=weapons.Guns[id]
+    cards.decorate(row('',function() event:FireServer('EquipWeapon',{Item=id});modal.Visible=false end),'Pistol',spec.Name,'Saved weapon loadout',loadout.Weapon==id and 'EQUIPPED' or 'EQUIP',{Weapon=id})
+   end
+  end
   for _,item in {'Water','Coffee','Sandwich','Bandage','Flashlight'} do
    local entry=catalog[item];local count=p:GetAttribute('Bag'..item) or 0
    local card=cards.decorate(row('',function() if count>0 then event:FireServer('UseSupply',{Item=item}) end end),entry.Icon,entry.Name,entry.Description,count>0 and ('USE · '..count..' in bag') or 'NOT OWNED')
@@ -52,7 +60,8 @@ return function(p,event,modal,title,clear,row,paragraph,notify)
   p:GetAttributeChangedSignal(attr):Connect(function() if modal.Visible and title.Text=='HOME & PARTIES' then homes() elseif modal.Visible and title.Text=='MY BAG' then bag() end end)
  end
  event.OnClientEvent:Connect(function(kind,data)
-  if kind=='Mart' then
+  if kind=='State' then loadout=data;if modal.Visible and title.Text=='MY BAG' then bag() end
+  elseif kind=='Mart' then
    clear('FUEL MART')
    for _,key in {'Water','Coffee','Sandwich','Bandage','Flashlight'} do
     local entry=catalog[key]

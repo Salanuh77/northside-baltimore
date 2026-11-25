@@ -5,6 +5,8 @@ local Policy=game:GetService('PolicyService')
 local Style=require(game.ReplicatedStorage:WaitForChild('StreetStyle'))
 local Names=require(game.ReplicatedStorage:WaitForChild('ResidentNames'))
 local products=require(game.ReplicatedStorage:WaitForChild('ShopProducts'))
+local Weapons=require(game.ReplicatedStorage:WaitForChild('WeaponCatalog'))
+local Inventory=require(script.Parent.WeaponInventory)
 local types={}
 for name,product in products do types[product.Id]=name end
 return function(profiles,jobs,event,closest,sync,tell,save,tool)
@@ -28,7 +30,7 @@ return function(profiles,jobs,event,closest,sync,tell,save,tool)
   end
   d.Cash-=30; d.Look.Hair=request.Style; d.Look.HairColor=request.Color; dress(customer,d); sync(customer); tell(customer,'Your haircut is saved.')
  end
- local actions={OpenMirror=true,MirrorLook=true,CreateResident=true,Outfit=true,Cut=true,ServeCut=true,Premium=true,PartyItem=true,ArmoryFinish=true}
+ local actions={OpenMirror=true,MirrorLook=true,CreateResident=true,Outfit=true,Cut=true,ServeCut=true,Premium=true,PartyItem=true,ArmoryFinish=true,BuyWeapon=true,EquipWeapon=true,WeaponAttachment=true}
  local function resolveName(p,data)
   return Names.resolve(data,Style.FirstNames,Style.LastNames,function(name)
    return Text:FilterStringAsync(name,p.UserId):GetNonChatStringForBroadcastAsync()
@@ -95,6 +97,20 @@ return function(profiles,jobs,event,closest,sync,tell,save,tool)
     local root=p.Character and p.Character:FindFirstChild('HumanoidRootPart')
     if root and (root.Position-req.Chair.Position).Magnitude<=14 then requests[customer]=nil; haircut(customer,p,req) end
    end
+  elseif kind=='BuyWeapon' or kind=='WeaponAttachment' or kind=='EquipWeapon' then
+   if not d.Look or (kind~='EquipWeapon' and not closest(p,'GunStore')) or d.PendingSale or d.Trading then return true end
+   local bag=p:FindFirstChildOfClass('Backpack');local old=(p.Character and p.Character:FindFirstChild('Pistol')) or (bag and bag:FindFirstChild('Pistol'))
+   if old and old:GetAttribute('Reloading') then return true end
+   local ok,message
+   if kind=='EquipWeapon' then
+    Inventory.ensure(d);ok=Inventory.select(d,data.Item);message=ok and 'Loadout equipped' or 'You do not own that weapon.'
+   elseif kind=='BuyWeapon' then
+    Inventory.ensure(d)
+    if Weapons.Guns[data.Item] and (d.Guns[data.Item] or 0)>0 then ok=Inventory.select(d,data.Item);message='Equipped'
+    else ok,message=Inventory.buy(d,data.Item) end
+   else ok,message=Inventory.attachment(d,data.Item) end
+   if ok then if old then old:Destroy() end;tool(p,'Pistol');sync(p) end
+   tell(p,message or 'Choose a weapon.');return true
   elseif kind=='ArmoryFinish' then
    if not d.Look or not d.Items.Pistol or not closest(p,'GunStore') or not table.find({'Slate compact','Silver service','Field carbine'},data.Finish) then return true end
    local bag=p:FindFirstChildOfClass('Backpack');local existing=(p.Character and p.Character:FindFirstChild('Pistol')) or (bag and bag:FindFirstChild('Pistol'))
@@ -137,16 +153,17 @@ return function(profiles,jobs,event,closest,sync,tell,save,tool)
  end
  local function receipt(info)
   local key=types[info.ProductId];local p=Players:GetPlayerByUserId(info.PlayerId);local d=p and profiles[p]
-  if not d or not d.Look or not key or d.Leaving or d.Trading then return Enum.ProductPurchaseDecision.NotProcessedYet end
+  if not d or not d.Look or not key or d.Leaving or d.Trading or d.PendingSale then return Enum.ProductPurchaseDecision.NotProcessedYet end
   local id=tostring(info.PurchaseId)
   if not d.Receipts[id] then
-   d.Receipts[id]=true
    if key=='Sidearm' then
-    d.Stock.Sidearm=(d.Stock.Sidearm or 0)+1
-    if not d.Items.Pistol then d.Items.Pistol=true;d.Magazine=12;d.Reserve=math.min(120,d.Reserve+12) end
+    local hadGun=d.Items.Pistol
+    if not Inventory.add(d,'Carbine',12) then return Enum.ProductPurchaseDecision.NotProcessedYet end
+    if not hadGun then d.Reserve=math.min(120,d.Reserve+12) end
    elseif key=='Sampler' then
     for name,product in products do if product.Use then d.Stock[name]=(d.Stock[name] or 0)+3 end end
    else d.Stock[key]=(d.Stock[key] or 0)+5 end
+   d.Receipts[id]=true
   end
   if not save(p,false) then return Enum.ProductPurchaseDecision.NotProcessedYet end
   if key=='Sidearm' and d.Items.Pistol then tool(p,'Pistol') end

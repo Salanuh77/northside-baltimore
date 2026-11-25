@@ -249,9 +249,10 @@ singleMesh('service-cap','ServiceCap',rs)
 local starterRig=rig:Clone();starterRig.Name='StarterCharacter';starterRig.Parent=starter
 local appearance=Instance.new('ModuleScript');appearance.Name='ResidentAppearance';appearance.Source=fs.readFile('src/ResidentAppearance.luau');appearance.Parent=rs
 local theme=Instance.new('ModuleScript');theme.Name='UITheme';theme.Source=fs.readFile('src/UITheme.luau');theme.Parent=rs
-for _,name in {'ItemThumbnail','ItemCatalog','ItemCard','BrandIdentity','CombatPose','CombatClient'} do
+for _,name in {'ItemThumbnail','ItemCatalog','ItemCard','BrandIdentity','CombatPose','CombatClient','WeaponCatalog','GunClient'} do
  local module=Instance.new('ModuleScript');module.Name=name;module.Source=fs.readFile('src/'..name..'.luau');module.Parent=rs
 end
+require('./weapon-meshes')(rs)
 local itemModels=Instance.new('Folder');itemModels.Name='ItemModels';itemModels.Parent=rs
 for _,name in {'Water','Coffee','Sandwich','Bandage','Flashlight','Ammo','Pistol','Bat','Knife','Crowbar','Medkit','Clothing','Bubbles','Glow','Confetti','Streamers','Sampler'} do
  local module=Instance.new('ModuleScript');module.Name=name;module.Source=fs.readFile('src/ItemModels/'..name..'.luau');module.Parent=itemModels
@@ -278,7 +279,7 @@ local restServer=Instance.new('ModuleScript');restServer.Name='HomeRest';restSer
 local route=Instance.new('RemoteFunction'); route.Name='WalkingRoute'; route.Parent=rs
 local trail=Instance.new('ModuleScript'); trail.Name='StreetTrail'; trail.Source=fs.readFile('src/StreetTrail.luau'); trail.Parent=rs
 local staff=Instance.new('ModuleScript');staff.Name='ShopStaff';staff.Source=fs.readFile('src/ShopStaff.luau');staff.Parent=server.Parent
-for _,name in {'ResponderBrain','NpcNavigation','PistolVisual','NpcCombat','NpcAwareness','NpcTactics','NpcGround','NpcReactions','NpcSight','StreetCombatRules','StreetCombat','Ragdoll','CivilianBrain','Civilians'} do
+for _,name in {'ResponderBrain','NpcNavigation','PistolVisual','NpcCombat','NpcAwareness','NpcTactics','NpcGround','NpcReactions','NpcSight','StreetCombatRules','StreetCombat','Ragdoll','CivilianBrain','CivilianRoutes','Civilians','WeaponInventory','WeaponVisual'} do
  local module=Instance.new('ModuleScript');module.Name=name;module.Source=fs.readFile('src/'..name..'.luau');module.Parent=server.Parent
 end
 local routes=Instance.new('ModuleScript'); routes.Name='WalkingRoutes'; routes.Source=fs.readFile('src/WalkingRoutes.luau'); routes.Parent=server.Parent

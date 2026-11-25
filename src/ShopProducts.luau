@@ -1,5 +1,5 @@
 return {
- Sidearm={Id=3732000729,Title='One sidearm'},
+ Sidearm={Id=3732000729,Title='Patapsco Precision carbine'},
  Glow={Id=3732000733,Title='5 glow sticks',Use='Glow stick'},
  Confetti={Id=3732000737,Title='5 confetti bursts',Use='Confetti burst'},
  Bubbles={Id=3732068670,Title='5 courtyard bubble effects',Use='Courtyard bubbles'},

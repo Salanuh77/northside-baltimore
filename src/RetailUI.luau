@@ -5,6 +5,7 @@ local p=Players.LocalPlayer
 local products=require(game.ReplicatedStorage:WaitForChild('ShopProducts'))
 local cards=require(game.ReplicatedStorage:WaitForChild('ItemCard'))
 local catalog=require(game.ReplicatedStorage:WaitForChild('ItemCatalog'))
+local weapons=require(game.ReplicatedStorage:WaitForChild('WeaponCatalog'))
 return function(event,modal,content,clear,row,paragraph,input,state)
  local function item(key,fn,price)
   local entry=catalog[key]
@@ -12,7 +13,10 @@ return function(event,modal,content,clear,row,paragraph,input,state)
  end
  local function premium(key)
   local product=products[key]
-  local card=item(key=='Sidearm' and 'Pistol' or key,function() event:FireServer('Premium',{Item=key}) end,'Check Robux price')
+  local card
+  if key=='Sidearm' then
+   card=cards.decorate(row('',function() event:FireServer('Premium',{Item=key}) end),'Pistol',weapons.Guns.Carbine.Name,'Premium precision carbine. Slower shots, greater reach.','Check Robux price',{Weapon='Carbine'})
+  else card=item(key,function() event:FireServer('Premium',{Item=key}) end,'Check Robux price') end
   task.spawn(function()
    local ok,info=pcall(function() return Market:GetProductInfoAsync(product.Id,Enum.InfoType.Product) end)
    if ok and card.button.Parent and info.PriceInRobux then card.price.Text=info.PriceInRobux..' Robux' end
@@ -32,12 +36,21 @@ return function(event,modal,content,clear,row,paragraph,input,state)
   elseif kind=='Checkout' then
    for _,prod in products do if prod.Id==data then Market:PromptProductPurchase(p,data);break end end
   elseif kind=='GunStore' then
-   clear('EASTERN OUTFITTERS');premium('Sidearm')
-   paragraph('For a city-cash purchase, use the player trade menu to buy a sidearm from another eligible player.')
+   clear('RIVER PRO ARMORY')
+   paragraph('Cash weapons include a loaded magazine. Owned weapons can be equipped here without buying them again.')
+   for _,id in weapons.Order do
+    local spec=weapons.Guns[id];local owned=((state().Weapons or {})[id] or 0)>0
+    if spec.Price or owned then
+     cards.decorate(row('',function() event:FireServer('BuyWeapon',{Item=id});modal.Visible=false end),'Pistol',spec.Name,spec.Capacity..' rounds · '..(spec.Automatic and 'Automatic' or spec.Pellets>1 and 'Pump action' or 'Semi-auto'),owned and 'OWNED · Equip' or '$'..spec.Price,{Weapon=id})
+    end
+   end
+   premium('Sidearm')
    item('Ammo',function() event:FireServer('BuyAmmo') end)
-   if (state().Items or {}).Pistol then
-    for _,name in {'Slate compact','Silver service','Field carbine'} do
-     row(name..' · Included appearance',function() event:FireServer('ArmoryFinish',{Finish=name});modal.Visible=false end)
+   paragraph('Attachments for '..weapons.get(state().Weapon).Name)
+   for _,id in {'Scope','Suppressor'} do
+    local spec=weapons.Attachments[id];local owned=(state().Attachments or {})[id];local active=(state().AttachmentEnabled or {})[id]
+    if weapons.supports(state().Weapon,id) then
+     cards.decorate(row('',function() event:FireServer('WeaponAttachment',{Item=id});modal.Visible=false end),'Pistol',spec.Name,spec.Description,owned and (active and 'OWNED · Remove' or 'OWNED · Attach') or '$'..spec.Price,{Attachment=id})
     end
    end
   elseif kind=='Sporting' then

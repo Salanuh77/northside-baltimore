@@ -24,7 +24,13 @@ function Thumbnail.attach(parent,key,options)
   text.Text=value;text.Font=Enum.Font.Oswald;text.TextScaled=true;text.TextColor3=color or Color3.new(1,1,1);text.Parent=gui
  end
  local source=storage.ItemModels:FindFirstChild(key)
- if source then require(source)(builder) else builder.part('Parcel',{1,.8,.7},{0,0,0},{164,134,96}) end
+ local weaponCatalog=storage:FindFirstChild('WeaponCatalog') and require(storage.WeaponCatalog)
+ local chosen=weaponCatalog and options and (options.Weapon and weaponCatalog.Guns[options.Weapon] or options.Attachment and weaponCatalog.Attachments[options.Attachment])
+ local mesh=chosen and storage:FindFirstChild('WeaponMeshes') and storage.WeaponMeshes:FindFirstChild(chosen.Mesh)
+ if mesh then
+  local displayed=mesh:Clone();displayed.Parent=model
+  for _,part in displayed:GetDescendants() do if part:IsA('BasePart') then part.Anchored=true end end
+ elseif source then require(source)(builder) else builder.part('Parcel',{1,.8,.7},{0,0,0},{164,134,96}) end
  local bounds,size=model:GetBoundingBox()
  local camera=Instance.new('Camera');camera.FieldOfView=34
  local distance=math.max(size.X,size.Y,size.Z)*2.05
