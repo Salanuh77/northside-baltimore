@@ -1,6 +1,6 @@
 param([Parameter(Mandatory)][string]$Place, [Parameter(Mandatory)][string]$LogDirectory,
-    [ValidateSet('homes','server','ui','returning','retail','custody','life','encounters','access','combat','civilians')]
-    [string[]]$Suites = @('homes','server','ui','returning','retail','custody','life','encounters','access','combat','civilians'))
+    [ValidateSet('homes','server','ui','returning','retail','custody','life','encounters','access','combat','civilians','weapons')]
+    [string[]]$Suites = @('homes','server','ui','returning','retail','custody','life','encounters','access','combat','civilians','weapons'))
 $ErrorActionPreference = 'Stop'
 Set-Location (Split-Path $PSScriptRoot)
 $candidate = (Resolve-Path $Place).Path

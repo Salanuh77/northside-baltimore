@@ -34,7 +34,7 @@ Press **Play**, select a resident file and enter the city. Press **P** or use th
 - **H**: surrender / stop surrendering.
 - **T**: nearby player payments, item offers and robbery.
 - Equipped pistol: click/tap to fire; **R** reloads. Mobile buttons cover player menu, surrender and reload.
-- Freight Expectations sells a knife for $55, a crowbar for $90, and a medkit for $70. Bench Authority sells a wood bat for $80. River Pro Outfitters sells sidearms for Robux. Eligible players can agree on a city-cash price in the nearby player trade menu.
+- Freight Expectations sells a knife for $55, a crowbar for $90, and a medkit for $70. Bench Authority sells a wood bat for $80. River Pro Outfitters sells the Harbor Compact for $250, Foundry Pump for $650 and Lanvale PDW for $750 in city cash. The optional Patapsco Precision carbine remains a premium purchase; eligible players can agree on a city-cash trade price.
 - House lockbox: equip crowbar and stay nearby for 9 seconds. Sell stolen goods at the warehouse salvage counter for $110 each.
 - Store register: equip pistol and stay nearby for 12 seconds for $225. Locations reset after 3 minutes.
 - Player robbery: target must surrender; remain nearby for 8 seconds. Takes 25% of cash, capped at $200, with a 5 minute victim cooldown. Bank money is protected.
@@ -42,7 +42,7 @@ Press **Play**, select a resident file and enter the city. Press **P** or use th
 - Credit union ATM: deposit / withdraw. Clinic: heal for $50. Medkit restores up to 60 health.
 - Death charges up to $75 and removes carried stolen goods; owned equipment returns on respawn.
 
-The city wallet tracks earned cash. Roblox handles optional sidearm purchases, five-use packs of bubbles, glow sticks, confetti and streamers, and a twelve-use party sampler. The phone displays the current Roblox product price at checkout.
+The city wallet tracks earned cash. Roblox handles optional precision carbine purchases, five-use packs of bubbles, glow sticks, confetti and streamers, and a twelve-use party sampler. The phone displays the current Roblox product price at checkout.
 
 New residents choose their name, height, build, skin tone, and haircut. Exchange Streetwear sells three original jackets with denim for city cash. A saved outfit can be worn again at the counter. Juniper and Waverly barbershops offer $30 cuts, and a player employed as a barber can serve another customer after clocking in at Juniper.
 
@@ -77,11 +77,11 @@ The crime RP direction prioritizes readable police pursuits and consequences. NP
 
 Two NPC officers and two NPC paramedics patrol and respond. Use **Phone → Dispatch** for help. Police book surrendered wanted residents into Patapsco; a nearby stationary suspect below 25 health can also be subdued. A healthy resisting player must be pursued. Paramedics treat injured players. Players can apply to either service and start a paid shift. Additional in-person dispatch payments are capped by a per-recipient cooldown.
 
-Nearby blocks also populate with up to 18 civilians. Neighbors walk sidewalk routes, pause, converse, yield around people, warn about personal space and react to danger. Cautious residents flee; bold assault victims can briefly defend themselves. A witness who reaches safety can call police with the observed incident location. Hearing gunfire does not reveal a hidden shooter's identity, and fear expires before the resident resumes their route.
+Nearby blocks populate with 18 civilians for one player, scaling to a shared server cap of 30. Randomized residents appear outside the immediate view, walk connected sidewalk routes, avoid immediate reversals, wait for crossing signals and pause after several destinations. Distant residents retire after a grace period; older residents can leave out of view and be replaced. Neighbors converse, yield around people, warn about personal space and react to danger. Cautious residents flee; bold assault victims can briefly defend themselves. A witness who reaches safety can call police with the observed incident location. Hearing gunfire does not reveal a hidden shooter's identity, and fear expires before the resident resumes their route.
 
 Every resident receives free **Fists**. Press **G / D-pad right** to raise or lower them; use **click / Punch / RT** to attack and hold **F / Block / LT** to guard. Timed jab–cross–hook combinations consume stamina. Frontal guard reduces damage, rear attacks bypass it, and depleted guard breaks. Clean finishers produce temporary physical ragdolls; dead characters retain a physical pose until cleanup. Server checks reject wall hits, distant targets, spam, safe-zone attacks and attacks while incapacitated. The shoulder camera restores its previous settings when fists are lowered or a menu opens.
 
-The deterministic `street-combat`, `civilian-brain` and `combat-pose` suites run in CI. Disposable two-player `combat` and `civilians` Studio probes supplement the existing nine release suites. Their assertions cover actual movement, conversations, hidden-shooter memory, directional guard, three-hit damage, replicated physical joints and get-up. See `skills/roblox-npc-behavior` for the behavioral reference and evidence boundaries.
+The deterministic `street-combat`, `civilian-brain`, `civilian-routes`, `civilian-map`, `weapon-inventory` and `combat-pose` suites run in CI. Disposable two-player `combat`, `civilians` and `weapons` Studio probes supplement the existing nine release suites. Their assertions cover actual movement, conversations, hidden-shooter memory, directional guard, three-hit damage, replicated physical joints and get-up. See `skills/roblox-npc-behavior` for the behavioral reference and evidence boundaries.
 
 ## Interiors
 
@@ -108,3 +108,11 @@ Residents use the city's articulated R15 body. The creator groups changes into *
 Use **F**, **X**, controller **B** or **Exit vehicle** to leave a car. Beds now place residents on their backs across the mattress. Rest for four seconds to recover 15 health; use **Space**, controller **B** or **Get up** on touch to stand in the aisle. Getting up early or taking damage cancels the healing reward.
 
 For art-only source-space renders, install `art/requirements.txt` and run `python art/preview_residents.py`. These previews are not Roblox screenshots. `scripts/publish-resident-art.luau` imports reviewed meshes, records a per-content receipt and grants the experience access before the normal release tests.
+
+## Cash armory and modular weapons
+
+Six original Meshy T2.5 props supply the sidearm, PDW, pump shotgun, precision carbine, compact optic and quiet muzzle. The approved batch used 90 credits; source GLBs, import models, task IDs and geometry counts are retained in `art/weapon-*`. No internal firearm mechanisms are modeled.
+
+Use the gun counter to buy standard guns for city cash. The optic costs $180 and the quiet muzzle costs $220, with compatibility shown in the shop. Owned guns can be selected through Phone → My bag. Each gun keeps its magazine when switching or saving. Existing paid sidearms migrate to the premium carbine. Hold right mouse / LT to aim; optics narrow the field of view, the PDW supports held automatic fire, and R reloads the selected magazine.
+
+Quiet muzzles reduce hearing from 110 to 28 studs and remove the muzzle flash and tracer. Distant clients receive no suppressed shot-origin event. Nearby witnesses can still hear the shot, direct victims know they were attacked, and anyone who sees the shooter can identify them. Suppression is not invisibility.

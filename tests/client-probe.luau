@@ -3,8 +3,21 @@ local rs=game:GetService('ReplicatedStorage')
 local remote=rs:WaitForChild('TestDrive')
 local action=rs:WaitForChild('CityAction')
 local lastNotice=''
+local shots={}
+action.OnClientEvent:Connect(function(kind,data) if kind=='Shot' then table.insert(shots,data) end end)
 action.OnClientEvent:Connect(function(kind,message) if kind=='Notice' then lastNotice=tostring(message) end end)
 remote.OnClientInvoke=function(kind,data)
+ if kind=='Shots' then local result=shots;shots={};return result end
+ if kind=='FireBurst' then for _=1,12 do action:FireServer('Shoot',{Position=data.Position,Aiming=true}) end;task.wait(.15);return true end
+ if kind=='HoldFire' then
+  local tool=p.Character.Pistol;tool:Activate();task.wait(.55);tool:Deactivate();task.wait(.2);return true
+ end
+ if kind=='WeaponArt' then
+  local failures={};local meshes={}
+  for _,part in rs.WeaponMeshes:GetDescendants() do if part:IsA('MeshPart') then table.insert(meshes,part) end end
+  game.ContentProvider:PreloadAsync(meshes,function(id,status) if status~=Enum.AssetFetchStatus.Success then table.insert(failures,id) end end)
+  return #meshes>=6 and #failures==0,table.concat(failures,', ')
+ end
  if kind=='CombatCamera' then
   local camera=workspace.CurrentCamera;camera.CameraType=Enum.CameraType.Scriptable
   camera.CFrame=CFrame.lookAt(data.From,data.To);return true
@@ -50,10 +63,17 @@ remote.OnClientInvoke=function(kind,data)
  if kind=='ItemCard' then
   local gui=p.PlayerGui:WaitForChild('NorthsideHUD')
   local deadline=os.clock()+6;local card
-  repeat card=gui:FindFirstChild('Item '..data.Key,true);if card then break end;task.wait(.1) until os.clock()>deadline
+  repeat
+   for _,v in gui:GetDescendants() do
+    if v.Name=='Item '..data.Key and (not data.Weapon or v:GetAttribute('WeaponId')==data.Weapon) and (not data.Attachment or v:GetAttribute('AttachmentId')==data.Attachment) then card=v;break end
+   end
+   if card then break end;task.wait(.1)
+  until os.clock()>deadline
   assert(card,'Missing product card '..data.Key)
   local view=card:FindFirstChildWhichIsA('ViewportFrame',true)
-  assert(view and view.CurrentCamera and #view:FindFirstChildOfClass('WorldModel'):GetDescendants()>4,'Product image has no visible geometry')
+  local world=view and view:FindFirstChildOfClass('WorldModel')
+  local visible=world and world:FindFirstChildWhichIsA('BasePart',true)
+  assert(view and view.CurrentCamera and visible and visible.Size.Magnitude>0,'Product image has no visible geometry')
   assert(card.Price.Text==data.Price,'Wrong displayed item price: '..card.Price.Text)
   if data.Buy then
    local scroll=card:FindFirstAncestorOfClass('ScrollingFrame')

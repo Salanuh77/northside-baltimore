@@ -2,6 +2,8 @@ local fs=require('@lune/fs')
 local luau=require('@lune/luau')
 local enum=require('@lune/roblox').Enum
 local decision=enum.ProductPurchaseDecision
+local Inventory=require('../src/WeaponInventory')
+local Weapons=require('../src/WeaponCatalog')
 local source=fs.readFile('src/CityRetail.luau')
 local function fixture()
  local p={UserId=8}
@@ -13,7 +15,7 @@ local function fixture()
  local catalog=require('../src/ShopProducts')
  local style=luau.load(fs.readFile('src/StreetStyle.luau'),{environment={game=game,Color3=require('@lune/roblox').Color3,require=function() return {} end},injectGlobals=true})()
  style.apply=function(_,_,outfit) state.equipped=outfit end
- local factory=luau.load(source,{environment={game=game,Enum=enum,require=function(name) return name=='ShopProducts' and catalog or name=='StreetStyle' and style or {} end},injectGlobals=true})()
+ local factory=luau.load(source,{environment={game=game,Enum=enum,script={Parent={WeaponInventory='WeaponInventory'}},require=function(name) return name=='ShopProducts' and catalog or name=='StreetStyle' and style or name=='WeaponCatalog' and Weapons or name=='WeaponInventory' and Inventory or {} end},injectGlobals=true})()
  local noop=function() end
  local function atCounter(_,kind) return kind=='Clothing' and state.atStore end
  local retail=factory(profiles,{}, {},atCounter,noop,noop,function() return state.canSave end,function() state.tools+=1 end)
@@ -40,8 +42,13 @@ local cases={
  {'trading',function(buy,d) d.Trading=true;assert(buy(gun)==decision.NotProcessedYet and next(d.Items)==nil) end},
  {'owned loadout and ammo cap',function(buy,d,s) assert(buy(gun)==decision.PurchaseGranted and d.Stock.Sidearm==1 and d.Magazine==12 and d.Reserve==120 and s.tools==1) end},
  {'distinct sidearms',function(buy,d) buy(gun);d.Magazine=2;buy(gun,'second');assert(d.Stock.Sidearm==2 and d.Magazine==2) end},
+ {'full premium inventory keeps receipt pending',function(buy,d)
+  Inventory.restore(d,{Guns={Carbine=100},Weapon='Carbine',GunMags={Carbine=7}})
+  assert(buy(gun,'full')==decision.NotProcessedYet and not d.Receipts.full and d.Guns.Carbine==100)
+  Inventory.remove(d,'Carbine');assert(buy(gun,'full')==decision.PurchaseGranted and d.Guns.Carbine==100)
+ end},
  {'retry a failed save',function(buy,d,s) s.canSave=false;assert(buy(gun)==decision.NotProcessedYet and s.tools==0);s.canSave=true;assert(buy(gun)==decision.PurchaseGranted and d.Stock.Sidearm==1 and s.tools==1) end},
- {'replayed receipt after trade',function(buy,d,s) buy(gun);d.Items.Pistol=nil;d.Stock.Sidearm=0;s.tools=0;assert(buy(gun)==decision.PurchaseGranted and s.tools==0,'reissued a traded item') end},
+ {'replayed receipt after trade',function(buy,d,s) buy(gun);Inventory.remove(d,'Carbine');s.tools=0;assert(buy(gun)==decision.PurchaseGranted and s.tools==0,'reissued a traded item') end},
  {'glow pack',function(buy,d) buy(glow);buy(glow);assert(d.Stock.Glow==5) end},
  {'confetti packs',function(buy,d) buy(confetti);buy(confetti,'second');assert(d.Stock.Confetti==10) end},
  {'bubble pack',function(buy,d) buy(3732068670);assert(d.Stock.Bubbles==5) end},

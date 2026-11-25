@@ -31,6 +31,11 @@ cityServer.Source,marked=cityServer.Source:gsub('d%%.Spawning=false','d.Spawning
 assert(marked==1,'Missing initial spawn completion hook')
 cityServer.Source..=[==[
 local probe=Instance.new('BindableFunction');probe.Name='TestReceipt';probe.Parent=game.ServerStorage
+local profileProbe=Instance.new('BindableFunction');profileProbe.Name='TestProfile';profileProbe.Parent=game.ServerStorage
+profileProbe.OnInvoke=function(p,cash)
+ if cash then profiles[p].Cash=cash;sync(p) end
+ return payload(profiles[p])
+end
 probe.OnInvoke=function(p,info)
  for _,d in profiles do d.PaidTrading=true end
  return retail.receipt(info).Name
