@@ -4,6 +4,7 @@ __pycache__/
 *.rbxlx
 tests/launch.luau
 tests/*.log
+/tests/civilian-combat-review/
 
 *.rbxl
 !Squishy-original.rbxlx.rbxl

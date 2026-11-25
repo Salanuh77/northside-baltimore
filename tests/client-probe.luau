@@ -5,6 +5,33 @@ local action=rs:WaitForChild('CityAction')
 local lastNotice=''
 action.OnClientEvent:Connect(function(kind,message) if kind=='Notice' then lastNotice=tostring(message) end end)
 remote.OnClientInvoke=function(kind,data)
+ if kind=='CombatCamera' then
+  local camera=workspace.CurrentCamera;camera.CameraType=Enum.CameraType.Scriptable
+  camera.CFrame=CFrame.lookAt(data.From,data.To);return true
+ end
+ if kind=='CombatBurst' then for _=1,12 do action:FireServer('Punch') end;task.wait(.4);return true end
+ if kind=='ObserveKnockdown' then
+  local model=data.Model;local due=os.clock()+3
+  repeat
+   local sockets=0;local loose=0
+   if model and model.Parent then for _,v in model:GetDescendants() do
+    if v:IsA('BallSocketConstraint') and v.Name=='Knockdown socket' then sockets+=1 end
+    if v:IsA('Motor6D') and not v.Enabled then loose+=1 end
+   end end
+   if model and model:GetAttribute('Ragdolled') and sockets>=10 and loose>=10 then return true end
+   task.wait(.05)
+  until os.clock()>due
+  return false
+ end
+ if kind=='ObservePunch' then
+  local model=data.Model;local due=os.clock()+1
+  repeat
+   local joint=model and model:FindFirstChild('LeftShoulder',true)
+   if joint and math.abs(select(1,joint.C0:ToOrientation()))>.6 then return true end
+   task.wait(.03)
+  until os.clock()>due
+  return false
+ end
  if kind=='LastNotice' then return lastNotice end
  if kind=='InteriorView' then
   for _,gui in p.PlayerGui:GetChildren() do if gui:IsA('ScreenGui') then gui.Enabled=false end end
