@@ -38,6 +38,17 @@ local ok,err=pcall(function()
  check((shopper.model.HumanoidRootPart.Position-start).Magnitude>1,'Shopping changes position, not only its label')
  check((shopper.model.HumanoidRootPart.Position-shopper.life.goal).Magnitude<4,'Purchase happens at the destination')
  shopper.life=nil
+ shopper.born=os.clock()-80
+ local atShop=shopper.model.HumanoidRootPart.Position
+ local witnessPoint=require(game.ServerScriptService.NpcGround).choose(shopper.model,{atShop+Vector3.new(-6,0,0),atShop+Vector3.new(0,0,6),atShop+Vector3.new(0,0,-6)},true)
+ check(witnessPoint~=nil,'Store incident has a witness in a clear aisle')
+ park(victim.model,witnessPoint,atShop-witnessPoint,true)
+ local wallet=shopper.wallet
+ local theft=assert(society.incident(shopper,nil,'Shoplifting',os.clock()),'Eligible shopper can start a store incident')
+ check(waitFor(function() return theft.committed and theft.reported end,12),'Visible shoplifting is reported by a clerk or nearby witness: committed='..tostring(theft.committed)..' reported='..tostring(theft.reported)..' pos='..tostring(shopper.model.HumanoidRootPart.Position)..' goal='..tostring(theft.shopGoal)..' target='..theft.target:GetFullName()..' activity='..tostring(shopper.model:GetAttribute('Activity')))
+ check(shopper.wallet==wallet+25,'Store incident affects the NPC wallet only')
+ theft.expires=os.clock()
+ check(waitFor(function() return theft.done end,3),'Expired store incident frees its participant and officer')
  local floor=Instance.new('Part');floor.Name='Society test floor';floor.Anchored=true;floor.Size=Vector3.new(240,1,240);floor.Position=Vector3.new(2400,40,2400);floor.Parent=workspace
  local at=Vector3.new(2400,44,2400)
  park(a.Character,at+Vector3.new(-30,0,-10),nil,true);park(b.Character,at+Vector3.new(-30,0,10),nil,true)

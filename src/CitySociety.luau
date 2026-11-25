@@ -88,6 +88,9 @@ function Society.start(city,civilians,respond,combat,protected)
   for _,unit in respond.units do
    if unit.role=='police' and alive(unit.model) and (unit.model.HumanoidRootPart.Position-suspect.HumanoidRootPart.Position).Magnitude<65 and clear(unit.model,suspect) then witnessed=true;break end
   end
+  for _,clerk in game:GetService('CollectionService'):GetTagged('RouteClerk') do
+   if alive(clerk) and (clerk.HumanoidRootPart.Position-suspect.HumanoidRootPart.Position).Magnitude<35 and clear(clerk,suspect) then witnessed=true;break end
+  end
   if witnessed then scene.reported=now;scene.memory={lastSeen=suspect.HumanoidRootPart.Position,seenAt=now};scene.position=scene.memory.lastSeen end
  end
  function self.incident(s,victim,kind,now)

@@ -297,7 +297,11 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
       melee:guard(model,false)
       if unit.weapon and unit.weapon.Parent~=model then health:EquipTool(unit.weapon) end
      end
-     if action.mode=='Requesting surrender' and direct and now>=(unit.spokeAt or 0) then unit.spokeAt=now+12;tell(target,'Police: put your hands up to surrender, or break line of sight to lose the search.') end
+     if action.mode=='Requesting surrender' and direct and now>=(unit.spokeAt or 0) then
+      unit.spokeAt=now+12
+      local line=Dialogue.choose(unit.dialogue,{event='officer'},function() return random:NextNumber() end)
+      Dialogue.say(model,line,now);tell(target,'Police: '..line)
+     end
     elseif ambientAction then
      Brain.step(unit.brain,now,{valid=false})
     elseif role=='medic' and unit.danger and now<unit.danger.untilTime then
