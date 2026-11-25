@@ -43,6 +43,9 @@ function Rules.hit(s,now,damage,frontal,finisher)
  return {blocked=blocked and not broken,broken=broken,damage=blocked and not broken and math.max(1,damage*.15) or damage,knockdown=down}
 end
 function Rules.cancel(s,now)
- s.serial+=1;s.combo=0;s.phase='Idle';s.ready=now;s.stunUntil=now
+ s.serial+=1;s.combo=0
+ if s.phase=='Attacking' or s.phase=='Blocking' then s.phase='Idle' end
+ -- Holstering or surrendering invalidates the strike, not its recovery debt.
+ s.ready=math.max(s.ready,now)
 end
 return Rules
