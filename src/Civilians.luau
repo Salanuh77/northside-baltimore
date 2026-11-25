@@ -62,7 +62,7 @@ function Civilians.start(city,combat,report)
    local _,ped=Phases.at(workspace:GetServerTimeNow(),axis,closest:GetAttribute('SignalOffset') or 0)
    if ped~='Walk' then return false end
   end
-  s.enteredCrossing=true;return true
+  return true
  end
  local function spawn(index)
   local route=routes[index];local model=Storage.ResidentRig:Clone();model.Name='Neighborhood resident';model.Parent=field
@@ -205,6 +205,8 @@ function Civilians.start(city,combat,report)
      end
      if s.yield then s.nav:step(s.yield,now,8) else s.nav:stop() end
     elseif mode.mode=='Walking' then
+     -- Commit only when walking starts, not while talking or resting on a green.
+     if s.edge and s.edge.crossing then s.enteredCrossing=true end
      combat:guard(model,false);s.nav:step(goal,now,s.speed)
      if (at-s.progress).Magnitude>2 then s.progress=at;s.progressAt=now end
      if now-s.progressAt>10 and s.edge then
