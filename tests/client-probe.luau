@@ -97,7 +97,7 @@ remote.OnClientInvoke=function(kind,data)
   return false
  end
  if kind=='Prompt' then
-  local prompt=data:WaitForChild('ProximityPrompt',5)
+  local prompt=data:FindFirstChildWhichIsA('ProximityPrompt') or data:WaitForChild('ProximityPrompt',5)
   assert(prompt,'Interaction prompt missing')
   local camera=workspace.CurrentCamera; camera.CameraType=Enum.CameraType.Scriptable
   local head=p.Character:WaitForChild('Head')
