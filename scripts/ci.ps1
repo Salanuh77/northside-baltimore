@@ -9,7 +9,7 @@ if (!(Test-Path $lune)) {
     Remove-Item -LiteralPath $zip
 }
 if ((Get-FileHash $lune).Hash -ne '95F4A457317237516C347745BF363AA63DD30C97105C9595E6B8914B29267FDB') { throw 'Lune binary checksum mismatch' }
-foreach ($suite in 'tests/hair-materials','tests/appearance-migration','tests/creator-layout','tests/item-images','tests/npc-tactics','tests/npc-reactions','tests/npc-ground','tests/npc-sight','tests/brand-identity','tests/street-combat','tests/civilian-brain','tests/combat-pose','tests/behavior-regressions','tests/weapon-inventory','tests/civilian-routes','tests/door-swing','tests/combat-animation','tests/society-rules') {
+foreach ($suite in 'tests/hair-materials','tests/appearance-migration','tests/creator-layout','tests/item-images','tests/npc-tactics','tests/npc-reactions','tests/npc-ground','tests/npc-sight','tests/brand-identity','tests/street-combat','tests/civilian-brain','tests/combat-pose','tests/behavior-regressions','tests/weapon-inventory','tests/weapon-scale','tests/civilian-routes','tests/door-swing','tests/combat-animation','tests/society-rules') {
     & $lune run $suite
     if ($LASTEXITCODE -ne 0) { throw "$suite failed" }
 }

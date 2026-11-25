@@ -4,7 +4,7 @@ return function(tool,id,scope,suppressed)
  local source=library and library:FindFirstChild(spec.Mesh)
  if not source then require(script.Parent.PistolVisual)(tool,spec.Length>2 and 'Field carbine' or 'Slate compact');return end
  local handle=tool.Handle;handle.Transparency=1;handle.Size=Vector3.new(.25,.6,.3);handle.CanTouch=false;handle.CanQuery=false
- tool.Grip=CFrame.new(0,-.12,0)
+ tool.Grip=CFrame.new(0,-.08,0)
  local function mount(template,length,offset)
   local model=template:Clone();model.Name=template.Name..' exterior'
   local bounds,size=model:GetBoundingBox();local scale=length/size.Z
@@ -18,7 +18,16 @@ return function(tool,id,scope,suppressed)
   end
   model.Parent=tool
  end
- mount(source,spec.Length,CFrame.new(0,.28,-spec.Length*.22))
- if scope and library:FindFirstChild('scope') then mount(library.scope,.65,CFrame.new(0,.88,-.35)) end
- if suppressed and library:FindFirstChild('suppressor') then mount(library.suppressor,.65,CFrame.new(0,id=='Compact' and .66 or .53,-spec.Length*.72-.30)) end
+ -- Each anchor is measured on the source silhouette in normalized body space.
+ -- Put the grip at the palm; do not float every receiver over a shared offset.
+ local bodyY,bodyZ=-spec.GripY*spec.Length,-spec.GripZ*spec.Length
+ mount(source,spec.Length,CFrame.new(0,bodyY,bodyZ))
+ if scope and spec.Scope and library:FindFirstChild('scope') then
+  local size=library.scope:GetAttribute('NormalizedSize');local length=.4
+  mount(library.scope,length,CFrame.new(0,bodyY+spec.RailY*spec.Length+size.Y*length/2-.01,bodyZ+spec.ScopeZ*spec.Length))
+ end
+ if suppressed and spec.Suppressor and library:FindFirstChild('suppressor') then
+  local length=.4
+  mount(library.suppressor,length,CFrame.new(0,bodyY+spec.MuzzleY*spec.Length,bodyZ-spec.Length/2-length/2+.025))
+ end
 end

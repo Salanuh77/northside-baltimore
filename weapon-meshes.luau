@@ -25,6 +25,13 @@ return function(parent)
    part.Size*=scale;part.CFrame=CF.new((part.CFrame.Position-center)*scale)*part.CFrame.Rotation
    part.Anchored=true;part.CanCollide=false;part.CanTouch=false;part.CanQuery=false;part.Massless=true;part.Parent=model
   end
+  -- Persist the intended barrel axis through serialization and replication.
+  -- WorldPivot alone is non-replicated; an imported part's rotated frame can
+  -- otherwise make GetBoundingBox treat the thin side as the weapon length.
+  local anchor=rb.Instance.new('Part');anchor.Name='Weapon axis';anchor.Size=V(.01,.01,.01)
+  anchor.CFrame=CF.identity;anchor.Transparency=1;anchor.Anchored=true;anchor.CanCollide=false
+  anchor.CanTouch=false;anchor.CanQuery=false;anchor.Massless=true;anchor.Parent=model
+  model.PrimaryPart=anchor
   model.WorldPivot=CF.identity
   model:SetAttribute('NormalizedSize',(high-low)*scale)
  end

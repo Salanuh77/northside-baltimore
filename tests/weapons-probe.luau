@@ -7,6 +7,25 @@ local function park(p,at) p.Character:PivotTo(CFrame.new(at));p.Character.Humano
 local ok,err=pcall(function()
  check(waitFor(function() if #Players:GetPlayers()~=2 then return false end;for _,p in Players:GetPlayers() do if not p:GetAttribute('ProbeSpawnFinished') then return false end end;return true end,70),'Two ready residents')
  local a,b=table.unpack(Players:GetPlayers());local profile=game.ServerStorage.TestProfile
+ local catalog=require(game.ReplicatedStorage.WeaponCatalog)
+ for id,limit in {Compact=1.05,SMG=1.8,Shotgun=2.5,Carbine=2.6} do
+  local fixture=Instance.new('Tool');fixture.Name='Weapon fit fixture'
+  local handle=Instance.new('Part');handle.Name='Handle';handle.Anchored=true;handle.Parent=fixture
+  require(game.ServerScriptService.WeaponVisual)(fixture,id,true,true)
+  local spec=catalog.get(id);local body=fixture[spec.Mesh..' exterior'];local frame,size=body:GetBoundingBox()
+  check(size.Z<=limit+.01 and size.Y<1,'Actual imported '..id..' fits the handheld size budget: '..tostring(size)..' source='..tostring(game.ReplicatedStorage.WeaponMeshes[spec.Mesh]:GetAttribute('NormalizedSize')))
+  local palm=frame:PointToWorldSpace(Vector3.new(0,spec.GripY*spec.Length,spec.GripZ*spec.Length))
+  check((palm-handle.Position).Magnitude<.02,id..' grip is connected to the palm anchor')
+  local muzzle=fixture:FindFirstChild('suppressor exterior')
+  if muzzle then
+   local extension,extSize=muzzle:GetBoundingBox()
+   local rear=extension.Position.Z+extSize.Z/2;local front=frame.Position.Z-size.Z/2
+   check(extSize.Z<.42 and math.abs(rear-front)<.04,'Reduced suppressor meets '..id..' muzzle without a gap')
+  end
+  local optic=fixture:FindFirstChild('scope exterior')
+  if optic then local _,opticSize=optic:GetBoundingBox();check(opticSize.Z<.42,'Optic stays compact on '..id) end
+  fixture:Destroy()
+ end
  local loaded,detail=call(a,'WeaponArt');check(loaded,'All six imported weapon assets and materials load: '..tostring(detail))
  local counter;for _,v in workspace.Baltimore:GetDescendants() do if v:GetAttribute('Action')=='GunStore' then counter=v;break end end
  park(a,counter.Position+counter.CFrame.LookVector*5+Vector3.yAxis*2)
@@ -16,6 +35,8 @@ local ok,err=pcall(function()
  call(a,'WeaponAttachment',{Item='Suppressor'});d=profile:Invoke(a)
  check(d.Cash==30 and d.Attachments.Suppressor and d.AttachmentEnabled.Suppressor,'Cash suppressor delivered')
  check(a.Backpack.Pistol:FindFirstChild('sidearm exterior') and a.Backpack.Pistol:FindFirstChild('suppressor exterior'),'Imported attachments mounted to the real tool')
+ call(a,'Equip',{Name='Pistol'})
+ check((a.Character.Pistol.Handle.Position-a.Character.RightHand.Position).Magnitude<.8,'Equipped compact remains in the resident hand')
  call(a,'WeaponAttachment',{Item='Scope'});check(profile:Invoke(a).Cash==30,'Incompatible scope rejects without charging')
  profile:Invoke(a,2200)
  call(a,'BuyWeapon',{Item='SMG'});call(a,'WeaponAttachment',{Item='Scope'})
