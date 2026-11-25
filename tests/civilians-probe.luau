@@ -24,12 +24,20 @@ local ok,err=pcall(function()
  check(waitFor(function() return (npc.HumanoidRootPart.Position-start).Magnitude>3 end,10),'Routine changes the actual civilian position')
  local floor=Instance.new('Part');floor.Name='Civilian arena';floor.Anchored=true;floor.Size=Vector3.new(180,1,180);floor.Position=Vector3.new(2100,40,2100);floor.Parent=workspace
  local at=Vector3.new(2100,44,2100)
- park(npc,at,Vector3.zAxis);park(a.Character,at+Vector3.zAxis*6,-Vector3.zAxis);park(b.Character,at+Vector3.new(40,0,30))
+ park(npc,at,Vector3.zAxis);park(a.Character,at+Vector3.zAxis*4.5,-Vector3.zAxis);park(b.Character,at+Vector3.new(40,0,30))
  for _,p in {a,b} do p:RequestStreamAroundAsync(at,5) end
- check(call(a,'Prompt',npc.Head),'Player can use the real Talk prompt')
- check(waitFor(function() return npc:GetAttribute('Activity')=='Talking' end,2),'Conversation pauses the civilian routine')
+ local talked,detail=call(a,'TalkProbe',npc.Head)
+ check(talked,'Player can use the real Talk prompt: '..tostring(detail))
+ check(waitFor(function() return npc:GetAttribute('Activity')=='Talking' end,2),string.format('Conversation pauses the civilian routine (mode=%s enabled=%s distance=%s health=%s speech=%s)',tostring(npc:GetAttribute('Activity')),tostring(npc.Head.Talk.Enabled),(npc.HumanoidRootPart.Position-a.Character.HumanoidRootPart.Position).Magnitude,npc.Humanoid.Health,tostring(npc.Head:FindFirstChild('Citizen speech'))))
  check(npc.Head:FindFirstChild('Citizen speech')~=nil,'Conversation creates visible speech')
- task.wait(4.5)
+ task.wait(6.1)
+ local divider=Instance.new('Part');divider.Anchored=true;divider.Size=Vector3.new(12,12,.5);divider.Position=at+Vector3.zAxis*2;divider.Parent=workspace
+ -- Exercise the server check even when a modified client ignores prompt LOS.
+ npc.Head.Talk.RequiresLineOfSight=false
+ check(call(a,'TalkProbe',npc.Head),'Blocked conversation request reaches the prompt')
+ task.wait(.4)
+ check(npc:GetAttribute('Activity')~='Talking' and not npc.Head:FindFirstChild('Citizen speech'),'Wall rejects conversation on the server')
+ divider:Destroy();npc.Head.Talk.RequiresLineOfSight=true
  park(npc,at,Vector3.zAxis);park(a.Character,at+Vector3.zAxis*2.5,-Vector3.zAxis)
  npc.HumanoidRootPart.Anchored=false
  start=npc.HumanoidRootPart.Position
