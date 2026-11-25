@@ -10,12 +10,16 @@ return function(gui,menuOpen)
  local function watch(model)
   if actors[model] then return end
   local joints={}
-  for _,j in model:GetDescendants() do if j:IsA('Motor6D') then joints[j.Name]={joint=j,rest=j.C0} end end
-  actors[model]={joints=joints}
+  local function jointAdded(j)
+   if j:IsA('Motor6D') then joints[j.Name]={joint=j,rest=j.C0} end
+  end
+  for _,j in model:GetDescendants() do jointAdded(j) end
+  -- Streaming may deliver the tag before the body's joints arrive.
+  actors[model]={joints=joints,added=model.DescendantAdded:Connect(jointAdded)}
  end
  Tags:GetInstanceAddedSignal('CombatActor'):Connect(watch)
  Tags:GetInstanceRemovedSignal('CombatActor'):Connect(function(model)
-  local state=actors[model];if state then for _,j in state.joints do if j.joint.Parent then j.joint.C0=j.rest end end end
+  local state=actors[model];if state then state.added:Disconnect();for _,j in state.joints do if j.joint.Parent then j.joint.C0=j.rest end end end
   actors[model]=nil
  end)
  for _,model in Tags:GetTagged('CombatActor') do watch(model) end
@@ -55,7 +59,7 @@ return function(gui,menuOpen)
  Run.PreSimulation:Connect(function(dt)
   local now=workspace:GetServerTimeNow()
   for model,state in actors do
-   if not model.Parent then actors[model]=nil;continue end
+   if not model.Parent then state.added:Disconnect();actors[model]=nil;continue end
    local root=model:FindFirstChild('HumanoidRootPart')
    if not root then continue end
    local mode=model:GetAttribute('CombatState') or 'Idle'

@@ -21,8 +21,11 @@ local ok,err=pcall(function()
  call(a,'Equip',{Name='Fists'});call(b,'Equip',{Name='Fists'})
  local h=b.Character.Humanoid;h.MaxHealth=500;h.Health=500
  local before=h.Health
+ local punchVisible,punchDetail
+ task.spawn(function() punchVisible,punchDetail=call(b,'ObservePunch',{Model=a.Character}) end)
  call(a,'CombatBurst')
  check(waitFor(function() return h.Health<before end,3) and h.Health==before-9,'Remote spam lands one bounded first punch')
+ check(waitFor(function() return punchVisible==true end,2),'Other client sees the attacking arm move: '..tostring(punchDetail))
  task.wait(1.2)
  before=h.Health;call(b,'Guard',{Enabled=true})
  local guardState=b.Character:GetAttribute('CombatState');local facing=b.Character.HumanoidRootPart.CFrame.LookVector

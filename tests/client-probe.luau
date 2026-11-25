@@ -24,13 +24,13 @@ remote.OnClientInvoke=function(kind,data)
   return false
  end
  if kind=='ObservePunch' then
-  local model=data.Model;local due=os.clock()+1
+  local model=data.Model;local due=os.clock()+1;local maximum=0;local found=false
   repeat
    local joint=model and model:FindFirstChild('LeftShoulder',true)
-   if joint and math.abs(select(1,joint.C0:ToOrientation()))>.6 then return true end
+   if joint then found=true;maximum=math.max(maximum,math.abs(select(1,joint.C0:ToOrientation())));if maximum>.6 then return true end end
    task.wait(.03)
   until os.clock()>due
-  return false
+  return false,string.format('shoulder=%s angle=%.2f tagged=%s state=%s',tostring(found),maximum,tostring(game:GetService('CollectionService'):HasTag(model,'CombatActor')),tostring(model:GetAttribute('CombatState')))
  end
  if kind=='LastNotice' then return lastNotice end
  if kind=='InteriorView' then
@@ -108,6 +108,16 @@ remote.OnClientInvoke=function(kind,data)
   prompt:InputHoldBegin(); task.wait(prompt.HoldDuration+.35); prompt:InputHoldEnd(); task.wait(0.3)
   camera.CameraType=Enum.CameraType.Custom
   return true
+ end
+ if kind=='TalkProbe' then
+  local prompt=data:FindFirstChildWhichIsA('ProximityPrompt');assert(prompt)
+  local triggered=false;local listener=prompt.Triggered:Connect(function() triggered=true end)
+  local camera=workspace.CurrentCamera;camera.CameraType=Enum.CameraType.Scriptable
+  camera.CFrame=CFrame.lookAt(data.Position+Vector3.new(0,1,6),data.Position)
+  task.wait(1)
+  prompt:InputHoldBegin();task.wait(prompt.HoldDuration+.5);prompt:InputHoldEnd();task.wait(.3)
+  listener:Disconnect()
+  return triggered,string.format('enabled=%s service=%s distance=%.2f',tostring(prompt.Enabled),tostring(game:GetService('ProximityPromptService').Enabled),(p.Character.HumanoidRootPart.Position-data.Position).Magnitude)
  end
  if kind=='WalkTo' then
   local human=p.Character.Humanoid
