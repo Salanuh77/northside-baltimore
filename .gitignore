@@ -19,3 +19,5 @@ tests/*.log
 
 # Embedded GLB textures are the source of truth; Meshy also exports redundant sidecars.
 /art/interior-*_textures/
+
+/art/weapon-*_textures/

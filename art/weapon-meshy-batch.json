@@ -1,0 +1,54 @@
+{
+  "approvedCredits": 90,
+  "created": "2026-11-25",
+  "assets": [
+    {
+      "key": "sidearm",
+      "prompt": "Original fictional compact semiautomatic sidearm exterior for a Roblox urban action game. Believable clean silhouette, distinct slide, grip, trigger guard and front sight. Matte charcoal polymer and brushed dark steel. Single complete prop, no ammunition, hands, text, logos, scene or base. Barrel points negative Z, vertical grip down Y, narrow width along X. Model the exterior only, suitable for a handheld game prop.",
+      "previewTaskId": "01a211fa-932f-7172-bb27-878be494c4c6",
+      "refineTaskId": "01a211fd-9b3b-7587-8ea4-99921466d501",
+      "aiModel": "meshy-t2.5",
+      "targetPolycount": 5000
+    },
+    {
+      "key": "smg",
+      "prompt": "Original fictional compact personal-defense submachine gun exterior for a Roblox action game. Short receiver, slim angled magazine, skeletal rear stock, compact foregrip, top accessory rail, believable modern industrial proportions. No optics or muzzle attachments; these will be modular. Single complete isolated prop, no hands, logos or scene. Barrel points negative Z, top up Y, width along X. Exterior geometry only.",
+      "previewTaskId": "01a211fa-9d16-7750-8c55-883f287b83d5",
+      "refineTaskId": "01a211fd-a363-7089-bf8d-667af8a013ae",
+      "aiModel": "meshy-t2.5",
+      "targetPolycount": 5000
+    },
+    {
+      "key": "shotgun",
+      "prompt": "Original fictional pump-action sporting shotgun exterior for a Roblox action game. Long dark steel barrel, ribbed pump fore-end, worn walnut shoulder stock, simple small front sight, believable game-ready proportions. No optics or muzzle attachments. Single isolated complete prop, no hands, shells, logo, text, floor or background scene. Barrel points negative Z, top up Y, narrow width X. Exterior only.",
+      "previewTaskId": "01a211fa-a5d0-7459-83b3-2857806c2007",
+      "refineTaskId": "01a211fd-a7df-768d-9296-0b75a5db2b7e",
+      "aiModel": "meshy-t2.5",
+      "targetPolycount": 5000
+    },
+    {
+      "key": "carbine",
+      "prompt": "Original fictional premium precision carbine exterior for a Roblox urban action game. Distinct long upper silhouette, compact straight magazine, ergonomic grip, lightweight angular shoulder stock, machined accessory rail, muted slate steel with tan polymer panels. No scope and no suppressor; separately attached game pieces. Single prop, no hands, logos, text or environment. Barrel points negative Z, top up Y, width X. Exterior only.",
+      "previewTaskId": "01a211fa-afeb-733d-ae4a-e2379cd6ecbd",
+      "refineTaskId": "01a211fd-ab0a-7748-b19a-fa55c3a041c5",
+      "aiModel": "meshy-t2.5",
+      "targetPolycount": 5000
+    },
+    {
+      "key": "scope",
+      "prompt": "Single fictional compact optic accessory exterior for a Roblox weapon prop. Short matte-black cylindrical optic housing, two mounting feet underneath, blue-tinted round front and rear lenses, small capped adjustment knobs. Detailed exterior shell, no internals, logos, text, weapon, hands or scene. Long axis along Z, front lens negative Z, feet toward negative Y. Game prop.",
+      "previewTaskId": "01a211fa-b844-73d3-abee-d90ad4d52477",
+      "refineTaskId": "01a211fd-af1d-7152-9786-97810ee6b73d",
+      "aiModel": "meshy-t2.5",
+      "targetPolycount": 1800
+    },
+    {
+      "key": "suppressor",
+      "prompt": "Single fictional muzzle attachment exterior for a Roblox game weapon prop. Slim cylindrical matte charcoal barrel extension with subtle machined exterior bands and a small dark recessed circular end. Simple recognizable clean silhouette. Exterior only, no internal mechanisms, cuts, diagrams, dimensions, logos, firearm, hands or scene. Cylinder axis along Z, front toward negative Z. Isolated game asset.",
+      "previewTaskId": "01a211fa-c076-77bd-9dc0-6897fb5b6303",
+      "refineTaskId": "01a211fd-b301-70c6-8adb-f707f9a1d680",
+      "aiModel": "meshy-t2.5",
+      "targetPolycount": 900
+    }
+  ]
+}

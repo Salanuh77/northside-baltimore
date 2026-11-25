@@ -53,5 +53,11 @@
   "street-denim": "76766624998016",
   "street-denim-black": "137989968179653",
   "washed-denim": "135970927551926",
-  "washed-denim-black": "81357501904591"
+  "washed-denim-black": "81357501904591",
+  "weapon-carbine": "115992292888905",
+  "weapon-scope": "131453296148964",
+  "weapon-shotgun": "129312582390245",
+  "weapon-sidearm": "83262295596229",
+  "weapon-smg": "82249146133748",
+  "weapon-suppressor": "139576978513707"
 }
