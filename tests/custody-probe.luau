@@ -119,12 +119,13 @@ local ok,err=pcall(function()
  end
  beside(p,npc,12)
  for i=1,10 do
-  if not npc.Parent then break end
+  if not npc.Parent or npc.Humanoid.Health<=0 then break end
   local hit=workspace:Raycast(p.Character.Head.Position,(npc.UpperTorso.Position-p.Character.Head.Position).Unit*80,(function()
    local params=RaycastParams.new(); params.FilterType=Enum.RaycastFilterType.Exclude; params.FilterDescendantsInstances={p.Character}; return params end)())
   call('Shoot',{Position=npc.UpperTorso.Position}); print('PATROL_SHOT',i,npc.Parent and npc.Humanoid.Health,p:GetAttribute('Heat'),pistol:GetAttribute('Ammo'),hit and hit.Instance:GetFullName()); task.wait(.1)
  end
- check(not npc.Parent and p:GetAttribute('Heat')>=3,'Player gun defeats an NPC officer and creates a wanted case')
+ check(npc.Humanoid.Health<=0 and npc:GetAttribute('Ragdolled') and p:GetAttribute('Heat')>=3,'Player gun defeats an NPC officer, leaves a physical ragdoll and creates a wanted case')
+ check(waitFor(function() return not npc.Parent end,15),'Defeated officer is cleaned up after the ragdoll interval')
  local officer=field['District officer']; beside(p,officer,5)
  call('Surrender'); call('CallResponder',{Role='police'})
  check(waitFor(function() return (p:GetAttribute('CustodyUntil') or 0)>os.time() end,18),'NPC officer arrests and books the player')
