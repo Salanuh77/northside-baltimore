@@ -94,13 +94,23 @@ function Civilians.start(city,combat,report)
    if now>=spawnAt and count<18 then
     spawnAt=now+.7
     local best,distance=nil,165
-    for i,route in routes do if not slots[i] then for _,v in people do local d=(v.root.Position-route.center).Magnitude;if d<distance and d>15 then best=i;distance=d end end end end
-    if best then spawn(best) end
+    for i,route in routes do if not slots[i] and now>=(route.blockedUntil or 0) then for _,v in people do local d=(v.root.Position-route.center).Magnitude;if d<distance and d>15 then best=i;distance=d end end end end
+    if best then
+     local created=spawn(best)
+     if not created then routes[best].blockedUntil=now+30 end
+    end
    end
    for model,s in agents do
     if not model.Parent then agents[model]=nil;slots[s.index]=nil;count-=1;continue end
     local at=model.HumanoidRootPart.Position;local human=model.Humanoid;local closest,dist=nil,math.huge
     for _,v in people do local d=(v.root.Position-at).Magnitude;if d<dist then closest=v;dist=d end end
+    local obstacle=closest and closest.root;local clearance=dist
+    for other in agents do
+     if other~=model and other.Parent and other.Humanoid.Health>0 then
+      local d=(other.HumanoidRootPart.Position-at).Magnitude
+      if d<clearance then clearance=d;obstacle=other.HumanoidRootPart end
+     end
+    end
     if dist>220 then s.unseen+=.25 else s.unseen=0 end
     if s.unseen>20 or human.Health<=0 and now>(s.deadAt or math.huge) then s.nav:stop();combat:cancel(model);model:Destroy();continue end
     if human.Health<=0 then s.deadAt=s.deadAt or now+12 end
@@ -114,7 +124,7 @@ function Civilians.start(city,combat,report)
     if arrived and s.pauseUntil==0 then s.pauseUntil=now+3+(s.index%4) end
     if s.pauseUntil>0 and now>=s.pauseUntil then s.leg=3-s.leg;s.pauseUntil=0;arrived=false end
     local mode=Brain.step(s.brain,now,{health=human.Health,ragdoll=model:GetAttribute('Ragdolled'),visibleThreat=seen,distance=target and (target.Position-at).Magnitude,
-     armed=weapon~=nil and weapon~=false,safeDistance=threat and (at-threat.position).Magnitude>34 and not seen,talk=s.talk,crowded=dist<4,arrived=arrived or s.pauseUntil>0})
+     armed=weapon~=nil and weapon~=false,safeDistance=threat and (at-threat.position).Magnitude>34 and not seen,talk=s.talk,crowded=clearance<4,arrived=arrived or s.pauseUntil>0})
     s.talk=nil;model:SetAttribute('Activity',mode.mode);s.prompt.Enabled=not s.brain.threat and human.Health>0 and not model:GetAttribute('Ragdolled')
     model:SetAttribute('KnownSuspect',s.brain.threat and s.brain.threat.suspect)
     model:SetAttribute('IncidentPosition',s.brain.threat and s.brain.threat.position)
@@ -137,9 +147,9 @@ function Civilians.start(city,combat,report)
      combat:guard(model,false)
      if now>=s.nextGoal then s.nextGoal=now+1.6;s.flee=Ground.choose(model,Tactics.flee(at,mode.threat),false) end
      if s.flee then s.nav:step(s.flee,now,16) else s.nav:stop();model:SetAttribute('Activity','Cowering') end
-    elseif (mode.mode=='Yielding' or mode.mode=='Warning') and closest then
+    elseif (mode.mode=='Yielding' or mode.mode=='Warning') and obstacle then
      if now>=s.nextGoal then
-      s.nextGoal=now+1.5;local delta=(closest.root.Position-at)*Vector3.new(1,0,1);local right=delta.Magnitude>.1 and Vector3.new(-delta.Z,0,delta.X).Unit or Vector3.xAxis
+      s.nextGoal=now+1.5;local delta=(obstacle.Position-at)*Vector3.new(1,0,1);local right=delta.Magnitude>.1 and Vector3.new(-delta.Z,0,delta.X).Unit or Vector3.xAxis
       s.yield=Ground.choose(model,{at+right*4,at-right*4,at-model.HumanoidRootPart.CFrame.LookVector*3},true)
      end
      if s.yield then s.nav:step(s.yield,now,8) else s.nav:stop() end
