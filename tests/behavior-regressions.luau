@@ -8,7 +8,7 @@ local function case(name,run)
 end
 local function civilian(personality) return Brain.new(personality or 'cautious',0) end
 local function step(s,t,input) input=input or {};input.health=input.health or 100;return Brain.step(s,t,input) end
-local function incident(s,kind,id,time) Brain.notice(s,time or 0,{kind=kind,position='corner',suspect=id,seen=id~=nil}) end
+local function incident(s,kind,id,time) Brain.notice(s,time or 0,{kind=kind,position='corner',suspect=id,seen=id~=nil,victim=true}) end
 local function near(a,b) return math.abs(a-b)<.00001 end
 -- SCENARIOS
 case('Combatants own independent stamina',function()

@@ -10,7 +10,7 @@ function Brain.notice(s,now,incident)
  if old and (old.kind=='assault' or old.kind=='gunfire') and incident.kind=='weapon' then return end
  local same=old and old.kind==incident.kind and old.suspect==incident.suspect and now-old.time<3
  s.threat={kind=incident.kind,position=incident.position,time=now,
-  suspect=incident.seen and incident.suspect or nil,reported=same and old.reported or false}
+  suspect=incident.seen and incident.suspect or nil,victim=incident.victim==true,reported=same and old.reported or false}
  s.talkUntil=0;s.reportAt=nil
 end
 function Brain.step(s,now,i)
@@ -22,7 +22,7 @@ function Brain.step(s,now,i)
  elseif t then
   local armed=i.armed or t.kind=='gunfire'
   if t.kind=='weapon' and i.visibleThreat and (i.distance or 100)>8 then mode='Wary'
-  elseif t.kind=='assault' and s.personality=='bold' and i.visibleThreat and not armed and (i.distance or 100)<9 and i.health>35 and now-t.time<7 then mode='Defending'
+  elseif t.kind=='assault' and t.victim and s.personality=='bold' and i.visibleThreat and not armed and (i.distance or 100)<9 and i.health>35 and now-t.time<7 then mode='Defending'
   elseif i.safeDistance then
    if t.suspect and not t.reported and t.kind~='weapon' then
     mode='Reporting';s.reportAt=s.reportAt or now

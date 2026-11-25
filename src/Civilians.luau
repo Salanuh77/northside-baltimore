@@ -79,7 +79,7 @@ function Civilians.start(city,combat,report)
    if model.Humanoid.Health<=0 then continue end
    local seen=player and visible(model,player.Character,55)
    if model==victim or seen or kind=='gunfire' and (model.HumanoidRootPart.Position-origin).Magnitude<90 then
-    Brain.notice(s.brain,now,{kind=kind,position=origin,suspect=player and player.UserId,seen=seen or model==victim})
+    Brain.notice(s.brain,now,{kind=kind,position=origin,suspect=player and player.UserId,seen=seen or model==victim,victim=model==victim})
     s.nextGoal=0
    end
   end
