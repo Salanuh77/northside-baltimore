@@ -18,6 +18,10 @@ Players equip free Fists or use G / controller D-pad right. Punch uses click, to
 
 Use the server's current character positions for the delayed hit, reject walls and rear-facing attacks, and deduplicate limbs into one victim per swing. Interrupt a pending attack using a serial token when the attacker is hit, knocked down or becomes ineligible. Release guards on focus loss, menu opening, unequip and character removal, with a server lease in case release never arrives.
 
+Cancellation invalidates the pending strike but preserves its recovery deadline and existing hit stun. Re-equipping or surrendering must not reset those costs. Keep an explicit victim flag separate from witness identity: seeing an assault permits retreat and reporting, not joining the fight.
+
+Client pose registries must handle joints arriving after a streamed model's tag. A second-client probe should observe a changed shoulder frame during a real attack, not only a replicated combat-state attribute. Conversation probes should frame the actual head prompt, verify its Triggered event, and separately exercise the server's wall rejection with client-side prompt occlusion disabled in the disposable fixture.
+
 Ragdoll attachments use the original Motor6D C0/C1 frames. Limit ball-socket twist and swing; prevent self-collision between body pieces. Retain root linkage, set RequiresNeck before disabling the neck joint, and restore saved properties on recovery. See official [BallSocketConstraint](https://create.roblox.com/docs/reference/engine/classes/BallSocketConstraint) and [Humanoid](https://create.roblox.com/docs/reference/engine/classes/Humanoid) documentation. A state named Knocked down is insufficient: verify sockets, disabled motors, actual torso rotation, client replication and successful get-up.
 
 ## Evidence boundaries
