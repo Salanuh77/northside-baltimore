@@ -4,7 +4,7 @@ Reviewed November 25, 2026: [zirdic's Advanced Civilian AI discussion](https://d
 
 ## Observable decisions
 
-- Walking follows a short sidewalk route and pauses at its ends. Activation is distance-bounded and population-capped; distant NPCs are retired after a grace period.
+- Walking follows the map-derived CivilianRoutes graph across connected sidewalks and crossing edges. Avoid the previous node when another exit exists, deweight recently visited nodes, vary speed and pause after several stops. Corner goals must clear signposts. Blocked edges expire and a temporarily empty route retries. Activation is distance-bounded and population-capped; distant NPCs retire after a grace period, and old peaceful residents leave out of view.
 - Talking requires a living, nearby, visible player and a cooldown. The speaker faces the visitor and stops walking briefly. Gunfire immediately interrupts it.
 - Yielding picks a clear side step. Sustained crowding adds a warning; touching alone does not initiate a fight.
 - Wary observes a visible weapon. A nearby weapon, assault or audible shot can trigger fleeing; blocked escape shows cowering.
@@ -27,3 +27,11 @@ Ragdoll attachments use the original Motor6D C0/C1 frames. Limit ball-socket twi
 ## Evidence boundaries
 
 Pure-state tests establish timing and priority rules. Spatial-query tests establish server hit rejection. Native Studio multiplayer probes establish motion, UI inputs, physics and replication. A compiled script or an attribute change alone does not prove the visual or physical result. Do not describe this as GTA's proprietary simulation or full GTA feature parity.
+
+## Population and firearm regressions
+
+Test at least four actual civilian destination arrivals while following outside personal space. Verify multiple distinct destinations, population caps, replacement on another block and distant cleanup. Do not keep the observer stationary and confuse a correct distance cull with a failed path. The complete city graph must remain connected, not merely pass a synthetic two-point test. Crossing waits happen before entering the road; once committed, a pedestrian finishes crossing.
+
+Use randomized appearance, speed and rest timing on each birth. Keep births outside the player-facing near field, retain threatened or talking residents, and never destroy NPCs just to satisfy a per-second generation quota. Single-player target is 18, adding three per additional player up to 30 total.
+
+WeaponCatalog and WeaponInventory separate cash guns, premium receipts, per-gun magazines and owned attachments. The weapons Studio gate exercises a real picture-card purchase, imported asset loading, automatic cadence, reload and suppression observed by a second player. A single textured MeshPart is valid product geometry; do not assert a minimum number of primitive pieces. Idle CombatClient must release joints so responder aiming can control them.

@@ -16,12 +16,24 @@ local ok,err=pcall(function()
  a:RequestStreamAroundAsync(Vector3.new(0,4,100),5)
  local field=workspace:WaitForChild('City civilians',15)
  check(waitFor(function() return #field:GetChildren()>=2 end,15),'Civilian population activates around players')
- check(#field:GetChildren()<=18,'Active population stays bounded')
+ check(#field:GetChildren()<=(field:GetAttribute('PopulationLimit') or 30),'Active population stays bounded')
  local npc
  for _,model in field:GetChildren() do if model:GetAttribute('Personality')~='bold' then npc=model;break end end
  npc=npc or field:GetChildren()[1]
  local start=npc.HumanoidRootPart.Position
  check(waitFor(function() return (npc.HumanoidRootPart.Position-start).Magnitude>3 end,10),'Routine changes the actual civilian position')
+ local destinations={};local stopStart=npc:GetAttribute('VisitedStops') or 0;local trace={};local traceAt=0
+ check(waitFor(function()
+  if not npc.Parent then return false end
+  -- Follow the subject outside its personal space so a legitimate distance cull
+  -- cannot masquerade as a navigation failure during this route observation.
+  park(a.Character,npc.HumanoidRootPart.Position+Vector3.new(0,0,24))
+  local dest=npc:GetAttribute('Destination');if dest then destinations[tostring(dest)]=true end
+  if os.clock()>traceAt then traceAt=os.clock()+6;table.insert(trace,tostring(npc.HumanoidRootPart.Position)..' -> '..tostring(dest)..' / '..tostring(npc:GetAttribute('Activity'))..' / stops '..tostring(npc:GetAttribute('VisitedStops'))) end
+  return (npc:GetAttribute('VisitedStops') or 0)-stopStart>=4
+ end,70),'Civilian walks through four actual sidewalk destinations: '..table.concat(trace,'; '))
+ local destinationCount=0;for _ in destinations do destinationCount+=1 end
+ check(destinationCount>=4,'Roaming is not the same two endpoints')
  local floor=Instance.new('Part');floor.Name='Civilian arena';floor.Anchored=true;floor.Size=Vector3.new(180,1,180);floor.Position=Vector3.new(2100,40,2100);floor.Parent=workspace
  local at=Vector3.new(2100,44,2100)
  park(npc,at,Vector3.zAxis);park(a.Character,at+Vector3.zAxis*4.5,-Vector3.zAxis);park(b.Character,at+Vector3.new(40,0,30))
@@ -56,5 +68,11 @@ local ok,err=pcall(function()
  check(waitFor(function() local mode=npc:GetAttribute('Activity');return mode=='Recovering' or mode=='Walking' end,24),'Expired danger returns to the routine')
  check(npc:GetAttribute('KnownSuspect')==nil and npc:GetAttribute('IncidentPosition')==nil,'Expired witness memory clears')
  wall:Destroy()
+ local oldIds={};for _,m in field:GetChildren() do oldIds[m:GetAttribute('CivilianId')]=true end
+ park(a.Character,Vector3.new(450,4,800));park(b.Character,Vector3.new(430,4,800))
+ check(waitFor(function()
+  for _,m in field:GetChildren() do if not oldIds[m:GetAttribute('CivilianId')] then return true end end
+ end,20),'New residents populate another block as players travel')
+ check(waitFor(function() return not npc.Parent end,20),'Distant residents retire and free population slots')
 end)
 game:GetService('StudioTestService'):EndTest({ok=ok,error=tostring(err)})
