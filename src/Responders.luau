@@ -178,7 +178,7 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
   end
   health.HealthChanged:Connect(function(current)
    if current>0 or not model.Parent then return end
-   unit.nav:stop();task.delay(12,function() model:Destroy() end)
+   unit.nav:stop();task.delay(12,function() if unit.weapon then unit.weapon:Destroy() end;model:Destroy() end)
    local index=table.find(units,unit);if index then table.remove(units,index) end
    task.delay(20,function() if field.Parent then bot(role,home,name) end end)
   end)
