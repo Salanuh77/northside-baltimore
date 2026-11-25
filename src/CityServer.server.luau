@@ -171,7 +171,43 @@ end
 local custody=require(script.Parent:WaitForChild('Custody'))(city,event,profiles,sync,tell,closest,function(p)
  cancelBusy(p); workService.finish(p); offers[p]=nil
 end)
-local respond=require(script.Parent:WaitForChild('Responders'))(city,event,profiles,jobs,sync,tell,safe,near,sight,custody.arrest,heat)
+local respond,civilians
+local function protectedModel(model)
+ local player=Players:GetPlayerFromCharacter(model)
+ if player then return safe(player) or (player:GetAttribute('CustodyUntil') or 0)>0 end
+ if model:FindFirstChildOfClass('ForceField') then return true end
+ local root=model:FindFirstChild('HumanoidRootPart');if not root then return true end
+ for _,z in city.SafeZones:GetChildren() do
+  local q=z.CFrame:PointToObjectSpace(root.Position);local half=z.Size/2
+  if math.abs(q.X)<half.X and math.abs(q.Y)<half.Y and math.abs(q.Z)<half.Z then return true end
+ end
+ return false
+end
+local function damageable(model)
+ return Players:GetPlayerFromCharacter(model)~=nil or model.Parent==workspace:FindFirstChild('Emergency responders') or game:GetService('CollectionService'):HasTag(model,'Civilian')
+end
+local combat=require(script.Parent.StreetCombat).new(event,{
+ allowed=function(model)
+  local player=Players:GetPlayerFromCharacter(model)
+  return not protectedModel(model) and (not player or profiles[player] and not player:GetAttribute('Surrendered') and not profiles[player].Trading)
+ end,
+ canDamage=function(attacker,target)
+  if not damageable(target) or protectedModel(target) or protectedModel(attacker) then return false end
+  if not Players:GetPlayerFromCharacter(attacker) and not Players:GetPlayerFromCharacter(target) then return false end
+  local player=Players:GetPlayerFromCharacter(target)
+  return not (player and player:GetAttribute('Surrendered') and not Players:GetPlayerFromCharacter(attacker))
+ end,
+ incident=function(attacker,target)
+  local p=Players:GetPlayerFromCharacter(attacker)
+  if p then
+   respond.alert(p,attacker.HumanoidRootPart.Position,'assault',target)
+   if civilians then civilians.alert(p,attacker.HumanoidRootPart.Position,'assault',target) end
+   heat(p,1)
+  end
+ end,
+})
+respond=require(script.Parent:WaitForChild('Responders'))(city,event,profiles,jobs,sync,tell,safe,near,sight,custody.arrest,heat,combat)
+civilians=require(script.Parent.Civilians).start(city,combat,respond.witness)
 local function timed(p,marker,seconds,valid,done,message)
  if busy[p] then return tell(p,'Finish your current action first.') end
  local _,h=alive(p); if not h then return end
@@ -414,6 +450,8 @@ local function selectFile(p,index,creating)
   local h=c:WaitForChild('Humanoid'); h.WalkSpeed=16
   c:WaitForChild('HumanoidRootPart'); custody.restore(p)
   retail.dress(p,d); givePhone(p); for name in d.Items do tool(p,name) end
+  local fists=Instance.new('Tool');fists.Name='Fists';fists.RequiresHandle=false;fists.CanBeDropped=false;fists.ToolTip='Click: combo · F: block · G: lower hands';fists.Parent=p.Backpack
+  require(script.Parent.Ragdoll).watch(c);game:GetService('CollectionService'):AddTag(c,'CombatActor')
   h.Died:Connect(function()
    cancelBusy(p); workService.finish(p); offers[p]=nil
    task.delay(Players.RespawnTime,function() if p.Parent and profiles[p]==d and p.Character==c then p:LoadCharacterAsync() end end)
@@ -468,16 +506,26 @@ event.OnServerEvent:Connect(function(p,kind,data)
   return
  end
  if not alive(p) then return end
+ if kind=='Guard' and data.Enabled==false then combat:guard(p.Character,false);return end
+ if p.Character:GetAttribute('Ragdolled') or p.Character:GetAttribute('CombatState')=='Stunned' then return end
  if kind=='PostBail' or kind=='LightPress' then return custody.handle(p,kind,data) end
  if (d.CustodyUntil or 0)>0 then return end
  if kind=='Cancel' then cancelBusy(p); return end
  if kind=='Surrender' then
+  combat:cancel(p.Character)
   cancelBusy(p); local state=not p:GetAttribute('Surrendered'); p:SetAttribute('Surrendered',state)
   local _,h=alive(p); h.WalkSpeed=state and 5 or 16; if state then h:UnequipTools() end
   tell(p,state and 'Surrendering. Nearby armed players can rob your cash. Press H to stop.' or 'Surrender ended.'); return
  end
  if p:GetAttribute('Surrendered') then return end
  if d.Trading or d.Leaving then return end
+ if kind=='Punch' then
+  if equipped(p,'Fists') then combat:attack(p.Character) end
+  return
+ elseif kind=='Guard' then
+  if equipped(p,'Fists') and type(data.Enabled)=='boolean' then combat:guard(p.Character,data.Enabled) end
+  return
+ end
  if retail.handle(p,kind,data) then return end
  if lifeActions[kind] then life.handle(p,kind,data)
  elseif kind=='CallResponder' or kind=='DispatchList' or kind=='Assist' then respond.handle(p,kind,data)
@@ -582,7 +630,10 @@ event.OnServerEvent:Connect(function(p,kind,data)
   local hit=workspace:Raycast(head.Position,(aim-head.Position).Unit*7,ray)
   local model=hit and hit.Instance:FindFirstAncestorOfClass('Model')
   local hum=model and model:FindFirstChildOfClass('Humanoid');local victim=model and Players:GetPlayerFromCharacter(model)
-  if hum and hum.Health>0 and ((victim and not safe(victim) and (victim:GetAttribute('CustodyUntil') or 0)==0) or model.Parent==workspace:FindFirstChild('Emergency responders')) then respond.alert(p,head.Position,'assault',model);hum:TakeDamage(equipped(p,'Bat') and 16 or 20);heat(p,1) end
+  if hum and hum.Health>0 and damageable(model) and not protectedModel(model) then
+   respond.alert(p,head.Position,'assault',model);civilians.alert(p,head.Position,'assault',model)
+   hum:TakeDamage(equipped(p,'Bat') and 16 or 20);heat(p,1)
+  end
  elseif kind=='Shoot' then
   if safe(p) or not equipped(p,'Pistol') or typeof(data.Position)~='Vector3' then return end
   local pos=data.Position
@@ -596,11 +647,12 @@ event.OnServerEvent:Connect(function(p,kind,data)
   local hit=workspace:Raycast(origin,direction.Unit*250,ray); local endPos=hit and hit.Position or origin+direction.Unit*250
   event:FireAllClients('Shot',{From=origin,To=endPos})
   respond.alert(p,origin,'gunfire',hit and hit.Instance:FindFirstAncestorOfClass('Model'))
+  civilians.alert(p,origin,'gunfire',hit and hit.Instance:FindFirstAncestorOfClass('Model'))
   if hit then
    local model=hit.Instance:FindFirstAncestorOfClass('Model'); local victim=model and Players:GetPlayerFromCharacter(model)
    if victim and victim~=p and not safe(victim) then
     local _,h=alive(victim); if h and (victim:GetAttribute('CustodyUntil') or 0)==0 then h:TakeDamage(24); heat(p,1) end
-   elseif model and model.Parent==workspace:FindFirstChild('Emergency responders') then
+   elseif model and damageable(model) and not protectedModel(model) then
     local h=model:FindFirstChildOfClass('Humanoid'); if h and h.Health>0 then h:TakeDamage(24); heat(p,1) end
    end
   end

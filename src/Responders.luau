@@ -48,7 +48,7 @@ local function rig(name,home,medical,parent)
  end)
  return model
 end
-return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHeat)
+return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHeat,melee)
  local field=Instance.new('Folder');field.Name='Emergency responders';field.Parent=workspace
  local calls={police={},medic={}};local cooldown={};local reports={};local units={}
  local random=Random.new()
@@ -159,6 +159,7 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
 
  local function bot(role,home,name)
   local model=rig(name,home,role=='medic',field);model:SetAttribute('Service',role)
+  require(script.Parent.Ragdoll).watch(model);game:GetService('CollectionService'):AddTag(model,'CombatActor')
   local unit={model=model,role=role,brain=Brain.new(),memory={},patrol=1,patrolAt=os.clock(),nextCover=0,side=math.floor(#units/2)%2==0 and 1 or -1,sector=#units}
   unit.nav=Navigation.new(model);table.insert(units,unit)
   local health=model.Humanoid
@@ -177,13 +178,16 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
   end
   health.HealthChanged:Connect(function(current)
    if current>0 or not model.Parent then return end
-   unit.nav:stop();model:Destroy()
+   unit.nav:stop();task.delay(12,function() model:Destroy() end)
    local index=table.find(units,unit);if index then table.remove(units,index) end
    task.delay(20,function() if field.Parent then bot(role,home,name) end end)
   end)
   task.spawn(function()
    local route={Vector3.zero,Vector3.new(0,0,24),Vector3.new(0,0,42),Vector3.new(0,0,18)}
    while model.Parent and health.Health>0 do
+    if model:GetAttribute('Ragdolled') or model:GetAttribute('CombatState')=='Stunned' then
+     unit.nav:stop();facing.Enabled=false;task.wait(.2);continue
+    end
     local now=os.clock();local at=model.HumanoidRootPart.Position
     local target,best,goal,direct=nil,math.huge,nil,false
     for _,p in Players:GetPlayers() do
@@ -229,6 +233,18 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
      else unit.searchCenter=nil;unit.searchStep=0 end
      if action.arrest and settle(role,target,nil,true) then action={mode='Patrolling',goal=home} end
      if action.fire then shoot(unit,target) end
+     if melee and not armed and report and (report.violentUntil or 0)>now and direct and (root.Position-at).Magnitude<5 and not target:GetAttribute('Surrendered') then
+      -- An active unarmed assault gets a bounded nonlethal response, not gunfire.
+      if unit.weapon and unit.weapon.Parent==model then unit.weapon.Parent=game.ServerStorage end
+      local delta=(root.Position-at)*Vector3.new(1,0,1)
+      if delta.Magnitude>.1 then model.HumanoidRootPart.CFrame=model.HumanoidRootPart.CFrame:Lerp(CFrame.lookAt(at,at+delta),.55) end
+      melee:guard(model,target.Character:GetAttribute('CombatState')=='Attacking')
+      if now>=(unit.punchAt or 0) then melee:attack(model);unit.punchAt=now+1.2 end
+      action={mode='Restraining attacker'}
+     elseif melee then
+      melee:guard(model,false)
+      if unit.weapon and unit.weapon.Parent~=model then health:EquipTool(unit.weapon) end
+     end
      if action.mode=='Requesting surrender' and direct and now>=(unit.spokeAt or 0) then unit.spokeAt=now+12;tell(target,'Police: put your hands up to surrender, or break line of sight to lose the search.') end
     elseif role=='medic' and unit.danger and now<unit.danger.untilTime then
      if now>=(unit.fleeAt or 0) then
@@ -316,5 +332,13 @@ return function(city,event,profiles,jobs,sync,tell,safe,near,sight,arrest,addHea
    if target and not settle(role,target,p) then tell(p,'Move beside the eligible patient or surrendered wanted player.') end
   end
  end
- return {handle=handle,alert=alert}
+ local function witness(p,position)
+  if not profiles[p] or safe(p) or typeof(position)~='Vector3' then return end
+  local previous=reports[p]
+  -- Preserve fresher direct sightings rather than overwriting them with a witness snapshot.
+  if previous and os.clock()-previous.time<3 then return end
+  reports[p]={position=position,time=os.clock(),violentUntil=0}
+  if addHeat and profiles[p].Heat<1 then addHeat(p,1) end
+ end
+ return {handle=handle,alert=alert,witness=witness}
 end
