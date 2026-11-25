@@ -11,4 +11,7 @@ local function step(s,t,input) input=input or {};input.health=input.health or 10
 local function incident(s,kind,id,time) Brain.notice(s,time or 0,{kind=kind,position='corner',suspect=id,seen=id~=nil}) end
 local function near(a,b) return math.abs(a-b)<.00001 end
 -- SCENARIOS
+case('Combatants own independent stamina',function()
+ local a,b=Rules.new(0),Rules.new(0);Rules.attack(a,0);assert(b.stamina==100 and b.combo==0)
+end)
 print('PASS behavior boundary regressions:',passed)
